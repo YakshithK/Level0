@@ -1,0 +1,83 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    --background: 223 47% 11%;
+    --foreground: 213 31% 91%;
+
+    --card: 223 47% 11%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 223 47% 11%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 180 100% 50%;
+    --primary-foreground: 223 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 213 31% 91%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 213 13% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 213 31% 91%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 213 31% 91%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 180 100% 50%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 223 47% 11%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 223 47% 11%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 213 31% 91%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 180 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #00ffff 0%, #39ff14 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glow-effect {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  }
+  
+  .gradient-border {
+    background: linear-gradient(135deg, #00ffff 0%, #39ff14 100%);
+    padding: 1px;
+    border-radius: 0.5rem;
+  }
+  
+  .gradient-border-inner {
+    background: hsl(var(--background));
+    border-radius: calc(0.5rem - 1px);
+  }
+}

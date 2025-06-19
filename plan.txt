@@ -1,193 +1,390 @@
-Absolutely — here's your full **step-by-step roadmap** to build a successful **“V0 for Video Games”** project, including technical dev, outreach, learning, and positioning.
+# Level0 MVP: HARDCORE 8-DAY EXECUTION PLAN
+## June 19 (5PM) → June 27 EOD
+
+> **MISSION**: Ship AI prompt-to-game builder. User types "lava platformer with spikes" → gets playable Phaser game + code. NO FLUFF. JUST SHIP.
 
 ---
 
-## 🎮 PROJECT GOAL
-
-> Build a web platform that turns text prompts (like “a 2D platformer with lava pits and a boss fight”) into **playable game scenes** using AI.
-
----
-
-## 📆 PHASE 1 — Foundation (Week 1–2)
-
-### 🔧 1. Tech Stack Finalization
-
-* **Frontend**: React + Tailwind (or Next.js if deploying on Vercel)
-* **Game Engine**: [Phaser.js](https://phaser.io) (easy to generate code + works in browser)
-* **Editor**: Monaco Editor (for live code editing, like V0.dev)
-* **LLM**: GPT-4o (via OpenAI API for prompt → code gen)
-* **Hosting**: Vercel (1-click deployment for demos)
-
-### 📚 2. Learn Phaser.js Basics
-
-Spend 3–5 days building:
-
-* A platformer (run, jump, gravity)
-* Enemy AI (simple patrol)
-* Game scene switching
-  Resources:
-* [Phaser 3 Docs](https://photonstorm.github.io/phaser3-docs/)
-* [Zenva Phaser Course](https://academy.zenva.com/product/the-complete-phaser-game-development-course/)
-* [Examples](https://phaser.io/examples)
-
-### ✍️ 3. Design Prompt Schema
-
-Build a simple structure that LLMs can easily map to:
-
-```json
-{
-  "genre": "platformer",
-  "playerAbilities": ["double jump", "dash"],
-  "enemies": ["slimes", "spike traps"],
-  "goal": "reach the exit portal",
-  "theme": "lava cave"
-}
-```
+## ⚡ DAILY ROUTINE (NON-NEGOTIABLE)
+- **6-8 hours coding** (except today: 3-4 hours)
+- **45-90 min targeted learning** (while coding, not separate)
+- **30 min outreach** (DMs, replies, community posts)
+- **10 min build in public** (progress post + engage)
+- **ZERO time on**: extensive testing, polish, perfectionism
 
 ---
 
-## 🔁 PHASE 2 — MVP (Week 3–4)
+## 🗓️ EXECUTION SCHEDULE
 
-### 🤖 4. Prompt → Code System
+### **June 19 (TODAY) - BOOTSTRAP** 
+*3-4 hours | 5PM-9PM*
 
-* Use GPT-4 to convert user prompts into game config JSON.
-* Convert JSON → Phaser code using templates like:
+#### 🔨 CODE (Priority Order)
+1. **Repo Setup** (30 min)
+   - `git init level0-ai`
+   - Next.js + Tailwind boilerplate
+   - Deploy to Vercel immediately
 
-```js
-if (config.playerAbilities.includes("double jump")) {
-    // inject double jump code
-}
-```
+2. **Basic UI** (90 min)
+   - Prompt textarea
+   - "Generate Game" button  
+   - Empty iframe for game preview
+   - Monaco editor placeholder
 
-Use:
+3. **Static Phaser Demo** (60 min)
+   - Basic Phaser scene with colored rectangles
+   - Player movement (WASD)
+   - Show in iframe
 
-* `prompt-to-json`: LLM converts text → structured format
-* `json-to-code`: Custom logic/templates insert features
+#### 📚 LEARN (Built into coding time)
+- Phaser 3 setup docs while coding
+- Next.js iframe integration while building
 
-### 🧪 5. Live Preview + Editor
+#### 📢 BUILD IN PUBLIC (5 min)
+**Tweet**: "Building Level0 - AI that turns text into playable games. 8 days to ship. Day 1 starts now 🎮⚡ #buildinpublic"
 
-* Integrate **Monaco Editor** for viewing/editing generated code.
-* Add preview pane using iframe that runs the code.
-
-Basic UI Layout:
-
-```
-+-----------------------+------------------+
-| Prompt Input          | Game Preview     |
-| Generated Code (editable)               |
-+-----------------------+------------------+
-```
-
-### 🖼️ 6. Asset Handling (MVP)
-
-* Use built-in shapes (e.g., colored boxes, circles) for now.
-* Later integrate:
-
-  * OpenArt or Lexica for sprites
-  * Simple pixel art generation (e.g., Replicate API or SDXL)
+#### 💬 OUTREACH (15 min)
+- Follow 20 indie hackers, AI builders, game devs
+- Set up Twitter lists: "GameDev", "AI Builders", "Indie Hackers"
 
 ---
 
-## 🚀 PHASE 3 — Launch & Polish (Week 5+)
+### **June 20 - GAME ENGINE CORE**
+*6-8 hours*
 
-### 🧼 7. Error Handling + Game Logic Robustness
+#### 🔨 CODE (Priority Order)
+1. **Player Physics** (2h)
+   - Gravity + jump
+   - Platform collision
+   - Basic movement controls
 
-* Add fallback handling if code generation fails
-* Catch infinite loops, crashes, or nulls in generated code
+2. **Dynamic Game Generation** (3h)
+   - `generateGame(config)` function
+   - Pass props to Phaser scene
+   - Reset game between generations
 
-### 🗃️ 8. Game Library
+3. **Code Display** (1h)
+   - Show generated Phaser code in Monaco
+   - Syntax highlighting
 
-* Save and display past generated games
-* “Remix this game” feature
-* Shareable game links
+#### 📚 LEARN (Built into coding)
+- Phaser Physics while implementing
+- React-Phaser integration patterns
 
----
+#### 📢 BUILD IN PUBLIC (10 min)
+**Post**: GIF of working platformer + "Day 1: Physics ✅. Tomorrow: AI generates this"
+**Engage**: Reply to 5 comments on yesterday's post
 
-## 🔊 OUTREACH STRATEGY
+#### 💬 OUTREACH (30 min)
+- DM 5 indie game devs: "Building AI game generator, would love your thoughts"
+- Join 3 game dev Discord servers
+- Comment on 5 relevant posts with valuable insights
 
-### 🧠 Positioning
-
-**Narrative**:
-
-> “V0.dev revolutionized UI. I'm doing the same for game development — turning words into playable games.”
-
-### 💬 1. Build in Public (Twitter + LinkedIn)
-
-* Share updates every 2–3 days
-* Hooks like:
-
-  * “I just typed this… and got a playable game.”
-  * “What if building a game was as easy as writing a sentence?”
-  * “Turning prompts into platformers — Day 7 of building V0 for games.”
-
-### 💼 2. DM Outreach to Gamedev and AI Creators
-
-* Indie gamedevs on Twitter
-* AI tooling builders
-* V0.dev team members (for advice)
-* Post on: IndieHackers, Hacker News, r/gamedev
-
-Sample DM:
-
-> Hey \[name], I’m building a V0-style tool for games — type a prompt like “platformer with lava and a boss” and it generates a playable scene. Would love your feedback or thoughts!
-
-### 🌐 3. Landing Page
-
-* One-pager with:
-
-  * Input → Output example
-  * “Coming soon” signup
-  * Shareable demos
-    Tools: Framer, Typedream, or build with Next.js
+#### 🎯 RESOURCES TO CONSUME
+- [Phaser 3 Examples](https://phaser.io/examples) - Bookmark, reference while coding
+- [React-Phaser Integration Guide](https://blog.ourcade.co/posts/2020/phaser-3-react-typescript/) - 15 min read
 
 ---
 
-## 📚 LEARNING PLAN (IN PARALLEL)
+### **June 21 - AI BRAIN**
+*6-8 hours*
 
-### 🔧 Phaser/Game Dev
+#### 🔨 CODE (Priority Order)
+1. **Game Schema** (1h)
+   ```json
+   {
+     "theme": "lava|ice|forest|space",
+     "playerAbilities": ["jump", "doubleJump", "dash"],
+     "enemies": ["spike", "slime", "shooter"],
+     "platforms": {"count": 5, "moving": false},
+     "goal": "portal|survival|collectible"
+   }
+   ```
 
-* Build 3–5 small games manually
-* Understand how levels, collisions, and physics work
-* Learn how game code is modularized
+2. **OpenAI Integration** (4h)
+   - Function calling setup
+   - Prompt engineering for reliable JSON
+   - Error handling + retry logic
+   - Test 20+ prompts
 
-### 🧠 Prompt Engineering
+3. **Config Processor** (2h)
+   - Validate JSON output
+   - Fill missing defaults
+   - Convert to Phaser-ready format
 
-* Study tools like V0.dev and Replit Ghostwriter
-* Learn structured prompting (few-shot, schema-first)
-* Practice with GPT-4 playground
+#### 📚 LEARN (Built into coding)
+- OpenAI Function Calling docs
+- Few-shot prompting while testing
 
-### 📺 Content to Follow
+#### 📢 BUILD IN PUBLIC (10 min)  
+**Post**: Screenshot: prompt → JSON config + "The AI gets it 🧠"
+**Engage**: Share in 2 AI communities
 
-* [Thomas Brush](https://www.youtube.com/user/thomasmbrush) — indie gamedev
-* [Yannic Kilcher](https://www.youtube.com/c/YannicKilcher) — for LLM breakdowns
-* [Fireship](https://www.youtube.com/c/Fireship) — great for tech intros
-* OpenAI Discord, r/gamedev, and Replit’s AI communities
+#### 💬 OUTREACH (30 min)
+- DM @OpenAI DevRel team with progress
+- DM 5 AI tool builders
+- Comment on OpenAI API discussions
+
+#### 🎯 RESOURCES TO CONSUME
+- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling)
+- [Few-Shot Prompting Examples](https://www.promptingguide.ai/techniques/fewshot)
+- Watch: "Building with OpenAI API" - Fireship (8 min)
 
 ---
 
-## 🔥 BONUS IDEAS (Post-MVP)
+### **June 22 - CODE GENERATOR**
+*6-8 hours*
 
-* 🎨 Add sprite/image generation for characters
-* 🕹️ Add support for turn-based or top-down genres
-* 🎮 WebSocket multiplayer generator
-* 🧠 Add "Explain how this game works" using AI
+#### 🔨 CODE (Priority Order)
+1. **Modular Code Gen** (4h)
+   - Template-based Phaser code generation
+   - Inject abilities: `if (doubleJump) { /* code */ }`
+   - Inject enemies: `spawnSlime()`, `spawnSpike()`
+   - Theme variations (colors, backgrounds)
+
+2. **Dynamic Execution** (2h)
+   - Eval generated code safely in iframe
+   - Handle execution errors gracefully
+   - Reset between generations
+
+3. **Code Preview** (1h)
+   - Display in Monaco with formatting
+   - Copy-to-clipboard button
+
+#### 📚 LEARN (Built into coding)
+- JavaScript eval security patterns
+- Phaser Groups and Factories
+
+#### 📢 BUILD IN PUBLIC (10 min)
+**Post**: "Config → Code → Game pipeline working! 🔥" + screen recording
+**Engage**: Tag @PhaserJS in the post
+
+#### 💬 OUTREACH (30 min)
+- DM Phaser community leaders
+- Share in r/gamedev
+- DM V0.dev team comparing approaches
+
+#### 🎯 RESOURCES TO CONSUME
+- [Safe JavaScript Eval Patterns](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+- [Phaser Groups Tutorial](https://phaser.io/tutorials/making-your-first-phaser-3-game/part9)
+- Skim: V0.dev code generation patterns
 
 ---
 
-## ✅ Summary
+### **June 23 - FULL PIPELINE**
+*6-8 hours*
 
-### Build Timeline:
+#### 🔨 CODE (Priority Order)
+1. **End-to-End Flow** (3h)
+   - Prompt → OpenAI → JSON → Code → Rendered Game
+   - Loading states (simple spinner)
+   - Generate/Regenerate buttons
 
-| Week | Focus                              |
-| ---- | ---------------------------------- |
-| 1    | Phaser + basic editor setup        |
-| 2    | Prompt parser + template builder   |
-| 3    | Code gen to Phaser output          |
-| 4    | Game preview UI + bug fixes        |
-| 5+   | Outreach + polish + asset pipeline |
+2. **Game Rendering** (2h)
+   - Inject code into iframe seamlessly  
+   - Handle game lifecycle
+   - Basic error messaging
+
+3. **Core UX** (2h)
+   - Smooth transitions
+   - Prompt examples dropdown
+   - Clear current game button
+
+#### 📚 LEARN (Built into coding)
+- Iframe sandboxing and communication
+- Async/await error handling patterns
+
+#### 📢 BUILD IN PUBLIC (10 min)
+**Post**: Full demo video: "Type → Generate → Play in 10 seconds" 
+**Engage**: Ask community: "What game would you generate first?"
+
+#### 💬 OUTREACH (30 min)
+- DM 10 people with working demo link
+- Post in 3 relevant Discord servers
+- Reply to comments with demo links
+
+#### 🎯 RESOURCES TO CONSUME
+- [Iframe Security Best Practices](https://web.dev/sandboxed-iframes/)
+- Watch: "Dynamic Content Loading" - Web Dev Simplified (12 min)
 
 ---
 
-## Want This as a Notion Page or PDF?
+### **June 24 - GAME COMPLEXITY**
+*6-8 hours*
 
-I can generate a clean, trackable Notion doc or downloadable roadmap — want me to?
+#### 🔨 CODE (Priority Order)
+1. **Advanced Player Abilities** (3h)
+   - Double jump mechanics
+   - Dash/sprint system  
+   - Wall jump (if time allows)
+
+2. **Enemy Behaviors** (2h)
+   - Moving platforms
+   - Patrolling enemies
+   - Simple shooting enemies
+
+3. **Win Conditions** (2h)
+   - Portal/exit mechanics
+   - Collectible items
+   - Timer-based challenges
+
+#### 📚 LEARN (Built into coding)
+- Phaser Tweens and advanced physics
+- Game state management patterns
+
+#### 📢 BUILD IN PUBLIC (10 min)
+**Post**: "Now generating complex games with multiple mechanics 🎯" + examples
+**Engage**: Share in indie game communities
+
+#### 💬 OUTREACH (30 min)
+- DM game streamers for potential demo
+- Share with indie game dev communities
+- Connect with Phaser plugin developers
+
+#### 🎯 RESOURCES TO CONSUME
+- [Phaser Tweens Documentation](https://newdocs.phaser.io/docs/3.80.0/Phaser.Tweens)
+- [Advanced Phaser Physics](https://phaser.io/news/2018/09/phaser-matter-physics-tutorial)
+
+---
+
+### **June 25 - SHARING & PERSISTENCE**
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+1. **URL Sharing** (3h)
+   - Encode prompt in URL params
+   - "Share this game" button
+   - Social media meta tags
+
+2. **Local Persistence** (2h)
+   - Save last 5 prompts in localStorage
+   - "Recent prompts" dropdown
+   - Restore on page reload
+
+3. **Prompt Gallery** (2h)
+   - Curated example prompts
+   - Categories: platformer, shooter, puzzle
+   - "Try random prompt" button
+
+#### 📚 LEARN (Built into coding)
+- URL encoding/decoding
+- localStorage best practices
+
+#### 📢 BUILD IN PUBLIC (10 min)
+**Post**: "Share your AI games with one click 🔗" + shareable examples
+**Engage**: Ask followers to share their generated games
+
+#### 💬 OUTREACH (30 min)
+- DM 15 people with shareable demo links
+- Ask for feedback on game examples
+- Share in maker communities
+
+#### 🎯 RESOURCES TO CONSUME
+- [URL Search Params API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
+- [localStorage Performance Tips](https://web.dev/storage-for-the-web/)
+
+---
+
+### **June 26 - LAUNCH PREP**
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+1. **Stability** (2h)
+   - Handle OpenAI API failures gracefully
+   - Fallback game templates
+   - Basic input validation
+
+2. **Launch Assets** (3h)
+   - Record 60-second demo video
+   - Take high-quality screenshots
+   - Write copy for social posts
+   - Prepare launch sequence
+
+3. **Performance** (2h)
+   - Optimize bundle size
+   - Cache generated code
+   - Minimize API calls
+
+#### 📚 LEARN (Built into prep)
+- Product launch best practices
+- Social media optimization
+
+#### 📢 BUILD IN PUBLIC (15 min)
+**Post**: "Launch day tomorrow! 8-day build journey recap 🧵" + progress thread
+**Engage**: Build anticipation, ask for launch day support
+
+#### 💬 OUTREACH (45 min)
+- Pre-launch DM blast to entire network
+- Prepare Product Hunt submission
+- Schedule launch posts across platforms
+
+#### 🎯 RESOURCES TO CONSUME
+- [Product Hunt Launch Guide](https://blog.producthunt.com/how-to-launch-on-product-hunt-7c1843e06399)
+- [Viral Launch Strategies](https://www.indiehackers.com/post/how-i-got-10-000-users-in-24-hours-4a9c0e6b4f)
+
+---
+
+### **June 27 - LAUNCH DAY**
+*4-6 hours*
+
+#### 🔨 FINAL PUSH (2h)
+- Last-minute testing
+- Deploy final version
+- Set up analytics tracking
+
+#### 📢 LAUNCH SEQUENCE (3h)
+- **8AM**: Twitter announcement thread
+- **9AM**: LinkedIn post with story
+- **10AM**: Product Hunt submission
+- **12PM**: Reddit r/gamedev, r/MachineLearning
+- **2PM**: Discord communities (10+)
+- **4PM**: Indie Hackers showcase
+- **6PM**: Follow-up engagement
+
+#### 💬 OUTREACH (All Day)
+- Respond to every comment/mention
+- DM personal network with launch news
+- Engage with early users in real-time
+
+---
+
+## 🎯 COMPLETE RESOURCE ARSENAL
+
+### 📚 LEARNING RESOURCES
+
+#### **Phaser Development**
+- [Phaser 3 Documentation](https://newdocs.phaser.io/)
+- [Phaser Examples](https://phaser.io/examples) - Bookmark for reference
+- [Ourcade Phaser Tutorials](https://blog.ourcade.co/) - Advanced patterns
+- [Phaser Discord](https://discord.gg/phaser) - Community support
+
+#### **AI Integration**
+- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Function Calling Guide](https://platform.openai.com/docs/guides/function-calling)
+- [Prompt Engineering Guide](https://www.promptingguide.ai/)
+- [LangChain Expression Language](https://python.langchain.com/docs/expression_language/) - Advanced prompting
+
+#### **Code Generation & Dynamic Execution**
+- [MDN eval() Security](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+- [Safe Code Execution Patterns](https://blog.risingstack.com/writing-a-javascript-framework-sandboxed-code-evaluation/)
+- [Iframe Sandboxing](https://web.dev/sandboxed-iframes/)
+- [Blob URLs for Dynamic Content](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+
+#### **React & Next.js**
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Patterns](https://reactpatterns.com/) - Best practices
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Monaco Editor Integration](https://microsoft.github.io/monaco-editor/)
+
+### 🎥 VIDEO CONTENT (Watch While Coding)
+
+#### **Day 20 (Phaser Basics)**
+- [Fireship: Phaser in 100 Seconds](https://www.youtube.com/watch?v=frRWKxB9Hm0)
+- [Zenva: Phaser 3 Platformer](https://www.youtube.com/watch?v=7cpZ6k7JPE0) (30 min)
+
+#### **Day 21 (AI Integration)**
+- [OpenAI DevDay Highlights](https://www.youtube.com/watch?v=U9mJuUkhUzk) (20 min)
+- [Building with GPT-4 Function Calling](https://www.youtube.com/watch?v=0lOSvOoF2to)
+
+#### **Day 22 (Code Generation)**
+- [Dynamic JavaScript Execution](https://www.youtube.com/watch?v=J
