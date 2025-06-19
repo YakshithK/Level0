@@ -14,14 +14,24 @@ const BetaSection = () => {
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("You're on the list! We'll be in touch soon.", {
-        description: "Check your email for a confirmation."
-      });
-      setEmail("");
-      setIsSubmitting(false);
-    }, 1000);
+    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdLrssp64lHvjYUPyyMOuTRkvDvDSIvBx_pXXiy_iO34Pz-mw/formResponse"
+    const formData = new FormData()
+    formData.append("entry.1036261049", email)
+
+    try {
+      await fetch(formUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+      })
+
+      toast.success("You're on the list! We'll be in touch soon.")
+      setEmail("")
+    } catch (err) {
+      toast.error("Something went wrong, Please Try again")
+    } finally {
+      setIsSubmitting(false)
+    }
   };
 
   return (
