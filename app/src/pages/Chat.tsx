@@ -1,9 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../App.css'
 import { PhaserGame } from '../components/PhaserGames';
+import Editor from "@monaco-editor/react"
+import { generatePhaserCode } from '@/utils/generateGame';
+
+const CONFIGS_LENGTH = 2
 
 export default function Chat() {
   const [prompt, setPrompt] = useState('');
+  const [configIndex, setConfigIndex] = useState(0);
+  const [phaserCode, setPhaserCode] = useState("")
+  const [showCode, setShowCode] = useState(false);
+
+  useEffect(() => {
+    setPhaserCode(generatePhaserCode(configIndex));
+  }, [configIndex])
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newIndex = (configIndex + 1) % CONFIGS_LENGTH;
+    setConfigIndex(newIndex);
+    setPhaserCode(generatePhaserCode(newIndex));
+  };
 
   return (
     <div className="min-h-screen bg-[#181c24] text-[#e5e7ef] flex items-center justify-center">
@@ -20,7 +38,7 @@ export default function Chat() {
             </div>
             {/* Chat Input Area */}
             <div className="p-2 border-t border-[#2c2f36] bg-[#2c2f36]">
-              <form className="flex gap-1" onSubmit={e => e.preventDefault()}>
+              <form className="flex gap-1" onSubmit={handleSend}>
                 <textarea
                   className="flex-1 border rounded p-1 bg-[#23272f] text-[#e5e7ef] min-h-[32px] resize-y text-sm"
                   value={prompt}
@@ -35,10 +53,38 @@ export default function Chat() {
           </div>
           {/* Right Side: Preview */}
           <div className="flex flex-col w-1/2 min-w-0 h-full">
+            <div className="flex flex-row items-center mb-2">
+              <button
+                className={`mr-2 px-4 py-1 rounded font-bold ${!showCode ? 'bg-[#00ffff] text-[#181c24]' : 'bg-[#23272f] text-[#e5e7ef] border border-[#00ffff]'}`}
+                onClick={() => setShowCode(false)}
+              >
+                Game
+              </button>
+              <button
+                className={`px-4 py-1 rounded font-bold ${showCode ? 'bg-[#00ffff] text-[#181c24]' : 'bg-[#23272f] text-[#e5e7ef] border border-[#00ffff]'}`}
+                onClick={() => setShowCode(true)}
+              >
+                Code
+              </button>
+            </div>
+            {showCode ? (
+            <div className="flex-1 p-2 flex flex-col min-h-0 min-w-0">
+              <span className="block mb-1 font-semibold text-sm">Code Editor</span>
+              <Editor
+                height="100%"
+                language='javascript'
+                value={phaserCode}
+                onChange={(value) => {
+                  setPhaserCode(value || "");
+                }}
+              />
+            </div>
+            ) : (
             <div className="flex-1 p-2 flex flex-col min-h-0 min-w-0">
               <span className="block mb-1 font-semibold text-sm">Game Preview</span>
-              <PhaserGame />
+              <PhaserGame configIndex={configIndex} code={phaserCode}/>
             </div>
+            )}
           </div>
         </div>
       </div>
