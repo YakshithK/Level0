@@ -1,6 +1,6 @@
-import React from "react";
 import { useState } from 'react';
 import '../App.css'
+import { PhaserGame } from '../components/PhaserGames';
 
 export default function Chat() {
   const [prompt, setPrompt] = useState('');
@@ -37,11 +37,7 @@ export default function Chat() {
           <div className="flex flex-col w-1/2 min-w-0 h-full">
             <div className="flex-1 p-2 flex flex-col min-h-0 min-w-0">
               <span className="block mb-1 font-semibold text-sm">Game Preview</span>
-              <iframe
-                title="Game Preview"
-                className="w-full flex-1 border rounded bg-[#2c2f36]"
-                src="about:blank"
-              />
+              <PhaserGame />
             </div>
           </div>
         </div>
