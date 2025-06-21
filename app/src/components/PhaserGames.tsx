@@ -1,61 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
-import { generatePhaserCode } from "@/utils/generateGame";
-
-const configs = [
-  {
-    backgroundColor: "#1e1e2f",
-    gravity: { y: 600 },
-    player: {
-      x: 100,
-      y: 100,
-      size: 30,
-      color: 0x00ffcc,
-      bounce: 0.3,
-    },
-    platforms: [
-      { x: 200, y: 500, width: 400, height: 40, color: 0xff0000 },
-      { x: 600, y: 400, width: 200, height: 30, color: 0x00ff00 },
-      { x: 400, y: 300, width: 300, height: 20, color: 0x0000ff },
-      { x: 100, y: 200, width: 250, height: 20, color: 0xffff00 },
-    ],
-    controls: {
-      left: "LEFT",
-      right: "RIGHT",
-      jump: "SPACE",
-    }
-  },
-  {
-    backgroundColor: "#1e1e2f",
-    gravity: { y: 600 },
-    player: {
-      x: 100,
-      y: 100,
-      size: 30,
-      color: 0x00ffcc,
-      bounce: 0.3,
-    },
-    platforms: [
-      { x: 200, y: 500, width: 400, height: 40, color: 0xff0000 },
-      { x: 600, y: 400, width: 200, height: 30, color: 0x00ff00 },
-      { x: 400, y: 300, width: 300, height: 20, color: 0x0000ff },
-      { x: 100, y: 200, width: 250, height: 20, color: 0xffff00 },
-    ],
-    controls: {
-      left: "LEFT",
-      right: "RIGHT",
-      jump: "SPACE",
-    }
-  }
-]
+import { 
+  createDynamicGame, 
+  validateUserCode, 
+  DEFAULT_SCENE_BOILERPLATE,
+  GAME_CONFIG 
+} from "@/utils/generateGame";
 
 export const PhaserGame: React.FC<{
   configIndex: number;
   code: string;
 }> = ({ configIndex, code }) => {
   const gameRef = useRef<HTMLDivElement>(null);
+  const gameInstance = useRef<Phaser.Game | null>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
+  const [error, setError] = useState<string | null>(null);
 
+  // Handle size changes
   useEffect(() => {
     if (gameRef.current) {
       const { width, height } = gameRef.current.getBoundingClientRect();
@@ -66,11 +27,15 @@ export const PhaserGame: React.FC<{
     }
   }, []);
 
+  // Destroy the current game instance
   const destroyGame = () => {
-    if (window && (window as any).__phaserGame) {
-      (window as any).__phaserGame.destroy(true);
-      (window as any).__phaserGame = null;
+    if (gameInstance.current) {
+      console.log('[PhaserGame] Destroying game instance...');
+      gameInstance.current.destroy(true);
+      gameInstance.current = null;
     }
+    
+    // Clean up DOM
     if (gameRef.current) {
       while (gameRef.current.firstChild) {
         gameRef.current.removeChild(gameRef.current.firstChild);
@@ -78,42 +43,76 @@ export const PhaserGame: React.FC<{
     }
   };
 
+  // Create and run the game with user code
   useEffect(() => {
+    console.log('[PhaserGame] Code or config changed, recreating game...');
+    
+    // Clear previous error
+    setError(null);
+    
+    // Destroy existing game
     destroyGame();
+    
     if (size.width > 0 && size.height > 0 && gameRef.current) {
-      let codeToRun = code;
-      const config = configs[configIndex];
-      if (!code || !code.includes('parent: gameRef')) {
-        codeToRun = generatePhaserCode(config);
-      }
-  
       try {
-        (window as any).__phaserGame = new Function('Phaser', 'gameRef', codeToRun)(Phaser, gameRef.current);
-  
-        // Focus the latest canvas reliably
+        // Validate user code first
+        const validation = validateUserCode(code || DEFAULT_SCENE_BOILERPLATE);
+        if (!validation.isValid) {
+          setError(`Code validation failed:\n${validation.errors.join('\n')}`);
+          return;
+        }
+
+        // Use the code provided or fall back to default boilerplate
+        const codeToRun = code || DEFAULT_SCENE_BOILERPLATE;
+        
+        console.log('[PhaserGame] Creating dynamic game with code:', codeToRun.substring(0, 100) + '...');
+        
+        // Create the game with the dynamic scene
+        gameInstance.current = createDynamicGame(gameRef.current, codeToRun, GAME_CONFIG, Phaser);
+        
+        // Focus the canvas after creation
         setTimeout(() => {
-          const canvases = gameRef.current?.querySelectorAll('canvas');
-          const canvas = canvases?.[canvases.length - 1]; // last one = newest
+          const canvas = gameRef.current?.querySelector('canvas');
           if (canvas) {
             canvas.setAttribute('tabindex', '0');
             canvas.focus();
-            console.log('[REACT] Focused new Phaser canvas');
-          } else {
-            console.warn('[REACT] No canvas found in gameRef');
+            console.log('[PhaserGame] Focused new Phaser canvas');
           }
-        }, 250); // Slight delay to let Phaser fully attach
-      } catch (e) {
-        console.log(e);
+        }, 100);
+        
+        console.log('[PhaserGame] Game created successfully');
+        
+      } catch (error) {
+        console.error('[PhaserGame] Error creating game:', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setError(`Game creation failed: ${errorMessage}\n\nCheck the browser console for more details.`);
       }
     }
-  
+
+    // Cleanup function
     return () => {
       destroyGame();
     };
   }, [code, configIndex, size.width, size.height]);
-  
 
   return (
-    <div ref={gameRef} style={{ width: "100%", height: "100%" }} />
+    <div className="relative w-full h-full">
+      <div ref={gameRef} style={{ width: "100%", height: "100%" }} />
+      
+      {/* Error display */}
+      {error && (
+        <div className="absolute top-0 left-0 right-0 bg-red-900 text-white p-4 text-sm font-mono whitespace-pre-wrap z-10">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">{error}</div>
+            <button 
+              onClick={() => setError(null)}
+              className="ml-4 text-white hover:text-gray-300"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
