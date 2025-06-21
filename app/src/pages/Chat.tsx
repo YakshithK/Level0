@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '../App.css'
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react"
@@ -6,25 +6,102 @@ import { generatePhaserCode } from '@/utils/generateGame';
 
 const CONFIGS_LENGTH = 2
 
+const configs = [
+  {
+    backgroundColor: "#1e1e2f",
+    gravity: { y: 600 },
+    player: {
+      x: 100,
+      y: 100,
+      size: 30,
+      color: 0x00ffcc,
+      bounce: 0.3,
+    },
+    platforms: [
+      { x: 200, y: 500, width: 400, height: 40, color: 0xff0000 },
+      { x: 600, y: 400, width: 200, height: 30, color: 0x00ff00 },
+      { x: 400, y: 300, width: 300, height: 20, color: 0x0000ff },
+      { x: 100, y: 200, width: 250, height: 20, color: 0xffff00 },
+    ],
+    controls: {
+      left: "LEFT",
+      right: "RIGHT",
+      jump: "SPACE",
+    }
+  },
+  {
+    backgroundColor: "#1e1e2f",
+    gravity: { y: 600 },
+    player: {
+      x: 100,
+      y: 100,
+      size: 30,
+      color: 0x00ffcc,
+      bounce: 0.3,
+    },
+    platforms: [
+      { x: 200, y: 500, width: 400, height: 40, color: 0xff0000 },
+      { x: 600, y: 400, width: 200, height: 30, color: 0x00ff00 },
+      { x: 400, y: 300, width: 300, height: 20, color: 0x0000ff },
+      { x: 100, y: 200, width: 250, height: 20, color: 0xffff00 },
+    ],
+    controls: {
+      left: "LEFT",
+      right: "RIGHT",
+      jump: "SPACE",
+    }
+  }
+]
+
 export default function Chat() {
   const [prompt, setPrompt] = useState('');
   const [configIndex, setConfigIndex] = useState(0);
   const [phaserCode, setPhaserCode] = useState("")
   const [showCode, setShowCode] = useState(false);
 
+  // Add global keydown listener for debugging
   useEffect(() => {
-    setPhaserCode(generatePhaserCode(configIndex));
+    const handler = (e) => {
+      console.log('[REACT GLOBAL] keydown:', e.code, e.key, e.keyCode);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  // Helper to focus the Phaser canvas
+  function focusPhaserCanvas() {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.setAttribute('tabindex', '0');
+      canvas.focus();
+    }
+  }
+
+  // Focus the Phaser canvas on mount and on every click
+  useEffect(() => {
+    focusPhaserCanvas();
+    window.addEventListener('click', focusPhaserCanvas);
+    return () => window.removeEventListener('click', focusPhaserCanvas);
+  }, []);
+
+  useEffect(() => {
+    setPhaserCode(generatePhaserCode(configs[configIndex]));
   }, [configIndex])
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const newIndex = (configIndex + 1) % CONFIGS_LENGTH;
     setConfigIndex(newIndex);
-    setPhaserCode(generatePhaserCode(newIndex));
+    setPhaserCode(generatePhaserCode(configs[newIndex]));
   };
 
   return (
-    <div className="min-h-screen bg-[#181c24] text-[#e5e7ef] flex items-center justify-center">
+    <div
+      className="min-h-screen bg-[#181c24] text-[#e5e7ef] flex items-center justify-center"
+      tabIndex={0}
+      style={{ outline: 'none' }}
+      onClick={e => e.currentTarget.focus()}
+    >
       <div className="w-full max-w-7xl mx-auto my-2 rounded-xl shadow-lg p-4 bg-[#23272f] flex flex-col h-[80vh]">
         <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden w-full h-full">
           {/* Left Side: Chat */}
