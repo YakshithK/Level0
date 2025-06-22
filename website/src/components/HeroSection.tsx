@@ -9,11 +9,6 @@ const HeroSection = () => {
       {/* Header with Logo */}
       <header className="relative z-20 flex justify-between items-center p-6 sm:p-8">
         <Logo />
-        <div className="flex gap-4">
-          <Button variant="outline" size="sm" className="border-neon-cyan/50 text-neon-cyan hover:bg-neon-cyan/10">
-            Sign in
-          </Button>
-        </div>
       </header>
 
       {/* Main Hero Content */}
