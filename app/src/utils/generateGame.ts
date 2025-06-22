@@ -1,4 +1,28 @@
-// TypeScript interfaces for better type safety
+// Add these imports at the top
+import { GameSchemeProcessor } from './gameSchemeProcessor';
+import { GameSchema } from '../types/gameSchema';
+
+// Add these functions to your existing file
+export function createGameFromSchema(schema: GameSchema): {
+  config: GameConfig;
+  code: string;
+} {
+  const processor = new GameSchemeProcessor(schema);
+  return {
+    config: processor.toGameConfig(),
+    code: processor.generatePhaserCode()
+  };
+}
+
+export function createDynamicGameFromSchema(
+  parentElement: HTMLElement,
+  schema: GameSchema,
+  Phaser: any
+): Phaser.Game {
+  const { config, code } = createGameFromSchema(schema);
+  return createDynamicGame(parentElement, code, config, Phaser);
+}
+
 export interface GameConfig {
   backgroundColor: string;
   gravity: { x: number; y: number };
@@ -200,14 +224,27 @@ function wrapMethodsInClass(userCode: string): string {
 export function createGameConfig(
   parentElement: HTMLElement, 
   sceneClass: any, 
-  config: GameConfig = GAME_CONFIG
+  config: GameConfig = GAME_CONFIG,
+  width?: number,
+  height?: number
 ): Phaser.Types.Core.GameConfig {
+  // Get the actual container size
+  const containerRect = parentElement.getBoundingClientRect();
+  const gameWidth = width || containerRect.width || 800;
+  const gameHeight = height || containerRect.height || 600;
+  
   return {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: gameWidth,
+    height: gameHeight,
     backgroundColor: config.backgroundColor,
     parent: parentElement,
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: gameWidth,
+      height: gameHeight
+    },
     input: {
       keyboard: true,
       mouse: true,
@@ -267,14 +304,16 @@ export function createDynamicGame(
   parentElement: HTMLElement, 
   userCode: string, 
   config: GameConfig = GAME_CONFIG,
-  Phaser: any
+  Phaser: any,
+  width?: number,
+  height?: number
 ): Phaser.Game {
   try {
     // Compile the user code into a Scene class
     const SceneClass = compileSceneClass(userCode, Phaser);
     
-    // Create game config with the dynamic scene
-    const gameConfig = createGameConfig(parentElement, SceneClass, config);
+    // Create game config with the dynamic scene and proper sizing
+    const gameConfig = createGameConfig(parentElement, SceneClass, config, width, height);
     
     // Create and return the game
     return new Phaser.Game(gameConfig);

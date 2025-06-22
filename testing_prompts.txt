@@ -1,0 +1,39 @@
+Here are some great prompts to test your AI game generation system:
+
+## **Simple Platformers**
+1. A simple lava platformer with jumping and spikes
+2. An ice world with double jump and sliding enemies
+3. A forest platformer with floating platforms and slime enemies
+
+## **Advanced Mechanics**
+4. A space shooter with moving platforms and shooting enemies
+5. A desert platformer with wall jumping and patrol enemies
+6. An underwater game with grappling hooks and boss battles
+
+## **Specific Themes**
+7. A lava world with dash ability and breakable platforms
+8. An ice castle with double jump and survival goal
+9. A space station with shooting ability and collectible items
+
+## **Complex Scenarios**
+10. A challenging platformer with multiple abilities: jump, dash, and wall jump
+11. A boss battle arena with lava theme and time-based goal
+12. A survival game in space with moving platforms and shooter enemies
+
+## **Edge Cases to Test**
+13. A simple game with just jumping
+14. A complex game with all abilities and all enemy types
+15. A peaceful forest game with no enemies, just platforming
+
+## **Expected Results:**
+- **Simple prompts** should generate basic schemas with 1-2 abilities and 1-2 enemy types
+- **Complex prompts** should generate schemas with multiple abilities and varied enemies
+- **Theme-specific prompts** should match the theme with appropriate colors and effects
+
+## **What to Look For:**
+1. **Schema Generation**: Check if the JSON schema appears correctly
+2. **Code Generation**: Verify that Phaser code is generated from the schema
+3. **Theme Matching**: Ensure the generated code uses appropriate colors for the theme
+4. **Error Handling**: Test with invalid prompts to see error messages
+
+Try these prompts in order from simple to complex to see how well the AI handles different levels of complexity!

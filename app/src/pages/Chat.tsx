@@ -8,6 +8,11 @@ import {
   GAME_CONFIG 
 } from '@/utils/generateGame';
 
+import { openAIService } from '../services/openaiService';
+import { createGameFromSchema } from '../utils/generateGame';
+import { GameSchema } from '../types/gameSchema';
+
+
 // Enhanced boilerplate with working game example
 const ENHANCED_BOILERPLATE = `// Edit the create() and update() methods below
 // You have access to 'this' which is your Phaser.Scene instance
@@ -84,6 +89,43 @@ export default function Chat() {
   const [phaserCode, setPhaserCode] = useState(ENHANCED_BOILERPLATE);
   const [showCode, setShowCode] = useState(true); // Start with code editor visible
   const [isRunning, setIsRunning] = useState(false);
+  // Add these state variables in your component
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentSchema, setCurrentSchema] = useState<GameSchema | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Add this function to handle AI generation
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const response = await openAIService.generateGameSchema(aiPrompt);
+      
+      if (response.success && response.gameSchema) {
+        setCurrentSchema(response.gameSchema);
+        
+        // Generate the game from the schema
+        const { config, code } = createGameFromSchema(response.gameSchema);
+        
+        // Update the Phaser code
+        setPhaserCode(code);
+        setIsRunning(false);
+        
+        // Show success message
+        console.log('Generated game schema:', response.gameSchema);
+      } else {
+        setError(response.error || 'Failed to generate game schema');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Initialize with enhanced boilerplate
   useEffect(() => {
@@ -180,7 +222,40 @@ export default function Chat() {
                 </button>
               </div>
             </div>
-            
+            <div className="p-3 border-b border-[#2c2f36] bg-[#2c2f36]">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Describe your game (e.g., 'A lava platformer with double jump and spikes')"
+                  className="flex-1 bg-[#1e1e1e] text-white px-3 py-2 rounded border border-[#444] focus:border-[#00ffff] outline-none"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAIGenerate()}
+                />
+                <button
+                  onClick={handleAIGenerate}
+                  disabled={isGenerating || !aiPrompt.trim()}
+                  className="bg-[#00ff00] text-black px-4 py-2 rounded font-bold hover:bg-[#39ff14] disabled:bg-[#666] disabled:cursor-not-allowed transition-colors"
+                >
+                  {isGenerating ? 'Generating...' : 'AI Generate'}
+                </button>
+              </div>
+              
+              {error && (
+                <div className="mt-2 text-red-400 text-sm">
+                  Error: {error}
+                </div>
+              )}
+              
+              {currentSchema && (
+                <div className="mt-2 p-2 bg-[#1e1e1e] rounded border border-[#444]">
+                  <div className="text-sm font-semibold mb-1">Generated Schema:</div>
+                  <pre className="text-xs text-[#ccc] overflow-auto">
+                    {JSON.stringify(currentSchema, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
             {/* Monaco Editor */}
             <div className="flex-1 min-h-0">
               <Editor
