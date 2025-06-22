@@ -66,19 +66,97 @@ export class GameSchemeProcessor {
 
   private generatePlatforms(themeConfig: any): Array<any> {
     const platforms = [];
-    const { count } = this.scheme.platforms;
+    const { count, moving, type } = this.scheme.platforms;
+    
+    // Generate random but sensible platform positions
+    const platformPositions = this.generateRandomPlatformPositions(count);
     
     for (let i = 0; i < count; i++) {
+      const pos = platformPositions[i];
+      const platformType = type || 'solid';
+      
+      // If moving platforms are enabled, make about half of them moving
+      // Skip the first platform (ground) to ensure player has a stable starting point
+      const isMoving = moving && i > 0 && (i % 2 === 0 || Math.random() < 0.5);
+      
       platforms.push({
-        x: 200 + (i * 150),
-        y: 500 - (i * 80),
-        width: 150 + Math.random() * 100,
+        x: pos.x,
+        y: pos.y,
+        width: pos.width,
         height: 20,
-        color: themeConfig.platformColors[i % themeConfig.platformColors.length]
+        color: themeConfig.platformColors[i % themeConfig.platformColors.length],
+        type: platformType,
+        moving: isMoving,
+        index: i
       });
     }
     
     return platforms;
+  }
+
+  private generateRandomPlatformPositions(count: number): Array<{x: number, y: number, width: number}> {
+    const positions = [];
+    const gameWidth = 800;
+    const gameHeight = 600;
+    const minJumpDistance = 120; // Minimum distance player can jump
+    const maxJumpDistance = 200; // Maximum comfortable jump distance
+    
+    // Start with a ground platform for the player
+    positions.push({
+      x: 100,
+      y: 500,
+      width: 150 + Math.random() * 100
+    });
+    
+    // Generate additional platforms
+    for (let i = 1; i < count; i++) {
+      let attempts = 0;
+      let validPosition = false;
+      let x, y, width;
+      
+      while (!validPosition && attempts < 50) {
+        // Random position within game bounds
+        x = 50 + Math.random() * (gameWidth - 200);
+        y = 200 + Math.random() * (gameHeight - 300); // Keep platforms in playable area
+        width = 100 + Math.random() * 150; // Random width between 100-250
+        
+        // Check if position is valid (reachable from existing platforms)
+        validPosition = this.isPlatformPositionValid(x, y, positions, minJumpDistance, maxJumpDistance);
+        attempts++;
+      }
+      
+      if (validPosition) {
+        positions.push({ x, y, width });
+      } else {
+        // Fallback: place platform near a random existing one
+        const randomExisting = positions[Math.floor(Math.random() * positions.length)];
+        positions.push({
+          x: randomExisting.x + (Math.random() - 0.5) * 200,
+          y: randomExisting.y - 60 - Math.random() * 80,
+          width: 120 + Math.random() * 80
+        });
+      }
+    }
+    
+    return positions;
+  }
+
+  private isPlatformPositionValid(x: number, y: number, existingPositions: Array<{x: number, y: number, width: number}>, minJump: number, maxJump: number): boolean {
+    // Check if platform is reachable from at least one existing platform
+    for (const existing of existingPositions) {
+      const distanceX = Math.abs(x - existing.x);
+      const distanceY = Math.abs(y - existing.y);
+      
+      // Horizontal distance should be within jump range
+      if (distanceX >= minJump && distanceX <= maxJump) {
+        // Vertical distance should be reasonable for jumping
+        if (distanceY >= 40 && distanceY <= 120) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   }
 
   private generateControls(): any {
@@ -142,6 +220,7 @@ export class GameSchemeProcessor {
     
     // Create platforms
     this.platforms = this.physics.add.staticGroup();
+    this.movingPlatforms = this.physics.add.group();
     
     // Add left wall
     const leftWall = this.add.rectangle(10, 300, 20, 600, 0x888888);
@@ -156,18 +235,7 @@ export class GameSchemeProcessor {
     this.physics.add.existing(ground, true);
     this.platforms.add(ground);
     
-    const platform0 = this.add.rectangle(200, 500, 237, 20, 16729344);
-    this.physics.add.existing(platform0, true);
-    this.platforms.add(platform0);
-    const platform1 = this.add.rectangle(350, 420, 163, 20, 16737095);
-    this.physics.add.existing(platform1, true);
-    this.platforms.add(platform1);
-    const platform2 = this.add.rectangle(500, 340, 217, 20, 16729344);
-    this.physics.add.existing(platform2, true);
-    this.platforms.add(platform2);
-    const platform3 = this.add.rectangle(650, 260, 184, 20, 16729344);
-    this.physics.add.existing(platform3, true);
-    this.platforms.add(platform3);
+    ${this.generatePlatformCode()}
     
     // Create enemies
     ${this.generateEnemyCode()}
@@ -180,7 +248,8 @@ export class GameSchemeProcessor {
     ${this.generateGoalCode()}
     
     // Add collisions
-    this.physics.add.collider(this.player, this.platforms);
+    this.physics.add.collider(this.player, this.platforms, this.handlePlatformCollision, null, this);
+    this.physics.add.collider(this.player, this.movingPlatforms, this.handlePlatformCollision, null, this);
     // Add enemy collisions
     this.enemies.forEach(enemy => {
       this.physics.add.collider(this.player, enemy, this.handleEnemyCollision, null, this);
@@ -188,6 +257,16 @@ export class GameSchemeProcessor {
     
     // Add enemy-platform collisions so enemies don't phase through platforms
     this.physics.add.collider(this.enemies, this.platforms);
+    this.physics.add.collider(this.enemies, this.movingPlatforms);
+    
+    // Ensure moving platforms are solid for player collision
+    this.movingPlatforms.children.entries.forEach(platform => {
+      if (platform.type === 'moving') {
+        platform.body.setAllowGravity(false);
+        platform.body.setImmovable(true);
+        platform.body.setCollideWorldBounds(false);
+      }
+    });
     
     ${this.scheme.playerAbilities.includes('shoot') ? `
     // Add projectile collisions
@@ -240,6 +319,7 @@ export class GameSchemeProcessor {
   update() {
     ${this.generateMovementCode()}
     ${this.generateEnemyUpdateCode()}
+    this.updatePlatforms();
     if (!this.debugText) {
       this.debugText = this.add.text(10, 30, '', { color: '#fff' });
     }
@@ -251,31 +331,54 @@ export class GameSchemeProcessor {
 
   private generatePlatformCode(): string {
     const themeConfig = THEME_CONFIGS[this.scheme.theme];
+    const platformData = this.generatePlatforms(themeConfig);
     let code = '';
     
-    for (let i = 0; i < this.scheme.platforms.count; i++) {
-      const color = themeConfig.platformColors[i % themeConfig.platformColors.length];
-      const x = 200 + (i * 150);
-      const y = 500 - (i * 80);
-      const width = 150 + Math.floor(Math.random() * 100);
+    platformData.forEach((platform, i) => {
+      const { x, y, width, height, color, type, moving, index } = platform;
       
-      if (this.scheme.platforms.moving && i % 2 === 0) {
-        // Create moving platform
+      if (type === 'floating') {
+        // Floating platform - no physics body, just visual
         code += `
-    const platform${i} = this.add.rectangle(${x}, ${y}, ${width}, 20, ${color});
-    this.physics.add.existing(platform${i}, true);
-    platform${i}.body.setImmovable(true);
-    platform${i}.body.setVelocityX(50);
-    platform${i}.body.setBounceX(1);
-    this.platforms.add(platform${i});`;
+    const platform${index} = this.add.rectangle(${x}, ${y}, ${width}, ${height}, ${color});
+    platform${index}.setAlpha(0.7); // Semi-transparent
+    platform${index}.type = 'floating';`;
+      } else if (type === 'breakable') {
+        // Breakable platform - disappears when player touches it
+        code += `
+    const platform${index} = this.add.rectangle(${x}, ${y}, ${width}, ${height}, ${color});
+    this.physics.add.existing(platform${index}, true);
+    platform${index}.type = 'breakable';
+    platform${index}.health = 1;
+    this.platforms.add(platform${index});`;
       } else {
-        // Create static platform
-        code += `
-    const platform${i} = this.add.rectangle(${x}, ${y}, ${width}, 20, ${color});
-    this.physics.add.existing(platform${i}, true);
-    this.platforms.add(platform${i});`;
+        // Solid platform - normal physics
+        if (moving) {
+          // Moving platform: use dynamic body
+          code += `
+    const platform${index} = this.add.rectangle(${x}, ${y}, ${width}, ${height}, ${color});
+    this.physics.add.existing(platform${index}, false);
+    platform${index}.body.setAllowGravity(false);
+    platform${index}.body.setVelocityX(0);
+    platform${index}.body.setBounceX(1);
+    platform${index}.body.setCollideWorldBounds(false);
+    platform${index}.type = 'moving';
+    platform${index}.moveDirection = 1;
+    platform${index}.startX = ${x};
+    platform${index}.startY = ${y};
+    platform${index}.moveRange = 200;
+    platform${index}.moveSpeed = 2;
+    this.movingPlatforms.add(platform${index});`;
+        } else {
+          // Static solid platform
+          code += `
+    const platform${index} = this.add.rectangle(${x}, ${y}, ${width}, ${height}, ${color});
+    this.physics.add.existing(platform${index}, true);
+    platform${index}.type = 'solid';
+    this.platforms.add(platform${index});`;
+        }
       }
-    }
+    });
     
     return code;
   }
@@ -286,30 +389,31 @@ export class GameSchemeProcessor {
     let code = 'this.enemies = [];';
     let enemyIndex = 0;
     
+    // Get platform data for enemy placement
+    const themeConfig = THEME_CONFIGS[this.scheme.theme];
+    const platformData = this.generatePlatforms(themeConfig);
+    
     this.scheme.enemies.forEach((enemyType, i) => {
-      const themeConfig = THEME_CONFIGS[this.scheme.theme];
       const color = themeConfig.enemyColors[i % themeConfig.enemyColors.length];
       
       if (enemyType === 'spike' || enemyType === 'slime') {
         // Create multiple spikes/slimes - one per platform
-        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
-          const platformX = 200 + (platformIndex * 150);
-          const platformY = 500 - (platformIndex * 80);
-          const x = platformX + (Math.random() * 100 - 50); // Random position on platform
-          const y = platformY - 20; // Slightly above platform surface
+        for (let platformIndex = 0; platformIndex < platformData.length; platformIndex++) {
+          const platform = platformData[platformIndex];
+          const x = platform.x + (Math.random() * platform.width - platform.width/2); // Random position on platform
+          const y = platform.y - 20; // Slightly above platform surface
           
           code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
           enemyIndex++;
         }
       } else if (enemyType === 'shooter') {
         // Place shooters on platforms instead of ground
-        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
-          const platformX = 200 + (platformIndex * 150);
-          const platformY = 500 - (platformIndex * 80);
-          const x = platformX + (Math.random() * 100 - 50); // Random position on platform
-          const y = platformY - 30; // Above platform surface
+        for (let platformIndex = 0; platformIndex < platformData.length; platformIndex++) {
+          const platform = platformData[platformIndex];
+          const x = platform.x + (Math.random() * platform.width - platform.width/2); // Random position on platform
+          const y = platform.y - 30; // Above platform surface
           
-          code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
+          code += (ENEMY_CODE_SNIPPETS as any)[enemyType].create(enemyIndex, x, y, color);
           enemyIndex++;
         }
       } else if (enemyType === 'boss') {
@@ -327,8 +431,8 @@ export class GameSchemeProcessor {
         const y = 450;
         
         // Use modular enemy snippets
-        if (ENEMY_CODE_SNIPPETS[enemyType]) {
-          code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
+        if ((ENEMY_CODE_SNIPPETS as any)[enemyType]) {
+          code += (ENEMY_CODE_SNIPPETS as any)[enemyType].create(enemyIndex, x, y, color);
         } else {
           // Fallback for unknown enemy types
           code += `
@@ -497,6 +601,72 @@ export class GameSchemeProcessor {
     if (this.playerState.health <= 0) {
       this.scene.restart();
     }
+  }
+
+  updatePlatforms() {
+    // Update moving platforms
+    this.movingPlatforms.children.entries.forEach(platform => {
+      if (platform.type === 'moving') {
+        // Move platform by directly updating position
+        platform.x += platform.moveSpeed * platform.moveDirection;
+        
+        // Check if platform has moved too far from start position horizontally
+        const distanceFromStart = Math.abs(platform.x - platform.startX);
+        if (distanceFromStart > platform.moveRange) {
+          // Reverse direction
+          platform.moveDirection *= -1;
+        }
+        
+        // Keep vertical position fixed
+        platform.y = platform.startY || platform.y;
+        
+        // Debug: log platform movement
+        if (this.debugText) {
+          this.debugText.setText('Platform: x=' + Math.round(platform.x) + ', dir=' + platform.moveDirection + ', dist=' + Math.round(distanceFromStart));
+        }
+      }
+    });
+  }
+
+  handlePlatformCollision(player, platform) {
+    if (platform.type === 'breakable') {
+      // Breakable platform disappears when player touches it
+      platform.health--;
+      if (platform.health <= 0) {
+        // Add breaking effect
+        platform.setTint(0xff0000);
+        this.tweens.add({
+          targets: platform,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => {
+            platform.destroy();
+          }
+        });
+      }
+    }
+  }
+
+  isOnMovingPlatform() {
+    // Check if player is on a moving platform
+    return this.movingPlatforms.children.entries.some(platform => {
+      if (platform.type === 'moving') {
+        // Check if player is touching the platform from above
+        const playerBottom = this.player.y + this.player.height / 2;
+        const platformTop = platform.y - platform.height / 2;
+        const playerLeft = this.player.x - this.player.width / 2;
+        const playerRight = this.player.x + this.player.width / 2;
+        const platformLeft = platform.x - platform.width / 2;
+        const platformRight = platform.x + platform.width / 2;
+        
+        // Player is on platform if their bottom is at platform top level
+        // and they're horizontally overlapping
+        return Math.abs(playerBottom - platformTop) < 10 && 
+               playerRight > platformLeft && 
+               playerLeft < platformRight;
+      }
+      return false;
+    });
   }
 
   createBossAttack(boss, player) {
@@ -784,7 +954,7 @@ export class GameSchemeProcessor {
       // Normal jump logic
       code += `
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
-    if (jumpPressed && this.player.body.blocked.down) {
+    if (jumpPressed && (this.player.body.blocked.down || this.isOnMovingPlatform())) {
       this.player.body.setVelocityY(jumpSpeed);
     }
       `;

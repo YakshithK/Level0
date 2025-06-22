@@ -15,7 +15,7 @@ export type EnemyType = "spike" | "slime" | "shooter" | "boss";
 export interface PlatformConfig {
     count: number;
     moving?: boolean;
-    type?: "floating" | "solid" | "breakable";
+    type?: "solid" ;
 }
 
 export type GameGoal = "portal" | "survival" | "collectible" | "boss" | "time";
