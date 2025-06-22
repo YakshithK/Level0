@@ -57,13 +57,81 @@ export const DEFAULT_SCENE_BOILERPLATE = `// Edit the create() and update() meth
 // You have access to 'this' which is your Phaser.Scene instance
 
 create() {
-  // Add your game objects here
-  // Example: this.player = this.add.rectangle(100, 100, 32, 32, 0x00ff00);
+  // Create a player rectangle
+  this.player = this.add.rectangle(100, 100, 32, 32, 0x00ff00);
+  this.physics.add.existing(this.player, false);
+  this.player.body.setCollideWorldBounds(true);
+  this.player.body.setBounce(0.3, 0.3);
+  
+  // Create a static group for platforms and walls
+  this.platforms = this.physics.add.staticGroup();
+
+  // Create a platform
+  const platform = this.add.rectangle(400, 500, 200, 20, 0xff0000);
+  this.physics.add.existing(platform, true);
+  this.platforms.add(platform);
+
+  // Create left and right walls (inside the visible area)
+  const leftWall = this.add.rectangle(10, 300, 20, 600, 0x888888);
+  this.physics.add.existing(leftWall, true);
+  this.platforms.add(leftWall);
+  const rightWall = this.add.rectangle(790, 300, 20, 600, 0x888888);
+  this.physics.add.existing(rightWall, true);
+  this.platforms.add(rightWall);
+
+  // Add collision between player and platforms (including walls)
+  this.physics.add.collider(this.player, this.platforms);
+  
+  // Setup keyboard controls
+  this.cursors = this.input.keyboard.createCursorKeys();
+  this.wasd = this.input.keyboard.addKeys({
+    a: Phaser.Input.Keyboard.KeyCodes.A,
+    d: Phaser.Input.Keyboard.KeyCodes.D,
+    w: Phaser.Input.Keyboard.KeyCodes.W
+  });
+  
+  // Add debug text
+  this.debugText = this.add.text(10, 10, 'Game Ready!', { 
+    color: '#ffffff', 
+    fontSize: '16px',
+    fontFamily: 'monospace'
+  });
+  
+  // Focus the canvas for input
+  this.sys.game.canvas.setAttribute('tabindex', '0');
+  this.sys.game.canvas.focus();
 }
 
 update() {
-  // Handle movement, input, or game logic here
-  // This runs every frame
+  // Handle player movement
+  const speed = 200;
+  const jumpSpeed = -400;
+  
+  // Reset velocity
+  this.player.body.setVelocityX(0);
+  
+  // Get input state
+  const left = this.cursors.left.isDown || this.wasd.a.isDown;
+  const right = this.cursors.right.isDown || this.wasd.d.isDown;
+  const jump = this.cursors.up.isDown || this.wasd.w.isDown;
+  
+  // Move left/right
+  if (left) {
+    this.player.body.setVelocityX(-speed);
+  } else if (right) {
+    this.player.body.setVelocityX(speed);
+  }
+  
+  // Jump (only if on ground)
+  if (jump && this.player.body.blocked.down) {
+    this.player.body.setVelocityY(jumpSpeed);
+  }
+  
+  // Update debug text
+  const debugInfo = 'Left: ' + left + ' | Right: ' + right + ' | Jump: ' + jump + '\n' +
+                   'On Ground: ' + this.player.body.blocked.down + '\n' +
+                   'Velocity: (' + Math.round(this.player.body.velocity.x) + ', ' + Math.round(this.player.body.velocity.y) + ')';
+  this.debugText.setText(debugInfo);
 }`;
 
 // Advanced example showing complete class structure

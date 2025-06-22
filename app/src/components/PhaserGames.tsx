@@ -16,15 +16,31 @@ export const PhaserGame: React.FC<{
   const [size, setSize] = useState({ width: 800, height: 600 });
   const [error, setError] = useState<string | null>(null);
 
-  // Handle size changes
+  // Handle size changes with ResizeObserver
   useEffect(() => {
-    if (gameRef.current) {
-      const { width, height } = gameRef.current.getBoundingClientRect();
+    if (!gameRef.current) return;
+
+    const updateSize = () => {
+      const { width, height } = gameRef.current!.getBoundingClientRect();
       setSize({
         width: Math.max(400, Math.floor(width)),
         height: Math.max(300, Math.floor(height)),
       });
-    }
+    };
+
+    updateSize();
+
+    // Listen for window resize
+    window.addEventListener('resize', updateSize);
+
+    // Use ResizeObserver for container changes
+    const resizeObserver = new window.ResizeObserver(updateSize);
+    resizeObserver.observe(gameRef.current);
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // Destroy the current game instance

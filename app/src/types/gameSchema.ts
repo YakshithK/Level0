@@ -32,6 +32,6 @@ export const DEFAULT_GAME_SCHEME: GameSchema = {
     theme: "lava",
     playerAbilities: ['jump'],
     enemies: ["spike"],
-    platforms: {count: 4},
+    platforms: {count: 2},
     goal: "portal"
 }

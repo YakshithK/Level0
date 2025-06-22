@@ -24,12 +24,26 @@ create() {
   this.player.body.setCollideWorldBounds(true);
   this.player.body.setBounce(0.3, 0.3);
   
-  // Create a platform
-  const platform = this.add.rectangle(400, 500, 200, 20, 0xff0000);
-  this.physics.add.existing(platform, true);
-  
-  // Add collision between player and platform
-  this.physics.add.collider(this.player, platform);
+  // Create a static group for platforms and walls
+  this.platforms = this.physics.add.staticGroup();
+
+  // Create a ground platform (for 400x400 area)
+  const ground = this.add.rectangle(200, 390, 400, 20, 0xff0000);
+  this.physics.add.existing(ground, true);
+  this.platforms.add(ground);
+
+  // Create left wall (shorter, visible)
+  const leftWall = this.add.rectangle(20, 300, 40, 150, 0x8888ff);
+  this.physics.add.existing(leftWall, true);
+  this.platforms.add(leftWall);
+
+  // Create right wall (shorter, visible)
+  const rightWall = this.add.rectangle(380, 300, 40, 150, 0x8888ff);
+  this.physics.add.existing(rightWall, true);
+  this.platforms.add(rightWall);
+
+  // Add collision between player and platforms (including walls)
+  this.physics.add.collider(this.player, this.platforms);
   
   // Setup keyboard controls
   this.cursors = this.input.keyboard.createCursorKeys();
@@ -75,13 +89,9 @@ update() {
   if (jump && this.player.body.blocked.down) {
     this.player.body.setVelocityY(jumpSpeed);
   }
-  
-  // Update debug text
-  const debugInfo = 'Left: ' + left + ' | Right: ' + right + ' | Jump: ' + jump + '\\n' +
-                   'On Ground: ' + this.player.body.blocked.down + '\\n' +
-                   'Velocity: (' + Math.round(this.player.body.velocity.x) + ', ' + Math.round(this.player.body.velocity.y) + ')';
-  this.debugText.setText(debugInfo);
-}`;
+
+}
+`;
 
 export default function Chat() {
   const [prompt, setPrompt] = useState('');

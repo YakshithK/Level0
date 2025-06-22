@@ -1,5 +1,6 @@
 import { GameSchema, DEFAULT_GAME_SCHEME } from '../types/gameSchema';
 import { THEME_CONFIGS } from '../config/ThemeConfig';
+import { ABILITY_CODE_SNIPPETS } from './mappings';
 
 // Add GameConfig interface for Phaser
 export interface GameConfig {
@@ -120,7 +121,8 @@ export class GameSchemeProcessor {
 
   private buildSceneCode(): string {
     const themeConfig = THEME_CONFIGS[this.scheme.theme];
-    
+    const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
+    const hasDash = this.scheme.playerAbilities.includes('dash');
     return `class DynamicScene extends Phaser.Scene {
   constructor() {
     super({ key: "DynamicScene" });
@@ -172,10 +174,13 @@ export class GameSchemeProcessor {
     
     // Player state
     this.playerState = {
-      canDoubleJump: ${this.scheme.playerAbilities.includes('doubleJump')},
-      hasDoubleJumped: false,
-      canDash: ${this.scheme.playerAbilities.includes('dash')},
-      dashCooldown: 0,
+      ${hasDoubleJump ? 'hasDoubleJumped: false,' : ''}
+      ${hasDash ? `dashCooldown: 0,
+      dashing: false,
+      dashTime: 0,
+      dashDirection: 1,` : ''}
+      canDoubleJump: ${hasDoubleJump},
+      canDash: ${hasDash},
       canShoot: ${this.scheme.playerAbilities.includes('shoot')},
       shootCooldown: 0,
       canWallJump: ${this.scheme.playerAbilities.includes('wallJump')},
@@ -380,6 +385,8 @@ export class GameSchemeProcessor {
   }
 
   private generateMovementCode(): string {
+    const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
+    const hasDash = this.scheme.playerAbilities.includes('dash');
     let code = `
     const speed = 200;
     const jumpSpeed = -400;
@@ -390,7 +397,6 @@ export class GameSchemeProcessor {
     // Get input state
     const left = this.cursors.left.isDown || this.wasd.a.isDown;
     const right = this.cursors.right.isDown || this.wasd.d.isDown;
-    const jump = this.cursors.up.isDown || this.wasd.w.isDown;
     const shoot = this.cursors.shift.isDown || this.wasd.x.isDown;
     
     // Move left/right
@@ -399,70 +405,23 @@ export class GameSchemeProcessor {
     } else if (right) {
       this.player.body.setVelocityX(speed);
     }
-    
-    // Jump mechanics
-    if (jump && this.player.body.blocked.down) {
+    `;
+    // Modular double jump logic
+    if (hasDoubleJump) {
+      code += ABILITY_CODE_SNIPPETS.doubleJump.replace(/-400/g, 'jumpSpeed');
+    } else {
+      // Normal jump logic
+      code += `
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
+    if (jumpPressed && this.player.body.blocked.down) {
       this.player.body.setVelocityY(jumpSpeed);
-      this.playerState.hasDoubleJumped = false;
-    }`;
-
-    // Add double jump
-    if (this.scheme.playerAbilities.includes('doubleJump')) {
-      code += `
-    
-    // Double jump
-    if (jump && !this.player.body.blocked.down && this.playerState.canDoubleJump && !this.playerState.hasDoubleJumped) {
-      this.player.body.setVelocityY(jumpSpeed);
-      this.playerState.hasDoubleJumped = true;
-    }`;
     }
-
-    // Add dash
-    if (this.scheme.playerAbilities.includes('dash')) {
-      code += `
-    
-    // Dash ability
-    if (this.playerState.dashCooldown > 0) {
-      this.playerState.dashCooldown--;
+      `;
     }
-    if (this.cursors.shift.isDown && this.playerState.dashCooldown === 0) {
-      const dashSpeed = 400;
-      this.player.body.setVelocityX(this.player.body.velocity.x > 0 ? dashSpeed : -dashSpeed);
-      this.playerState.dashCooldown = 30;
-    }`;
+    // Modular dash logic
+    if (hasDash) {
+      code += ABILITY_CODE_SNIPPETS.dash;
     }
-
-    // Add shooting
-    if (this.scheme.playerAbilities.includes('shoot')) {
-      code += `
-    
-    // Shooting ability
-    if (this.playerState.shootCooldown > 0) {
-      this.playerState.shootCooldown--;
-    }
-    if (shoot && this.playerState.canShoot && this.playerState.shootCooldown === 0) {
-      this.createPlayerProjectile();
-      this.playerState.shootCooldown = 20;
-    }`;
-    }
-
-    // Add wall jump
-    if (this.scheme.playerAbilities.includes('wallJump')) {
-      code += `
-    
-    // Wall jump ability
-    this.playerState.isOnWall = this.player.body.blocked.left || this.player.body.blocked.right;
-    if (this.playerState.wallJumpCooldown > 0) {
-      this.playerState.wallJumpCooldown--;
-    }
-    if (jump && this.playerState.isOnWall && this.playerState.wallJumpCooldown === 0) {
-      const wallJumpSpeed = -350;
-      const wallJumpX = this.player.body.blocked.left ? 200 : -200;
-      this.player.body.setVelocity(wallJumpX, wallJumpSpeed);
-      this.playerState.wallJumpCooldown = 10;
-    }`;
-    }
-
     return code;
   }
 

@@ -166,6 +166,13 @@ export class OpenAIService {
             .map(({ score, ...example }) => example);
     }
 
+    // Helper to format few-shot examples for the system prompt
+    private formatFewShotExamples(examples: typeof FEW_SHOT_EXAMPLES): string {
+        return examples.map(ex => {
+            return `User: ${ex.user}\nAssistant: ${JSON.stringify(ex.assistant, null, 2)}`;
+        }).join("\n\n");
+    }
+
     async generateGameSchema(userPrompt: string): Promise<OpenAIResponse> {
         if (!this.apiKey) {
             return {
@@ -176,42 +183,28 @@ export class OpenAIService {
         try {
             // Select relevant few-shot examples
             const relevantExamples = this.selectRelevantExamples(userPrompt);
-            
-            // Build conversation messages with few-shot examples
+
+            // Build system prompt with embedded few-shot examples
+            const systemPromptWithExamples = [
+                SYSTEM_PROMPT,
+                '',
+                'Here are some examples:',
+                this.formatFewShotExamples(relevantExamples),
+                '',
+                'Now, given the following user description, return the game schema as JSON using the create_game_schema function.'
+            ].join('\n');
+
+            // Build conversation messages
             const messages: OpenAIMessage[] = [
                 {
                     role: "system",
-                    content: SYSTEM_PROMPT
+                    content: systemPromptWithExamples
+                },
+                {
+                    role: "user",
+                    content: userPrompt
                 }
             ];
-
-            // Add relevant few-shot examples
-            relevantExamples.forEach(example => {
-                messages.push({
-                    role: "user",
-                    content: example.user
-                });
-                messages.push({
-                    role: "assistant",
-                    content: null,
-                    tool_calls: [
-                        {
-                            id: `example_${Math.random()}`,
-                            type: "function",
-                            function: {
-                                name: "create_game_schema",
-                                arguments: JSON.stringify(example.assistant)
-                            }
-                        }
-                    ]
-                });
-            });
-
-            // Add the actual user prompt
-            messages.push({
-                role: "user",
-                content: userPrompt
-            });
 
             const response = await fetch(OPENAI_API_URL, {
                 method: "POST",
