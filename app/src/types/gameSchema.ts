@@ -8,7 +8,7 @@ export interface GameSchema {
 
 export type GameTheme = "lava" | "ice" | "forest" | "space" | "desert" | "underwater";
 
-export type PlayerAbility = "jump" | "doubleJump" | "dash" | "wallJump" | "shoot" | "grapple";
+export type PlayerAbility = "jump" | "doubleJump" | "dash" | "wallJump" | "shoot";
 
 export type EnemyType = "spike" | "slime" | "shooter" | "patrol" | "boss";
 

@@ -72,5 +72,20 @@ export const ABILITY_CODE_SNIPPETS = {
   }
   // --- WALL JUMP LOGIC END ---
 `,
+    shoot: `
+  // --- SHOOTING LOGIC START ---
+  if (this.playerState.shootCooldown > 0) {
+    this.playerState.shootCooldown--;
+  }
+  const shootPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space);
+  if (shootPressed && this.playerState.shootCooldown === 0) {
+    this.createBullet();
+    this.playerState.shootCooldown = 20; // 20 frames cooldown
+  }
+  
+  // Update bullets manually
+  this.updateBullets();
+  // --- SHOOTING LOGIC END ---
+`,
     // ...other abilities
   };

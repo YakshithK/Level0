@@ -124,6 +124,7 @@ export class GameSchemeProcessor {
     const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
     const hasDash = this.scheme.playerAbilities.includes('dash');
     const hasWallJump = this.scheme.playerAbilities.includes('wallJump');
+    const hasShoot = this.scheme.playerAbilities.includes('shoot');
     return `class DynamicScene extends Phaser.Scene {
   constructor() {
     super({ key: "DynamicScene" });
@@ -173,6 +174,7 @@ export class GameSchemeProcessor {
     
     // Create projectiles group for shooting
     ${this.scheme.playerAbilities.includes('shoot') ? 'this.projectiles = this.physics.add.group();' : ''}
+    ${this.generateAbilityCode()}
     
     // Create goal
     ${this.generateGoalCode()}
@@ -209,65 +211,18 @@ export class GameSchemeProcessor {
       wallJumpCooldown: 0,
       canDoubleJump: ${hasDoubleJump},
       canDash: ${hasDash},
-      canShoot: ${this.scheme.playerAbilities.includes('shoot')},
+      canShoot: ${hasShoot},
       shootCooldown: 0,
       canWallJump: ${hasWallJump},
       wallJumpLockDir: null, // 'left' or 'right'
       wallJumpLockTimer: 0,
+      facing: 'right', // Track which way the player is facing
     };
   }
 
   update() {
-    const speed = 200;
-    const jumpSpeed = -400;
-    // Reset velocity
-    this.player.body.setVelocityX(0);
-    // Get input state
-    const left = this.cursors.left.isDown || this.wasd.a.isDown;
-    const right = this.cursors.right.isDown || this.wasd.d.isDown;
-    const shoot = this.cursors.shift.isDown || this.wasd.x.isDown;
-    // --- WALL JUMP LOCK LOGIC ---
-    if (this.playerState.wallJumpLockTimer > 0) {
-      this.playerState.wallJumpLockTimer--;
-      if (this.playerState.wallJumpLockTimer === 0) {
-        this.playerState.wallJumpLockDir = null;
-      }
-    }
-    let moveLeft = left;
-    let moveRight = right;
-    if (this.playerState.wallJumpLockDir === 'left') moveLeft = false;
-    if (this.playerState.wallJumpLockDir === 'right') moveRight = false;
-    // Move left/right
-    if (moveLeft) {
-      this.player.body.setVelocityX(-speed);
-    } else if (moveRight) {
-      this.player.body.setVelocityX(speed);
-    }
-    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
-    this.playerState.isOnWall = this.player.body.blocked.left || this.player.body.blocked.right;
-    if (this.playerState.wallJumpCooldown > 0) {
-      this.playerState.wallJumpCooldown--;
-    }
-    if (jumpPressed) {
-      if (
-        this.playerState.isOnWall &&
-        !this.player.body.blocked.down &&
-        this.playerState.wallJumpCooldown === 0
-      ) {
-        // WALL JUMP
-        const wallJumpHorizontal = 1000;
-        const wallJumpVertical = -350;
-        const wallJumpX = this.player.body.blocked.left ? wallJumpHorizontal : -wallJumpHorizontal;
-        this.player.body.setVelocity(wallJumpX, wallJumpVertical);
-        this.playerState.wallJumpCooldown = 10;
-        // Lock input toward the wall for 10 frames
-        this.playerState.wallJumpLockDir = this.player.body.blocked.left ? 'left' : 'right';
-        this.playerState.wallJumpLockTimer = 10;
-      } else if (this.player.body.blocked.down) {
-        // NORMAL JUMP
-        this.player.body.setVelocityY(jumpSpeed);
-      }
-    }
+    ${this.generateMovementCode()}
+    ${this.generateEnemyUpdateCode()}
     if (!this.debugText) {
       this.debugText = this.add.text(10, 30, '', { color: '#fff' });
     }
@@ -482,9 +437,76 @@ export class GameSchemeProcessor {
     if (this.scheme.playerAbilities.includes('shoot')) {
       code += `
 
+  createBullet() {
+    // Create a simple rectangle bullet
+    const bullet = this.add.rectangle(
+      this.player.x + (this.playerState.facing === 'right' ? 30 : -30),
+      this.player.y,
+      16,
+      8,
+      0xffff00
+    );
+    
+    // Store bullet data
+    const bulletData = {
+      sprite: bullet,
+      velocityX: this.playerState.facing === 'right' ? 8 : -8, // pixels per frame
+      velocityY: 0,
+      lifetime: 180 // 3 seconds at 60fps
+    };
+    
+    this.bullets.push(bulletData);
+  }
+
+  updateBullets() {
+    // Update each bullet manually
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+      
+      // Move bullet
+      bullet.sprite.x += bullet.velocityX;
+      bullet.sprite.y += bullet.velocityY;
+      
+      // Check collision with platforms
+      let hitPlatform = false;
+      this.platforms.children.entries.forEach(platform => {
+        if (this.checkCollision(bullet.sprite, platform)) {
+          hitPlatform = true;
+        }
+      });
+      
+      // Check collision with enemies
+      let hitEnemy = false;
+      this.enemies.forEach(enemy => {
+        if (this.checkCollision(bullet.sprite, enemy)) {
+          hitEnemy = true;
+        }
+      });
+      
+      // Decrease lifetime
+      bullet.lifetime--;
+      
+      // Remove bullet if it hit something or expired
+      if (hitPlatform || hitEnemy || bullet.lifetime <= 0 || 
+          bullet.sprite.x < 0 || bullet.sprite.x > 800) {
+        bullet.sprite.destroy();
+        this.bullets.splice(i, 1);
+      }
+    }
+  }
+
+  checkCollision(rect1, rect2) {
+    return (rect1.x - rect1.width/2 < rect2.x + rect2.width/2 &&
+            rect1.x + rect1.width/2 > rect2.x - rect2.width/2 &&
+            rect1.y - rect1.height/2 < rect2.y + rect2.height/2 &&
+            rect1.y + rect1.height/2 > rect2.y - rect2.height/2);
+  }
+
   createPlayerProjectile() {
     const projectile = this.add.rectangle(this.player.x, this.player.y, 8, 8, 0xffff00);
     this.physics.add.existing(projectile, false);
+    // Disable gravity for manually created projectiles too
+    projectile.body.setAllowGravity(false);
     projectile.body.setVelocityX(this.player.body.velocity.x > 0 ? 400 : -400);
     this.projectiles.add(projectile);
     
@@ -499,6 +521,8 @@ export class GameSchemeProcessor {
   createEnemyProjectile(enemy, target) {
     const projectile = this.add.rectangle(enemy.x, enemy.y, 6, 6, 0xff0000);
     this.physics.add.existing(projectile, false);
+    // Disable gravity for enemy projectiles too
+    projectile.body.setAllowGravity(false);
     const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, target.x, target.y);
     const velocity = this.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), 200);
     projectile.body.setVelocity(velocity.x, velocity.y);
@@ -536,22 +560,74 @@ export class GameSchemeProcessor {
   }`;
     }
 
-    // Add collectible handling if collectible goal is enabled
-    if (this.scheme.goal === 'collectible') {
+    return code;
+  }
+
+  private generateMovementCode(): string {
+    const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
+    const hasDash = this.scheme.playerAbilities.includes('dash');
+    const hasWallJump = this.scheme.playerAbilities.includes('wallJump');
+    const hasShoot = this.scheme.playerAbilities.includes('shoot');
+    let code = `
+    const speed = 200;
+    const jumpSpeed = -400;
+    
+    // Reset velocity
+    this.player.body.setVelocityX(0);
+    
+    // Get input state
+    const left = this.cursors.left.isDown || this.wasd.a.isDown;
+    const right = this.cursors.right.isDown || this.wasd.d.isDown;
+    const shoot = this.cursors.shift.isDown || this.wasd.x.isDown;
+    
+    // Move left/right
+    if (left) {
+      this.player.body.setVelocityX(-speed);
+      this.playerState.facing = 'left';
+    } else if (right) {
+      this.player.body.setVelocityX(speed);
+      this.playerState.facing = 'right';
+    }
+    `;
+    // Modular double jump logic
+    if (hasDoubleJump) {
+      code += ABILITY_CODE_SNIPPETS.doubleJump.replace(/-400/g, 'jumpSpeed');
+    } else {
+      // Normal jump logic
       code += `
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
+    if (jumpPressed && this.player.body.blocked.down) {
+      this.player.body.setVelocityY(jumpSpeed);
+    }
+      `;
+    }
+    // Modular wall jump logic
+    if (hasWallJump) {
+      code += ABILITY_CODE_SNIPPETS.wallJump
+        .replace(/-350/g, 'jumpSpeed')
+        .replace(/200/g, 'speed');
+    }
+    // Modular dash logic
+    if (hasDash) {
+      code += ABILITY_CODE_SNIPPETS.dash;
+    }
+    // Modular shooting logic
+    if (hasShoot) {
+      code += ABILITY_CODE_SNIPPETS.shoot;
+    }
+    return code;
+  }
 
-  handleCollectible(player, collectible) {
-    collectible.destroy();
-    this.collectedCount++;
-    if (this.collectibleText) {
-      this.collectibleText.setText('Collectibles: ' + this.collectedCount + '/5');
+  private generateAbilityCode(): string {
+    const hasShoot = this.scheme.playerAbilities.includes('shoot');
+    let code = '';
+    
+    if (hasShoot) {
+      code += `
+    // Create bullet array to track bullets manually
+    this.bullets = [];`;
     }
-    if (this.collectedCount >= 5) {
-      this.handleWin();
-    }
-  }`;
-    }
-
+    
     return code;
   }
 }
