@@ -1,6 +1,6 @@
 import { GameSchema, DEFAULT_GAME_SCHEME } from '../types/gameSchema';
 import { THEME_CONFIGS } from '../config/ThemeConfig';
-import { ABILITY_CODE_SNIPPETS } from './mappings';
+import { ABILITY_CODE_SNIPPETS, ENEMY_CODE_SNIPPETS } from './mappings';
 
 // Add GameConfig interface for Phaser
 export interface GameConfig {
@@ -173,7 +173,7 @@ export class GameSchemeProcessor {
     ${this.generateEnemyCode()}
     
     // Create projectiles group for shooting
-    ${this.scheme.playerAbilities.includes('shoot') ? 'this.projectiles = this.physics.add.group();' : ''}
+    ${this.scheme.playerAbilities.includes('shoot') || this.scheme.enemies.includes('shooter') ? 'this.projectiles = this.physics.add.group();' : ''}
     ${this.generateAbilityCode()}
     
     // Create goal
@@ -186,10 +186,17 @@ export class GameSchemeProcessor {
       this.physics.add.collider(this.player, enemy, this.handleEnemyCollision, null, this);
     });
     
+    // Add enemy-platform collisions so enemies don't phase through platforms
+    this.physics.add.collider(this.enemies, this.platforms);
+    
     ${this.scheme.playerAbilities.includes('shoot') ? `
     // Add projectile collisions
     this.physics.add.collider(this.projectiles, this.enemies, this.handleProjectileHit, null, this);
     this.physics.add.collider(this.projectiles, this.platforms, this.handleProjectileWall, null, this);` : ''}
+    
+    ${this.scheme.enemies.includes('shooter') ? `
+    // Add enemy projectile collisions with player
+    this.physics.add.collider(this.projectiles, this.player, this.handlePlayerHitByProjectile, null, this);` : ''}
     
     // Setup controls
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -217,7 +224,17 @@ export class GameSchemeProcessor {
       wallJumpLockDir: null, // 'left' or 'right'
       wallJumpLockTimer: 0,
       facing: 'right', // Track which way the player is facing
+      health: 3, // Player has 3 lives
     };
+    
+    // Create health bar (always displayed)
+    this.healthBar = this.add.rectangle(100, 30, 200, 20, 0x333333);
+    this.healthBar.setOrigin(0, 0);
+    this.healthBar.setStrokeStyle(2, 0xffffff);
+    this.healthText = this.add.text(10, 10, 'Health: 3', { 
+      fontSize: '16px', 
+      color: '#ffffff' 
+    });
   }
 
   update() {
@@ -267,45 +284,59 @@ export class GameSchemeProcessor {
     if (this.scheme.enemies.length === 0) return 'this.enemies = [];';
     
     let code = 'this.enemies = [];';
+    let enemyIndex = 0;
     
     this.scheme.enemies.forEach((enemyType, i) => {
       const themeConfig = THEME_CONFIGS[this.scheme.theme];
       const color = themeConfig.enemyColors[i % themeConfig.enemyColors.length];
-      const x = 400 + (i * 200);
       
-      switch (enemyType) {
-        case 'patrol':
+      if (enemyType === 'spike' || enemyType === 'slime') {
+        // Create multiple spikes/slimes - one per platform
+        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
+          const platformX = 200 + (platformIndex * 150);
+          const platformY = 500 - (platformIndex * 80);
+          const x = platformX + (Math.random() * 100 - 50); // Random position on platform
+          const y = platformY - 20; // Slightly above platform surface
+          
+          code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
+          enemyIndex++;
+        }
+      } else if (enemyType === 'shooter') {
+        // Place shooters on platforms instead of ground
+        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
+          const platformX = 200 + (platformIndex * 150);
+          const platformY = 500 - (platformIndex * 80);
+          const x = platformX + (Math.random() * 100 - 50); // Random position on platform
+          const y = platformY - 30; // Above platform surface
+          
+          code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
+          enemyIndex++;
+        }
+      } else if (enemyType === 'boss') {
+        // Place boss on a high platform for better positioning
+        const platformX = 400; // Center platform
+        const platformY = 340; // Higher platform (platform2)
+        const x = platformX + (Math.random() * 100 - 50); // Random position on platform
+        const y = platformY - 40; // Above platform surface
+        
+        code += (ENEMY_CODE_SNIPPETS as any)[enemyType].create(enemyIndex, x, y, color);
+        enemyIndex++;
+      } else {
+        // Other enemies on ground
+        const x = 400 + (enemyIndex * 200);
+        const y = 450;
+        
+        // Use modular enemy snippets
+        if (ENEMY_CODE_SNIPPETS[enemyType]) {
+          code += ENEMY_CODE_SNIPPETS[enemyType].create(enemyIndex, x, y, color);
+        } else {
+          // Fallback for unknown enemy types
           code += `
-    const ${enemyType}${i} = this.add.rectangle(${x}, 450, 20, 20, ${color});
-    this.physics.add.existing(${enemyType}${i}, true);
-    ${enemyType}${i}.body.setImmovable(true);
-    ${enemyType}${i}.body.setVelocityX(100);
-    ${enemyType}${i}.body.setBounceX(1);
-    ${enemyType}${i}.patrolDirection = 1;
-    this.enemies.push(${enemyType}${i});`;
-          break;
-        case 'shooter':
-          code += `
-    const ${enemyType}${i} = this.add.rectangle(${x}, 450, 20, 20, ${color});
-    this.physics.add.existing(${enemyType}${i}, true);
-    ${enemyType}${i}.body.setImmovable(true);
-    ${enemyType}${i}.shootTimer = 0;
-    this.enemies.push(${enemyType}${i});`;
-          break;
-        case 'boss':
-          code += `
-    const ${enemyType}${i} = this.add.rectangle(${x}, 450, 40, 40, ${color});
-    this.physics.add.existing(${enemyType}${i}, true);
-    ${enemyType}${i}.body.setImmovable(true);
-    ${enemyType}${i}.health = 3;
-    ${enemyType}${i}.attackTimer = 0;
-    this.enemies.push(${enemyType}${i});`;
-          break;
-        default: // spike, slime
-          code += `
-    const ${enemyType}${i} = this.add.rectangle(${x}, 450, 20, 20, ${color});
-    this.physics.add.existing(${enemyType}${i}, true);
-    this.enemies.push(${enemyType}${i});`;
+    const ${enemyType}${enemyIndex} = this.add.rectangle(${x}, ${y}, 20, 20, ${color});
+    this.physics.add.existing(${enemyType}${enemyIndex}, true);
+    this.enemies.push(${enemyType}${enemyIndex});`;
+        }
+        enemyIndex++;
       }
     });
     
@@ -314,43 +345,37 @@ export class GameSchemeProcessor {
 
   private generateEnemyUpdateCode(): string {
     let code = '';
+    let enemyIndex = 0;
     
     this.scheme.enemies.forEach((enemyType, i) => {
-      switch (enemyType) {
-        case 'patrol':
-          code += `
-    // Update patrol enemy ${i}
-    const patrol${i} = this.enemies[${i}];
-    if (patrol${i} && patrol${i}.body) {
-      if (patrol${i}.body.blocked.left || patrol${i}.body.blocked.right) {
-        patrol${i}.body.setVelocityX(-patrol${i}.body.velocity.x);
-      }
-    }`;
-          break;
-        case 'shooter':
-          code += `
-    // Update shooter enemy ${i}
-    const shooter${i} = this.enemies[${i}];
-    if (shooter${i} && this.player) {
-      shooter${i}.shootTimer++;
-      if (shooter${i}.shootTimer > 120) { // Shoot every 2 seconds
-        this.createEnemyProjectile(shooter${i}, this.player);
-        shooter${i}.shootTimer = 0;
-      }
-    }`;
-          break;
-        case 'boss':
-          code += `
-    // Update boss enemy ${i}
-    const boss${i} = this.enemies[${i}];
-    if (boss${i} && this.player) {
-      boss${i}.attackTimer++;
-      if (boss${i}.attackTimer > 180) { // Attack every 3 seconds
-        this.createBossAttack(boss${i}, this.player);
-        boss${i}.attackTimer = 0;
-      }
-    }`;
-          break;
+      if (enemyType === 'spike' || enemyType === 'slime') {
+        // Multiple enemies per type - run update for each one
+        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
+          if (ENEMY_CODE_SNIPPETS[enemyType] && ENEMY_CODE_SNIPPETS[enemyType].update) {
+            code += ENEMY_CODE_SNIPPETS[enemyType].update(enemyIndex);
+          }
+          enemyIndex++;
+        }
+      } else if (enemyType === 'shooter') {
+        // Multiple shooters per type - run update for each one
+        for (let platformIndex = 0; platformIndex < this.scheme.platforms.count; platformIndex++) {
+          if (ENEMY_CODE_SNIPPETS[enemyType] && ENEMY_CODE_SNIPPETS[enemyType].update) {
+            code += ENEMY_CODE_SNIPPETS[enemyType].update(enemyIndex);
+          }
+          enemyIndex++;
+        }
+      } else if (enemyType === 'boss') {
+        // Single boss per type
+        if ((ENEMY_CODE_SNIPPETS as any)[enemyType] && (ENEMY_CODE_SNIPPETS as any)[enemyType].update) {
+          code += (ENEMY_CODE_SNIPPETS as any)[enemyType].update(enemyIndex);
+        }
+        enemyIndex++;
+      } else {
+        // Single enemy per type
+        if ((ENEMY_CODE_SNIPPETS as any)[enemyType] && (ENEMY_CODE_SNIPPETS as any)[enemyType].update) {
+          code += (ENEMY_CODE_SNIPPETS as any)[enemyType].update(enemyIndex);
+        }
+        enemyIndex++;
       }
     });
     
@@ -422,7 +447,25 @@ export class GameSchemeProcessor {
     let code = `
   handleEnemyCollision(player, enemy) {
     // Handle player-enemy collision
-    this.scene.restart();
+    this.playerState.health--;
+    this.healthText.setText('Health: ' + this.playerState.health);
+    
+    // Update health bar width based on remaining health
+    const healthPercentage = this.playerState.health / 3;
+    this.healthBar.width = 200 * healthPercentage;
+    
+    // Change health bar color based on health
+    if (this.playerState.health === 3) {
+      this.healthBar.fillColor = 0x00ff00; // Green
+    } else if (this.playerState.health === 2) {
+      this.healthBar.fillColor = 0xffff00; // Yellow
+    } else {
+      this.healthBar.fillColor = 0xff0000; // Red
+    }
+    
+    if (this.playerState.health <= 0) {
+      this.scene.restart();
+    }
   }
 
   handleWin(player, portal) {
@@ -431,6 +474,126 @@ export class GameSchemeProcessor {
       fontSize: '32px', 
       color: '#00ff00' 
     }).setOrigin(0.5);
+  }
+
+  handlePlayerHitByProjectile(projectile, player) {
+    // Handle player hit by enemy projectile
+    this.playerState.health--;
+    this.healthText.setText('Health: ' + this.playerState.health);
+    
+    // Update health bar width based on remaining health
+    const healthPercentage = this.playerState.health / 3;
+    this.healthBar.width = 200 * healthPercentage;
+    
+    // Change health bar color based on health
+    if (this.playerState.health === 3) {
+      this.healthBar.fillColor = 0x00ff00; // Green
+    } else if (this.playerState.health === 2) {
+      this.healthBar.fillColor = 0xffff00; // Yellow
+    } else {
+      this.healthBar.fillColor = 0xff0000; // Red
+    }
+    
+    if (this.playerState.health <= 0) {
+      this.scene.restart();
+    }
+  }
+
+  createBossAttack(boss, player) {
+    // Different attack patterns based on boss health and phase
+    const healthPercentage = boss.health / boss.maxHealth;
+    
+    if (healthPercentage <= 0.3) {
+      // Critical health - rapid fire spread
+      this.createBossSpreadAttack(boss, player);
+    } else if (healthPercentage <= 0.6) {
+      // Damaged - triple shot
+      this.createBossTripleAttack(boss, player);
+    } else {
+      // Full health - single powerful shot
+      this.createBossSingleAttack(boss, player);
+    }
+  }
+
+  createBossSingleAttack(boss, player) {
+    // Single powerful shot
+    const bullet = this.add.rectangle(
+      boss.x + (boss.facing === 'right' ? 40 : -40),
+      boss.y,
+      20,
+      12,
+      0xff0000
+    );
+    
+    const bulletData = {
+      sprite: bullet,
+      velocityX: boss.facing === 'right' ? 10 : -10,
+      velocityY: 0,
+      lifetime: 240,
+      isEnemyBullet: true
+    };
+    
+    boss.bullets.push(bulletData);
+  }
+
+  createBossTripleAttack(boss, player) {
+    // Triple shot spread
+    const angles = [-15, 0, 15]; // Degrees
+    const speed = 8;
+    
+    angles.forEach(angle => {
+      const bullet = this.add.rectangle(
+        boss.x + (boss.facing === 'right' ? 40 : -40),
+        boss.y,
+        16,
+        10,
+        0xff4400
+      );
+      
+      const radians = Phaser.Math.DegToRad(angle);
+      const velocityX = Math.cos(radians) * speed * (boss.facing === 'right' ? 1 : -1);
+      const velocityY = Math.sin(radians) * speed;
+      
+      const bulletData = {
+        sprite: bullet,
+        velocityX: velocityX,
+        velocityY: velocityY,
+        lifetime: 200,
+        isEnemyBullet: true
+      };
+      
+      boss.bullets.push(bulletData);
+    });
+  }
+
+  createBossSpreadAttack(boss, player) {
+    // Rapid fire spread attack
+    const angles = [-30, -15, 0, 15, 30]; // 5 bullets in spread
+    const speed = 6;
+    
+    angles.forEach(angle => {
+      const bullet = this.add.rectangle(
+        boss.x + (boss.facing === 'right' ? 40 : -40),
+        boss.y,
+        14,
+        8,
+        0xff2200
+      );
+      
+      const radians = Phaser.Math.DegToRad(angle);
+      const velocityX = Math.cos(radians) * speed * (boss.facing === 'right' ? 1 : -1);
+      const velocityY = Math.sin(radians) * speed;
+      
+      const bulletData = {
+        sprite: bullet,
+        velocityX: velocityX,
+        velocityY: velocityY,
+        lifetime: 180,
+        isEnemyBullet: true
+      };
+      
+      boss.bullets.push(bulletData);
+    });
   }`;
 
     // Add shooting methods if shooting ability is enabled
@@ -480,6 +643,24 @@ export class GameSchemeProcessor {
       this.enemies.forEach(enemy => {
         if (this.checkCollision(bullet.sprite, enemy)) {
           hitEnemy = true;
+          // Handle enemy health if they have it
+          if (enemy.health) {
+            enemy.health--;
+            if (enemy.health <= 0) {
+              enemy.destroy();
+              const index = this.enemies.indexOf(enemy);
+              if (index > -1) {
+                this.enemies.splice(index, 1);
+              }
+            }
+          } else {
+            // Instant kill for enemies without health
+            enemy.destroy();
+            const index = this.enemies.indexOf(enemy);
+            if (index > -1) {
+              this.enemies.splice(index, 1);
+            }
+          }
         }
       });
       
@@ -519,15 +700,22 @@ export class GameSchemeProcessor {
   }
 
   createEnemyProjectile(enemy, target) {
-    const projectile = this.add.rectangle(enemy.x, enemy.y, 6, 6, 0xff0000);
+    const projectile = this.add.rectangle(enemy.x, enemy.y, 8, 8, 0xff0000);
     this.physics.add.existing(projectile, false);
-    // Disable gravity for enemy projectiles too
     projectile.body.setAllowGravity(false);
+    projectile.body.setGravity(0, 0);
+    
+    // Calculate direction to player
     const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, target.x, target.y);
-    const velocity = this.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), 200);
+    const velocity = this.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), 150);
     projectile.body.setVelocity(velocity.x, velocity.y);
     
-    // Remove projectile after 3 seconds
+    // Add to projectiles group if it exists
+    if (this.projectiles) {
+      this.projectiles.add(projectile);
+    }
+    
+    // Destroy after 3 seconds
     this.time.delayedCall(3000, () => {
       if (projectile.active) {
         projectile.destroy();

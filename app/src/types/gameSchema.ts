@@ -10,7 +10,7 @@ export type GameTheme = "lava" | "ice" | "forest" | "space" | "desert" | "underw
 
 export type PlayerAbility = "jump" | "doubleJump" | "dash" | "wallJump" | "shoot";
 
-export type EnemyType = "spike" | "slime" | "shooter" | "patrol" | "boss";
+export type EnemyType = "spike" | "slime" | "shooter" | "boss";
 
 export interface PlatformConfig {
     count: number;
