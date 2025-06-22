@@ -28,17 +28,17 @@ create() {
   this.platforms = this.physics.add.staticGroup();
 
   // Create a ground platform (for 400x400 area)
-  const ground = this.add.rectangle(200, 390, 400, 20, 0xff0000);
+  const ground = this.add.rectangle(200, 440, 400, 20, 0xff0000);
   this.physics.add.existing(ground, true);
   this.platforms.add(ground);
 
-  // Create left wall (shorter, visible)
-  const leftWall = this.add.rectangle(20, 300, 40, 150, 0x8888ff);
+  // Create left wall (taller, visible)
+  const leftWall = this.add.rectangle(20, 300, 40, 351, 0x8888ff);
   this.physics.add.existing(leftWall, true);
   this.platforms.add(leftWall);
 
-  // Create right wall (shorter, visible)
-  const rightWall = this.add.rectangle(380, 300, 40, 150, 0x8888ff);
+  // Create right wall (taller, visible)
+  const rightWall = this.add.rectangle(380, 300, 40, 351, 0x8888ff);
   this.physics.add.existing(rightWall, true);
   this.platforms.add(rightWall);
 

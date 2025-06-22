@@ -123,6 +123,7 @@ export class GameSchemeProcessor {
     const themeConfig = THEME_CONFIGS[this.scheme.theme];
     const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
     const hasDash = this.scheme.playerAbilities.includes('dash');
+    const hasWallJump = this.scheme.playerAbilities.includes('wallJump');
     return `class DynamicScene extends Phaser.Scene {
   constructor() {
     super({ key: "DynamicScene" });
@@ -130,17 +131,42 @@ export class GameSchemeProcessor {
 
   create() {
     // Set background
-    this.cameras.main.setBackgroundColor('${themeConfig.backgroundColor}');
+    this.cameras.main.setBackgroundColor('#2d1b1b');
     
     // Create player
-    this.player = this.add.rectangle(100, 100, 32, 32, ${themeConfig.playerColor});
+    this.player = this.add.rectangle(100, 100, 32, 32, 16739125);
     this.physics.add.existing(this.player, false);
     this.player.body.setCollideWorldBounds(true);
     this.player.body.setBounce(0.3, 0.3);
     
     // Create platforms
     this.platforms = this.physics.add.staticGroup();
-    ${this.generatePlatformCode()}
+    
+    // Add left wall
+    const leftWall = this.add.rectangle(10, 300, 20, 600, 0x888888);
+    this.physics.add.existing(leftWall, true);
+    this.platforms.add(leftWall);
+    // Add right wall (move to x=800)
+    const rightWall = this.add.rectangle(800, 300, 20, 600, 0x888888);
+    this.physics.add.existing(rightWall, true);
+    this.platforms.add(rightWall);
+    // Add ground
+    const ground = this.add.rectangle(400, 590, 800, 20, 0x888888);
+    this.physics.add.existing(ground, true);
+    this.platforms.add(ground);
+    
+    const platform0 = this.add.rectangle(200, 500, 237, 20, 16729344);
+    this.physics.add.existing(platform0, true);
+    this.platforms.add(platform0);
+    const platform1 = this.add.rectangle(350, 420, 163, 20, 16737095);
+    this.physics.add.existing(platform1, true);
+    this.platforms.add(platform1);
+    const platform2 = this.add.rectangle(500, 340, 217, 20, 16729344);
+    this.physics.add.existing(platform2, true);
+    this.platforms.add(platform2);
+    const platform3 = this.add.rectangle(650, 260, 184, 20, 16729344);
+    this.physics.add.existing(platform3, true);
+    this.platforms.add(platform3);
     
     // Create enemies
     ${this.generateEnemyCode()}
@@ -179,19 +205,72 @@ export class GameSchemeProcessor {
       dashing: false,
       dashTime: 0,
       dashDirection: 1,` : ''}
+      isOnWall: false,
+      wallJumpCooldown: 0,
       canDoubleJump: ${hasDoubleJump},
       canDash: ${hasDash},
       canShoot: ${this.scheme.playerAbilities.includes('shoot')},
       shootCooldown: 0,
-      canWallJump: ${this.scheme.playerAbilities.includes('wallJump')},
-      isOnWall: false,
-      wallJumpCooldown: 0
+      canWallJump: ${hasWallJump},
+      wallJumpLockDir: null, // 'left' or 'right'
+      wallJumpLockTimer: 0,
     };
   }
 
   update() {
-    ${this.generateMovementCode()}
-    ${this.generateEnemyUpdateCode()}
+    const speed = 200;
+    const jumpSpeed = -400;
+    // Reset velocity
+    this.player.body.setVelocityX(0);
+    // Get input state
+    const left = this.cursors.left.isDown || this.wasd.a.isDown;
+    const right = this.cursors.right.isDown || this.wasd.d.isDown;
+    const shoot = this.cursors.shift.isDown || this.wasd.x.isDown;
+    // --- WALL JUMP LOCK LOGIC ---
+    if (this.playerState.wallJumpLockTimer > 0) {
+      this.playerState.wallJumpLockTimer--;
+      if (this.playerState.wallJumpLockTimer === 0) {
+        this.playerState.wallJumpLockDir = null;
+      }
+    }
+    let moveLeft = left;
+    let moveRight = right;
+    if (this.playerState.wallJumpLockDir === 'left') moveLeft = false;
+    if (this.playerState.wallJumpLockDir === 'right') moveRight = false;
+    // Move left/right
+    if (moveLeft) {
+      this.player.body.setVelocityX(-speed);
+    } else if (moveRight) {
+      this.player.body.setVelocityX(speed);
+    }
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
+    this.playerState.isOnWall = this.player.body.blocked.left || this.player.body.blocked.right;
+    if (this.playerState.wallJumpCooldown > 0) {
+      this.playerState.wallJumpCooldown--;
+    }
+    if (jumpPressed) {
+      if (
+        this.playerState.isOnWall &&
+        !this.player.body.blocked.down &&
+        this.playerState.wallJumpCooldown === 0
+      ) {
+        // WALL JUMP
+        const wallJumpHorizontal = 1000;
+        const wallJumpVertical = -350;
+        const wallJumpX = this.player.body.blocked.left ? wallJumpHorizontal : -wallJumpHorizontal;
+        this.player.body.setVelocity(wallJumpX, wallJumpVertical);
+        this.playerState.wallJumpCooldown = 10;
+        // Lock input toward the wall for 10 frames
+        this.playerState.wallJumpLockDir = this.player.body.blocked.left ? 'left' : 'right';
+        this.playerState.wallJumpLockTimer = 10;
+      } else if (this.player.body.blocked.down) {
+        // NORMAL JUMP
+        this.player.body.setVelocityY(jumpSpeed);
+      }
+    }
+    if (!this.debugText) {
+      this.debugText = this.add.text(10, 30, '', { color: '#fff' });
+    }
   }
 
   ${this.generateHelperMethods()}
@@ -382,47 +461,6 @@ export class GameSchemeProcessor {
       default:
         return '';
     }
-  }
-
-  private generateMovementCode(): string {
-    const hasDoubleJump = this.scheme.playerAbilities.includes('doubleJump');
-    const hasDash = this.scheme.playerAbilities.includes('dash');
-    let code = `
-    const speed = 200;
-    const jumpSpeed = -400;
-    
-    // Reset velocity
-    this.player.body.setVelocityX(0);
-    
-    // Get input state
-    const left = this.cursors.left.isDown || this.wasd.a.isDown;
-    const right = this.cursors.right.isDown || this.wasd.d.isDown;
-    const shoot = this.cursors.shift.isDown || this.wasd.x.isDown;
-    
-    // Move left/right
-    if (left) {
-      this.player.body.setVelocityX(-speed);
-    } else if (right) {
-      this.player.body.setVelocityX(speed);
-    }
-    `;
-    // Modular double jump logic
-    if (hasDoubleJump) {
-      code += ABILITY_CODE_SNIPPETS.doubleJump.replace(/-400/g, 'jumpSpeed');
-    } else {
-      // Normal jump logic
-      code += `
-    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w);
-    if (jumpPressed && this.player.body.blocked.down) {
-      this.player.body.setVelocityY(jumpSpeed);
-    }
-      `;
-    }
-    // Modular dash logic
-    if (hasDash) {
-      code += ABILITY_CODE_SNIPPETS.dash;
-    }
-    return code;
   }
 
   private generateHelperMethods(): string {

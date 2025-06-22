@@ -51,5 +51,26 @@ export const ABILITY_CODE_SNIPPETS = {
   }
   // --- DOUBLE JUMP LOGIC END ---
 `,
+    wallJump: `
+  // --- WALL JUMP LOGIC START ---
+  this.playerState.isOnWall = this.player.body.blocked.left || this.player.body.blocked.right;
+  if (this.playerState.wallJumpCooldown > 0) {
+    this.playerState.wallJumpCooldown--;
+  }
+  if (
+    Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasd.w)
+  ) {
+    if (
+      this.playerState.isOnWall &&
+      !this.player.body.blocked.down &&
+      this.playerState.wallJumpCooldown === 0
+    ) {
+      const wallJumpX = this.player.body.blocked.left ? speed : -speed;
+      this.player.body.setVelocity(wallJumpX, jumpSpeed);
+      this.playerState.wallJumpCooldown = 10;
+    }
+  }
+  // --- WALL JUMP LOGIC END ---
+`,
     // ...other abilities
   };
