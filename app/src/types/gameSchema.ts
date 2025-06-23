@@ -18,7 +18,7 @@ export interface PlatformConfig {
     type?: "solid" ;
 }
 
-export type GameGoal = "portal" | "survival" | "collectible" | "boss" | "time";
+export type GameGoal =  "collectible" | "boss" | "time" | "portal" | "survival";
 
 export interface ThemeConfig {
     backgroundColor: string;
