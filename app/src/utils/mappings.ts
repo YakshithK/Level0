@@ -422,3 +422,370 @@ export const ENEMY_CODE_SNIPPETS = {
     }`
   }
 };
+
+export const HELPER_METHOD_SNIPPETS = {
+  handleEnemyCollision: `
+  handleEnemyCollision(player, enemy) {
+    // Handle player-enemy collision
+    this.playerState.health--;
+    this.healthText.setText('Health: ' + this.playerState.health);
+    
+    // Update health bar width based on remaining health
+    const healthPercentage = this.playerState.health / 3;
+    this.healthBar.width = 200 * healthPercentage;
+    
+    // Change health bar color based on health
+    if (this.playerState.health === 3) {
+      this.healthBar.fillColor = 0x00ff00; // Green
+    } else if (this.playerState.health === 2) {
+      this.healthBar.fillColor = 0xffff00; // Yellow
+    } else {
+      this.healthBar.fillColor = 0xff0000; // Red
+    }
+    
+    if (this.playerState.health <= 0) {
+      this.scene.restart();
+    }
+  }`,
+  handleWin: `
+  handleWin(player, portal) {
+    // Handle win condition
+    this.add.text(400, 300, 'YOU WIN!', { 
+      fontSize: '32px', 
+      color: '#00ff00' 
+    }).setOrigin(0.5);
+  }`,
+  handlePlayerHitByProjectile: `
+  handlePlayerHitByProjectile(projectile, player) {
+    // Handle player hit by enemy projectile
+    this.playerState.health--;
+    this.healthText.setText('Health: ' + this.playerState.health);
+    
+    // Update health bar width based on remaining health
+    const healthPercentage = this.playerState.health / 3;
+    this.healthBar.width = 200 * healthPercentage;
+    
+    // Change health bar color based on health
+    if (this.playerState.health === 3) {
+      this.healthBar.fillColor = 0x00ff00; // Green
+    } else if (this.playerState.health === 2) {
+      this.healthBar.fillColor = 0xffff00; // Yellow
+    } else {
+      this.healthBar.fillColor = 0xff0000; // Red
+    }
+    
+    if (this.playerState.health <= 0) {
+      this.scene.restart();
+    }
+  }`,
+  updatePlatforms: `
+  updatePlatforms() {
+    // Update moving platforms
+    this.movingPlatforms.children.entries.forEach(platform => {
+      if (platform.type === 'moving') {
+        // Move platform by directly updating position
+        platform.x += platform.moveSpeed * platform.moveDirection;
+        
+        // Check if platform has moved too far from start position horizontally
+        const distanceFromStart = Math.abs(platform.x - platform.startX);
+        if (distanceFromStart > platform.moveRange) {
+          // Reverse direction
+          platform.moveDirection *= -1;
+        }
+        
+        // Keep vertical position fixed
+        platform.y = platform.startY || platform.y;
+        
+        // Debug: log platform movement
+        if (this.debugText) {
+          this.debugText.setText('Platform: x=' + Math.round(platform.x) + ', dir=' + platform.moveDirection + ', dist=' + Math.round(distanceFromStart));
+        }
+      }
+    });
+  }`,
+  handlePlatformCollision: `
+  handlePlatformCollision(player, platform) {
+    if (platform.type === 'breakable') {
+      // Breakable platform disappears when player touches it
+      platform.health--;
+      if (platform.health <= 0) {
+        // Add breaking effect
+        platform.setTint(0xff0000);
+        this.tweens.add({
+          targets: platform,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => {
+            platform.destroy();
+          }
+        });
+      }
+    }
+  }`,
+  isOnMovingPlatform: `
+  isOnMovingPlatform() {
+    // Check if player is on a moving platform
+    return this.movingPlatforms.children.entries.some(platform => {
+      if (platform.type === 'moving') {
+        // Check if player is touching the platform from above
+        const playerBottom = this.player.y + this.player.height / 2;
+        const platformTop = platform.y - platform.height / 2;
+        const playerLeft = this.player.x - this.player.width / 2;
+        const playerRight = this.player.x + this.player.width / 2;
+        const platformLeft = platform.x - platform.width / 2;
+        const platformRight = platform.x + platform.width / 2;
+        
+        // Player is on platform if their bottom is at platform top level
+        // and they're horizontally overlapping
+        return Math.abs(playerBottom - platformTop) < 10 && 
+               playerRight > platformLeft && 
+               playerLeft < platformRight;
+      }
+      return false;
+    });
+  }`,
+  createBossAttack: `
+  createBossAttack(boss, player) {
+    // Different attack patterns based on boss health and phase
+    const healthPercentage = boss.health / boss.maxHealth;
+    
+    if (healthPercentage <= 0.3) {
+      // Critical health - rapid fire spread
+      this.createBossSpreadAttack(boss, player);
+    } else if (healthPercentage <= 0.6) {
+      // Damaged - triple shot
+      this.createBossTripleAttack(boss, player);
+    } else {
+      // Full health - single powerful shot
+      this.createBossSingleAttack(boss, player);
+    }
+  }`,
+  createBossSingleAttack: `
+  createBossSingleAttack(boss, player) {
+    // Single powerful shot
+    const bullet = this.add.rectangle(
+      boss.x + (boss.facing === 'right' ? 40 : -40),
+      boss.y,
+      20,
+      12,
+      0xff0000
+    );
+    
+    const bulletData = {
+      sprite: bullet,
+      velocityX: boss.facing === 'right' ? 10 : -10,
+      velocityY: 0,
+      lifetime: 240,
+      isEnemyBullet: true
+    };
+    
+    boss.bullets.push(bulletData);
+  }`,
+  createBossTripleAttack: `
+  createBossTripleAttack(boss, player) {
+    // Triple shot spread
+    const angles = [-15, 0, 15]; // Degrees
+    const speed = 8;
+    
+    angles.forEach(angle => {
+      const bullet = this.add.rectangle(
+        boss.x + (boss.facing === 'right' ? 40 : -40),
+        boss.y,
+        16,
+        10,
+        0xff4400
+      );
+      
+      const radians = Phaser.Math.DegToRad(angle);
+      const velocityX = Math.cos(radians) * speed * (boss.facing === 'right' ? 1 : -1);
+      const velocityY = Math.sin(radians) * speed;
+      
+      const bulletData = {
+        sprite: bullet,
+        velocityX: velocityX,
+        velocityY: velocityY,
+        lifetime: 200,
+        isEnemyBullet: true
+      };
+      
+      boss.bullets.push(bulletData);
+    });
+  }`,
+  createBossSpreadAttack: `
+  createBossSpreadAttack(boss, player) {
+    // Rapid fire spread attack
+    const angles = [-30, -15, 0, 15, 30]; // 5 bullets in spread
+    const speed = 6;
+    
+    angles.forEach(angle => {
+      const bullet = this.add.rectangle(
+        boss.x + (boss.facing === 'right' ? 40 : -40),
+        boss.y,
+        14,
+        8,
+        0xff2200
+      );
+      
+      const radians = Phaser.Math.DegToRad(angle);
+      const velocityX = Math.cos(radians) * speed * (boss.facing === 'right' ? 1 : -1);
+      const velocityY = Math.sin(radians) * speed;
+      
+      const bulletData = {
+        sprite: bullet,
+        velocityX: velocityX,
+        velocityY: velocityY,
+        lifetime: 180,
+        isEnemyBullet: true
+      };
+      
+      boss.bullets.push(bulletData);
+    });
+  }`,
+  createBullet: `
+  createBullet() {
+    // Create a simple rectangle bullet
+    const bullet = this.add.rectangle(
+      this.player.x + (this.playerState.facing === 'right' ? 30 : -30),
+      this.player.y,
+      16,
+      8,
+      0xffff00
+    );
+    
+    // Store bullet data
+    const bulletData = {
+      sprite: bullet,
+      velocityX: this.playerState.facing === 'right' ? 8 : -8, // pixels per frame
+      velocityY: 0,
+      lifetime: 180 // 3 seconds at 60fps
+    };
+    
+    this.bullets.push(bulletData);
+  }`,
+  updateBullets: `
+  updateBullets() {
+    // Update each bullet manually
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+      
+      // Move bullet
+      bullet.sprite.x += bullet.velocityX;
+      bullet.sprite.y += bullet.velocityY;
+      
+      // Check collision with platforms
+      let hitPlatform = false;
+      this.platforms.children.entries.forEach(platform => {
+        if (this.checkCollision(bullet.sprite, platform)) {
+          hitPlatform = true;
+        }
+      });
+      
+      // Check collision with enemies
+      let hitEnemy = false;
+      this.enemies.forEach(enemy => {
+        if (this.checkCollision(bullet.sprite, enemy)) {
+          hitEnemy = true;
+          // Handle enemy health if they have it
+          if (enemy.health) {
+            enemy.health--;
+            if (enemy.health <= 0) {
+              enemy.destroy();
+              const index = this.enemies.indexOf(enemy);
+              if (index > -1) {
+                this.enemies.splice(index, 1);
+              }
+            }
+          } else {
+            // Instant kill for enemies without health
+            enemy.destroy();
+            const index = this.enemies.indexOf(enemy);
+            if (index > -1) {
+              this.enemies.splice(index, 1);
+            }
+          }
+        }
+      });
+      
+      // Decrease lifetime
+      bullet.lifetime--;
+      
+      // Remove bullet if it hit something or expired
+      if (hitPlatform || hitEnemy || bullet.lifetime <= 0 || 
+          bullet.sprite.x < 0 || bullet.sprite.x > 800) {
+        bullet.sprite.destroy();
+        this.bullets.splice(i, 1);
+      }
+    }
+  }`,
+  checkCollision: `
+  checkCollision(rect1, rect2) {
+    return (rect1.x - rect1.width/2 < rect2.x + rect2.width/2 &&
+            rect1.x + rect1.width/2 > rect2.x - rect2.width/2 &&
+            rect1.y - rect1.height/2 < rect2.y + rect2.height/2 &&
+            rect1.y + rect1.height/2 > rect2.y - rect2.height/2);
+  }`,
+  createPlayerProjectile: `
+  createPlayerProjectile() {
+    const projectile = this.add.rectangle(this.player.x, this.player.y, 8, 8, 0xffff00);
+    this.physics.add.existing(projectile, false);
+    // Disable gravity for manually created projectiles too
+    projectile.body.setAllowGravity(false);
+    projectile.body.setVelocityX(this.player.body.velocity.x > 0 ? 400 : -400);
+    this.projectiles.add(projectile);
+    
+    // Remove projectile after 2 seconds
+    this.time.delayedCall(2000, () => {
+      if (projectile.active) {
+        projectile.destroy();
+      }
+    });
+  }`,
+  createEnemyProjectile: `
+  createEnemyProjectile(enemy, target) {
+    const projectile = this.add.rectangle(enemy.x, enemy.y, 8, 8, 0xff0000);
+    this.physics.add.existing(projectile, false);
+    projectile.body.setAllowGravity(false);
+    projectile.body.setGravity(0, 0);
+    
+    // Calculate direction to player
+    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, target.x, target.y);
+    const velocity = this.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), 150);
+    projectile.body.setVelocity(velocity.x, velocity.y);
+    
+    // Add to projectiles group if it exists
+    if (this.projectiles) {
+      this.projectiles.add(projectile);
+    }
+    
+    // Destroy after 3 seconds
+    this.time.delayedCall(3000, () => {
+      if (projectile.active) {
+        projectile.destroy();
+      }
+    });
+  }`,
+  handleProjectileHit: `
+  handleProjectileHit(projectile, enemy) {
+    projectile.destroy();
+    if (enemy.health) {
+      enemy.health--;
+      if (enemy.health <= 0) {
+        enemy.destroy();
+        const index = this.enemies.indexOf(enemy);
+        if (index > -1) {
+          this.enemies.splice(index, 1);
+        }
+      }
+    } else {
+      enemy.destroy();
+      const index = this.enemies.indexOf(enemy);
+      if (index > -1) {
+        this.enemies.splice(index, 1);
+      }
+    }
+  }`,
+  handleProjectileWall: `
+  handleProjectileWall(projectile, wall) {
+    projectile.destroy();
+  }`,
+};
