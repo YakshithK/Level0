@@ -12,15 +12,17 @@ export default function Chat() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [thinking, setThinking] = useState<string>("");
 
   const handleInitialPrompt = async () => {
     if (!aiPrompt.trim()) return;
     setIsGenerating(true);
     setError(null);
     try {
-      const code = await anthropicService.generatePhaserScene(aiPrompt);
-      if (code && code.trim()) {
-        setPhaserCode(code);
+      const result = await anthropicService.generatePhaserScene(aiPrompt);
+      if (result && result.code && result.code.trim()) {
+        setPhaserCode(result.code);
+        setThinking(result.thinking || "");
         setIsRunning(false);
         setHasGenerated(true);
       } else {
@@ -115,7 +117,14 @@ export default function Chat() {
           {/* Left Side: Chat Preview Placeholder */}
           <div className="flex flex-col w-1/2 min-w-0 h-full border-r border-[#2c2f36] bg-[#23272f]">
             <div className="flex-1 flex items-center justify-center">
-              <span className="text-[#888] text-lg">Chat Preview Coming Soon...</span>
+              {thinking ? (
+                <div className="text-[#00ffff] whitespace-pre-line text-base max-w-lg mx-auto p-4 rounded bg-[#181c24] border border-[#00ffff] shadow">
+                  <strong>Thinking:</strong>
+                  <div className="mt-2">{thinking}</div>
+                </div>
+              ) : (
+                <span className="text-[#888] text-lg">Chat Preview Coming Soon...</span>
+              )}
             </div>
             {/* Chat input at the bottom */}
             <form

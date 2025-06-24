@@ -1,4 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
+import systemPrompt from "../level0_system_prompt.txt?raw"
 
 const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || '';
 
@@ -23,27 +24,33 @@ export class AnthropicService {
     });
   }
 
-  async generatePhaserScene(promptText: string): Promise<string> {
+  async generatePhaserScene(promptText: string): Promise<{ thinking: string, code: string }> {
     const response = await this.anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 4000,
       messages: [
         {
           role: 'user',
-          content: `
-You are an expert Phaser game developer.
-
-Generate a complete Phaser 3 Scene class in JavaScript. The class name MUST be DynamicScene (i.e., 'class DynamicScene extends Phaser.Scene'). Don't use any images or external files. Just use basic shapes for now. The user prompt is:
-"${promptText}"
-
-Only return valid, runnable JavaScript code for the scene class. Don't explain anything. Also dont use any file assets because you don't have access to them. Don't use any image files at all.
-          `.trim(),
+          content: `${systemPrompt}\n\n${promptText}`.trim(),
         },
       ],
     });
     const textBlock = response.content.find(isTextBlock);
-    const code = textBlock ? (textBlock as { text: string }).text : '';
-    return stripCodeBlock(code);
+    const fullText = textBlock ? (textBlock as { text: string }).text : '';
+    // Extract <Thinking>...</Thinking> and code block
+    let thinking = '';
+    let code = '';
+    const thinkingMatch = fullText.match(/<Thinking>([\s\S]*?)<\/Thinking>/i);
+    if (thinkingMatch) {
+      thinking = thinkingMatch[1].trim();
+    }
+    const codeMatch = fullText.match(/```javascript([\s\S]*?)```/i) || fullText.match(/```([\s\S]*?)```/i);
+    if (codeMatch) {
+      code = codeMatch[1].trim();
+    } else {
+      code = stripCodeBlock(fullText);
+    }
+    return { thinking, code };
   }
 }
 
