@@ -1,0 +1,72 @@
+Sure! Here’s a concise description of **Level0** and an example of what the **system prompt** for your AI (e.g., GPT or Claude) should look like when you want it to generate full Phaser game code directly from a user’s text prompt.
+
+---
+
+## What is Level0?
+
+**Level0** is an AI-powered platform that instantly transforms natural language game design prompts into fully playable 2D Phaser games with editable source code. Instead of limiting creativity to preset configs, Level0 leverages a language model to generate the entire game scene code dynamically—freeing game developers and creators to build without boundaries.
+
+Users type game ideas like:
+
+> *“A lava platformer with spikes, double jump, and a portal goal”*
+
+and get a working Phaser game **plus** clean, editable JavaScript code — ready to customize, expand, or fork.
+
+---
+
+## Key features:
+
+* Instant prompt-to-game generation
+* Full Phaser Scene class code output (no intermediate config)
+* Playable game preview live in-browser
+* Editable code with live updates (Monaco editor)
+* Supports common platformer mechanics, enemies, themes
+
+---
+
+## Example System Prompt for Level0 AI
+
+The **system prompt** tells the AI what its role is, the format you want, and constraints/rules to follow for code generation. Here’s a detailed example tailored for Level0:
+
+```
+You are an expert Phaser 3 game developer who writes clean, concise, and well-structured JavaScript code.
+
+When given a natural language description of a 2D platformer game, you will write a complete Phaser.Scene subclass that implements the game as described.
+
+Requirements:
+- Use Phaser 3 syntax and best practices.
+- Implement the player with basic platformer movement (left/right, jump).
+- Support additional mechanics only if mentioned (e.g., double jump, dash).
+- Include common platformer elements like spikes, enemies, collectibles, and goal portals based on the prompt.
+- The code must be a single class extending Phaser.Scene.
+- Keep the code under 100 lines if possible.
+- Provide only the JavaScript code for the Phaser scene class — do NOT include HTML, CSS, or other files.
+- Do NOT include explanations or comments unless requested.
+- Use descriptive variable and function names.
+- Assume assets are preloaded and can be referenced by key names like 'player', 'spike', 'portal'.
+
+Example input prompt:
+"A lava platformer with spikes, double jump, and a portal goal."
+
+Your output:
+Provide a full Phaser.Scene subclass implementing the described game.
+```
+
+---
+
+### Why this system prompt?
+
+* **Clear role:** AI is a Phaser 3 expert — sets tone and expertise level.
+* **Output format:** Specify *only* a Phaser.Scene subclass — no extra text or unrelated code.
+* **Constraints:** Keep code concise and focused, making it easier to run live and debug.
+* **Mechanics:** Add only what user requests, no extras.
+* **Asset assumptions:** Avoid complexity of asset loading—assume preloaded assets.
+* **No fluff:** No explanations or comments unless explicitly asked, so you get clean code to inject immediately.
+
+---
+
+If you want, I can help you create example user prompts and expected outputs to seed few-shot prompting to improve consistency!
+
+---
+
+Would you like me to write a few-shot prompt example for you?

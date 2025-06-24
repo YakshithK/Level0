@@ -789,3 +789,211 @@ export const HELPER_METHOD_SNIPPETS = {
     projectile.destroy();
   }`,
 };
+
+
+// WORKING SCENE CLASS FOR SNAKE EATING APPLE GAME FROM CLAUDE SONNET 4
+class DynamicScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "SnakeGame" });
+  }
+
+  create() {
+    // Game settings
+    this.gridSize = 20;
+    this.gameWidth = 800;
+    this.gameHeight = 600;
+    this.cols = this.gameWidth / this.gridSize;
+    this.rows = this.gameHeight / this.gridSize;
+
+    // Set background
+    this.cameras.main.setBackgroundColor('#2d1b1b');
+
+    // Initialize snake
+    this.snake = [
+      { x: 10, y: 10 },
+      { x: 9, y: 10 },
+      { x: 8, y: 10 }
+    ];
+
+    // Snake direction
+    this.direction = { x: 1, y: 0 };
+    this.nextDirection = { x: 1, y: 0 };
+
+    // Game state
+    this.score = 0;
+    this.gameRunning = true;
+
+    // Create apple
+    this.apple = this.generateApple();
+
+    // Create snake graphics
+    this.snakeGraphics = [];
+    this.updateSnakeGraphics();
+
+    // Create apple graphic
+    this.appleGraphic = this.add.rectangle(
+      this.apple.x * this.gridSize + this.gridSize / 2,
+      this.apple.y * this.gridSize + this.gridSize / 2,
+      this.gridSize - 2,
+      this.gridSize - 2,
+      0xff0000
+    );
+
+    // Setup controls
+    this.wasd = this.input.keyboard.addKeys({
+      w: Phaser.Input.Keyboard.KeyCodes.W,
+      a: Phaser.Input.Keyboard.KeyCodes.A,
+      s: Phaser.Input.Keyboard.KeyCodes.S,
+      d: Phaser.Input.Keyboard.KeyCodes.D
+    });
+
+    // Create UI
+    this.scoreText = this.add.text(20, 20, 'Score: 0', {
+      fontSize: '24px',
+      color: '#00ff00'
+    });
+
+    this.gameOverText = this.add.text(
+      this.gameWidth / 2,
+      this.gameHeight / 2,
+      '',
+      {
+        fontSize: '32px',
+        color: '#ff0000'
+      }
+    ).setOrigin(0.5).setVisible(false);
+
+    // Game loop timer
+    this.gameTimer = this.time.addEvent({
+      delay: 150,
+      callback: this.updateGame,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  update() {
+    if (!this.gameRunning) return;
+
+    // Handle input
+    if (this.wasd.w.isDown && this.direction.y !== 1) {
+      this.nextDirection = { x: 0, y: -1 };
+    } else if (this.wasd.s.isDown && this.direction.y !== -1) {
+      this.nextDirection = { x: 0, y: 1 };
+    } else if (this.wasd.a.isDown && this.direction.x !== 1) {
+      this.nextDirection = { x: -1, y: 0 };
+    } else if (this.wasd.d.isDown && this.direction.x !== -1) {
+      this.nextDirection = { x: 1, y: 0 };
+    }
+  }
+
+  updateGame() {
+    if (!this.gameRunning) return;
+
+    // Update direction
+    this.direction = { ...this.nextDirection };
+
+    // Move snake
+    const head = { ...this.snake[0] };
+    head.x += this.direction.x;
+    head.y += this.direction.y;
+
+    // Check wall collision
+    if (head.x < 0 || head.x >= this.cols || head.y < 0 || head.y >= this.rows) {
+      this.gameOver();
+      return;
+    }
+
+    // Check self collision
+    for (let segment of this.snake) {
+      if (head.x === segment.x && head.y === segment.y) {
+        this.gameOver();
+        return;
+      }
+    }
+
+    // Add new head
+    this.snake.unshift(head);
+
+    // Check apple collision
+    if (head.x === this.apple.x && head.y === this.apple.y) {
+      this.eatApple();
+    } else {
+      // Remove tail if no apple eaten
+      this.snake.pop();
+    }
+
+    // Update graphics
+    this.updateSnakeGraphics();
+  }
+
+  generateApple() {
+    let apple;
+    do {
+      apple = {
+        x: Phaser.Math.Between(0, this.cols - 1),
+        y: Phaser.Math.Between(0, this.rows - 1)
+      };
+    } while (this.isAppleOnSnake(apple));
+    
+    return apple;
+  }
+
+  isAppleOnSnake(apple) {
+    return this.snake.some(segment => 
+      segment.x === apple.x && segment.y === apple.y
+    );
+  }
+
+  eatApple() {
+    // Increase score
+    this.score += 10;
+    this.scoreText.setText('Score: ' + this.score);
+
+    // Generate new apple
+    this.apple = this.generateApple();
+    
+    // Update apple graphic position
+    this.appleGraphic.x = this.apple.x * this.gridSize + this.gridSize / 2;
+    this.appleGraphic.y = this.apple.y * this.gridSize + this.gridSize / 2;
+
+    // Increase game speed slightly
+    if (this.gameTimer.delay > 80) {
+      this.gameTimer.delay = Math.max(80, this.gameTimer.delay - 2);
+    }
+  }
+
+  updateSnakeGraphics() {
+    // Clear existing snake graphics
+    this.snakeGraphics.forEach(graphic => graphic.destroy());
+    this.snakeGraphics = [];
+
+    // Create new snake graphics
+    this.snake.forEach((segment, index) => {
+      const color = index === 0 ? 0x00ff00 : 0x00aa00; // Head is brighter
+      const graphic = this.add.rectangle(
+        segment.x * this.gridSize + this.gridSize / 2,
+        segment.y * this.gridSize + this.gridSize / 2,
+        this.gridSize - 2,
+        this.gridSize - 2,
+        color
+      );
+      this.snakeGraphics.push(graphic);
+    });
+  }
+
+  gameOver() {
+    this.gameRunning = false;
+    this.gameTimer.destroy();
+
+    this.gameOverText.setText(
+      'GAME OVER!\nFinal Score: ' + this.score + '\nPress R to Restart'
+    ).setVisible(true);
+
+    // Add restart functionality
+    this.input.keyboard.once('keydown-R', () => {
+      this.scene.restart();
+    });
+  }
+}
+

@@ -388,3 +388,227 @@
 
 #### **Day 22 (Code Generation)**
 - [Dynamic JavaScript Execution](https://www.youtube.com/watch?v=J
+
+
+Got it! Here’s a revised plan starting **June 23** that reflects where you are now — you have live editing working with config-based games but want to shift toward a more flexible system where the AI generates actual Phaser scene code from prompts.
+
+---
+
+# Level0 MVP: HARDCORE 5-DAY EXECUTION PLAN
+
+## June 23 (Today) → June 27 EOD
+
+> **MISSION**: Ship AI prompt-to-playable-game builder where the AI generates *actual Phaser scene code* directly from the prompt — no rigid configs. Break the borders of imagination. NO FLUFF. JUST SHIP.
+
+---
+
+## ⚡ DAILY ROUTINE (NON-NEGOTIABLE)
+
+* **6-8 hours coding**
+* **45-90 min targeted learning** (while coding)
+* **30 min outreach** (DMs, replies, community posts)
+* **10 min build in public** (progress post + engage)
+* **ZERO time on**: extensive testing, polish, perfectionism
+
+---
+
+## 🗓️ EXECUTION SCHEDULE
+
+### **June 23 - FULL PIPELINE + AI-CODE INJECTION**
+
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+
+1. **End-to-End Flow (Prompt → Scene Code → Playable Game)**
+
+   * Integrate AI prompt-to-full Phaser Scene class code generation
+   * Replace config-driven code with AI-generated scene class code injection
+   * Display generated code live in Monaco editor
+   * Dynamically eval & run generated code in iframe
+
+2. **Improve Error Handling & Sandbox Execution**
+
+   * Catch and display runtime errors gracefully
+   * Secure dynamic code execution sandbox (iframe + blob URLs)
+   * Reset game instance cleanly on regenerate
+
+3. **UX Improvements**
+
+   * Prompt examples dropdown
+   * Clear/reset prompt and code button
+   * Loading spinner while waiting for AI response
+
+#### 📚 LEARN (Built into coding)
+
+* Advanced eval() sandboxing techniques
+* Safe dynamic code execution
+* Prompt engineering for reliable Phaser scene code generation
+
+#### 📢 BUILD IN PUBLIC (10 min)
+
+* Post demo video/GIF: “Day 1 of code-gen mode — AI generates full playable Phaser scene code from any prompt 🎮🔥 #buildinpublic”
+
+#### 💬 OUTREACH (30 min)
+
+* DM Phaser and AI developer communities with live demo
+* Engage on Twitter with relevant hashtags & tags
+* Post in Discord game dev channels
+
+---
+
+### **June 24 - PROMPT ENGINEERING + CODE QUALITY**
+
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+
+1. **Prompt Engineering**
+
+   * Refine prompt templates for stable and clean Phaser Scene output
+   * Add few-shot examples for better AI understanding
+   * Experiment with different temperature and model params
+
+2. **Code Sanitization & Formatting**
+
+   * Auto-format AI-generated code in Monaco
+   * Remove unsafe code patterns automatically
+   * Add helper code snippets to standardize scene setup
+
+3. **Performance & Responsiveness**
+
+   * Improve iframe reload speed
+   * Cache recent prompt + code to reduce API calls
+
+#### 📚 LEARN (Built into coding)
+
+* Few-shot prompting best practices
+* Prettier or other JS formatter integration
+* Advanced React iframe and state sync
+
+#### 📢 BUILD IN PUBLIC (10 min)
+
+* Post: “Dialed in prompt templates — AI now writes clean Phaser scene code on demand 🎯 #gamedev #AI”
+
+#### 💬 OUTREACH (30 min)
+
+* Reach out to AI prompt engineering experts for feedback
+* Share prompt examples on Twitter
+* Ask followers: “What’s the wildest game prompt you want to see?”
+
+---
+
+### **June 25 - GAME MECHANICS & DIVERSITY**
+
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+
+1. **Advanced Mechanics**
+
+   * Add support for common platformer mechanics via AI code generation:
+
+     * Double jump, dash, moving platforms, enemies
+   * Use prompt hints to toggle these mechanics on/off
+
+2. **Theme Variations & Visuals**
+
+   * AI-generated code to handle different themes (lava, ice, forest)
+   * Simple background and sprite placeholders injected dynamically
+
+3. **Test Complex Prompts**
+
+   * Generate multi-mechanic games from complex prompts
+   * Fix breaking cases
+
+#### 📚 LEARN (Built into coding)
+
+* Phaser advanced features (tweens, physics)
+* Dynamic asset loading basics
+
+#### 📢 BUILD IN PUBLIC (10 min)
+
+* Post clips of varied games generated live from prompts
+* Poll: “Which mechanic should we add next?”
+
+#### 💬 OUTREACH (30 min)
+
+* DM indie devs & streamers for feedback/demo
+* Post in game dev and AI forums
+
+---
+
+### **June 26 - SHARING, PERSISTENCE & STABILITY**
+
+*6-8 hours*
+
+#### 🔨 CODE (Priority Order)
+
+1. **Sharing Features**
+
+   * Encode prompts + code in URL params for sharing
+   * “Share game” button with social preview tags
+
+2. **Persistence**
+
+   * Store recent prompts and generated code in localStorage
+   * “Load recent” dropdown
+
+3. **Error Recovery & Fallbacks**
+
+   * Graceful fallback to simple game if code errors
+   * Input validation and sanitation
+
+#### 📚 LEARN (Built into coding)
+
+* URL encoding & social meta tags
+* localStorage APIs and performance
+
+#### 📢 BUILD IN PUBLIC (10 min)
+
+* Post: “Share your AI-built games with one click! 🔗 #buildinpublic”
+
+#### 💬 OUTREACH (30 min)
+
+* DM friends & followers with sharing demo
+* Gather feedback on sharing UX
+
+---
+
+### **June 27 - FINAL LAUNCH DAY**
+
+*4-6 hours*
+
+#### 🔨 FINAL PUSH (2h)
+
+* Final bug fixes & polish
+* Analytics integration
+* Deploy production build
+
+#### 📢 LAUNCH SEQUENCE (3h)
+
+* 8AM: Twitter thread launch + pinned post
+* 9AM: LinkedIn post with story
+* 10AM: Product Hunt submission
+* 12PM: Reddit r/gamedev + r/machinelearning launch posts
+* 2PM: Discord community blasts
+* 4PM: Indie Hackers showcase
+* 6PM: Engage & reply to all comments
+
+#### 💬 OUTREACH (All Day)
+
+* DM personal network launch news
+* Engage with early users live
+* Collect launch feedback
+
+---
+
+### NOTES
+
+* The goal now is **AI generating actual Phaser Scene class code live** — no pre-built configs limiting creativity.
+* Focus on safe, fast dynamic code injection + clean prompt engineering for robust results.
+* Keep sharing daily progress publicly, gather feedback fast, and iterate.
+
+---
+
+If you want, I can help you draft system prompts for the AI to generate Phaser scene code or help rework your frontend pipeline for this. Just ask!
