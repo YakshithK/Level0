@@ -14,6 +14,11 @@ function stripCodeBlock(code: string): string {
     .trim();
 }
 
+interface ChatMessage {
+  type: 'user' | 'ai';
+  content: string;
+}
+
 export class AnthropicService {
   private anthropic: Anthropic;
 
@@ -22,19 +27,46 @@ export class AnthropicService {
       apiKey: apiKey || ANTHROPIC_API_KEY,
       dangerouslyAllowBrowser: true
     });
+    
   }
 
-  async generatePhaserScene(promptText: string): Promise<{ thinking: string, code: string }> {
-    const response = await this.anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      messages: [
-        {
-          role: 'user',
-          content: `${systemPrompt}\n\n${promptText}`.trim(),
-        },
-      ],
+  async generatePhaserScene(promptText: string, isInitialPrompt: boolean = true, conversationHistory: ChatMessage[] = []): Promise<{ thinking: string, code: string }> {
+    const model = isInitialPrompt ? 'claude-3-haiku-20240307' : 'claude-3-haiku-20240307';
+    
+    // Build messages array with conversation history
+    const messages: any[] = [];
+    
+    // Add conversation history if provided
+    if (conversationHistory.length > 0) {
+      conversationHistory.forEach(msg => {
+        messages.push({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        });
+      });
+    }
+    
+    // Add the current prompt
+    messages.push({
+      role: 'user',
+      content: `${systemPrompt}\n\n${promptText}`.trim(),
     });
+    
+    // Log the messages being sent to AI
+    console.log('=== AI SERVICE CALL ===');
+    console.log('Model:', model);
+    console.log('Is Initial Prompt:', isInitialPrompt);
+    console.log('Conversation History Length:', conversationHistory.length);
+    console.log('Total Messages to AI:', messages.length);
+    console.log('Messages:', messages);
+    console.log('========================');
+    
+    const response = await this.anthropic.messages.create({
+      model: model,
+      max_tokens: 4000,
+      messages: messages,
+    });
+    
     const textBlock = response.content.find(isTextBlock);
     const fullText = textBlock ? (textBlock as { text: string }).text : '';
     // Extract <Thinking>...</Thinking> and code block
@@ -50,6 +82,7 @@ export class AnthropicService {
     } else {
       code = stripCodeBlock(fullText);
     }
+    console.log("thinking", response)
     return { thinking, code };
   }
 }

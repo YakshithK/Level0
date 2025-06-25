@@ -1,30 +1,103 @@
 import { useEffect, useState } from 'react';
+import { useLocation, Navigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react";
 import { anthropicService } from '../services/anthropicService';
 
+interface LocationState {
+  phaserCode: string;
+  thinking: string;
+  aiPrompt: string;
+}
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  code?: string;
+  timestamp: Date;
+}
+
 export default function Chat() {
-  const [phaserCode, setPhaserCode] = useState("");
+  const location = useLocation();
+  const state = location.state as LocationState;
+  
+  // If no state data, redirect back to landing
+  if (!state || !state.phaserCode) {
+    return <Navigate to="/" replace />;
+  }
+
+  const [phaserCode, setPhaserCode] = useState(state.phaserCode);
   const [showCode, setShowCode] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiPrompt, setAiPrompt] = useState(''); // Clear input on navigation
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [thinking, setThinking] = useState<string>("");
+  const [thinking, setThinking] = useState<string>(state.thinking);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 'initial-user',
+      type: 'user',
+      content: state.aiPrompt,
+      timestamp: new Date()
+    },
+    {
+      id: 'initial-ai',
+      type: 'ai',
+      content: state.thinking,
+      code: state.phaserCode,
+      timestamp: new Date()
+    }
+  ]);
 
   const handleInitialPrompt = async () => {
     if (!aiPrompt.trim()) return;
+    
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: aiPrompt,
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, userMessage]);
+    const currentPrompt = aiPrompt;
+    setAiPrompt(''); // Clear input immediately
     setIsGenerating(true);
     setError(null);
+    
+    // Convert chat messages to the format expected by the service
+    const conversationHistory = chatMessages.map(msg => ({
+      type: msg.type as 'user' | 'ai',
+      content: msg.content
+    }));
+    
+    // Log the conversation history for debugging
+    console.log('=== CONVERSATION HISTORY ===');
+    console.log('Current prompt:', currentPrompt);
+    console.log('Message history:', conversationHistory);
+    console.log('Total messages:', conversationHistory.length);
+    console.log('===========================');
+    
     try {
-      const result = await anthropicService.generatePhaserScene(aiPrompt);
+      const result = await anthropicService.generatePhaserScene(currentPrompt, false, conversationHistory);
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
         setThinking(result.thinking || "");
+        
+        // Add AI response to chat (store both thinking and code)
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: result.thinking || "",
+          code: result.code,
+          timestamp: new Date()
+        };
+        
+        setChatMessages(prev => [...prev, aiMessage]);
         setIsRunning(false);
-        setHasGenerated(true);
       } else {
         setError('No code was generated.');
       }
@@ -67,44 +140,59 @@ export default function Chat() {
     setIsRunning(false);
   };
 
-  if (!hasGenerated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#181c24]">
-        <form
-          className="w-full max-w-xl mx-auto flex flex-col items-center justify-center"
-          onSubmit={e => {
-            e.preventDefault();
-            handleInitialPrompt();
-          }}
-        >
-          <textarea
-            className="w-full h-32 p-4 rounded-lg border border-[#444] bg-[#23272f] text-white text-lg focus:outline-none focus:border-[#00ffff] resize-none shadow-lg"
-            placeholder="Describe your game (e.g., 'A lava platformer with double jump and spikes')"
-            value={aiPrompt}
-            onChange={e => setAiPrompt(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleInitialPrompt();
-              }
-            }}
-            disabled={isGenerating}
-            autoFocus
-          />
-          <button
-            type="submit"
-            className="mt-6 bg-[#00ff00] text-black px-8 py-3 rounded font-bold text-lg hover:bg-[#39ff14] disabled:bg-[#666] disabled:cursor-not-allowed transition-colors shadow"
-            disabled={isGenerating || !aiPrompt.trim()}
-          >
-            {isGenerating ? 'Generating...' : 'Generate Game'}
-          </button>
-          {error && (
-            <div className="mt-4 text-red-400 text-base">Error: {error}</div>
-          )}
-        </form>
-      </div>
-    );
-  }
+  // Handle input key events to prevent game controls from being captured
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    // Only redirect game keys if the game canvas is currently focused
+    const canvas = document.querySelector('canvas');
+    const isCanvasFocused = canvas === document.activeElement;
+    const isInputFocused = e.currentTarget === document.activeElement;
+    
+    // If input is focused, allow all typing (including space, W, A, S, D)
+    if (isInputFocused) {
+      // Handle Enter key for form submission
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleInitialPrompt();
+      }
+      return; // Allow all other keys to work normally in input
+    }
+    
+    // If game is running, not in code view, and canvas is focused, let game controls pass through
+    if (isRunning && !showCode && isCanvasFocused) {
+      // Common game control keys - let them pass through to the game
+      const gameControlKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space', 'shift', 'control', 'alt'];
+      if (gameControlKeys.includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Focus the game canvas to receive the key event
+        if (canvas) {
+          canvas.focus();
+          // Dispatch the key event to the canvas
+          const keyEvent = new KeyboardEvent('keydown', {
+            key: e.key,
+            code: e.code,
+            keyCode: e.keyCode,
+            which: e.which,
+            shiftKey: e.shiftKey,
+            ctrlKey: e.ctrlKey,
+            altKey: e.altKey,
+            metaKey: e.metaKey,
+            bubbles: true,
+            cancelable: true
+          });
+          canvas.dispatchEvent(keyEvent);
+        }
+        return;
+      }
+    }
+  };
+
+  // Handle input focus to manage game controls
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Only blur input if game is running, not in code view, and user clicks outside input
+    // This allows users to actually type in the input when they want to
+    console.log('Input focused - allowing typing');
+  };
 
   return (
     <div
@@ -114,16 +202,47 @@ export default function Chat() {
     >
       <div className="w-full max-w-7xl mx-auto rounded-xl shadow-lg bg-[#23272f] flex flex-col h-[calc(100vh-2rem)]">
         <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden w-full">
-          {/* Left Side: Chat Preview Placeholder */}
+          {/* Left Side: Chat Messages */}
           <div className="flex flex-col w-1/2 min-w-0 h-full border-r border-[#2c2f36] bg-[#23272f]">
-            <div className="flex-1 flex items-center justify-center">
-              {thinking ? (
-                <div className="text-[#00ffff] whitespace-pre-line text-base max-w-lg mx-auto p-4 rounded bg-[#181c24] border border-[#00ffff] shadow">
-                  <strong>Thinking:</strong>
-                  <div className="mt-2">{thinking}</div>
+            <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+              {chatMessages.length > 0 ? (
+                <div className="space-y-4">
+                  {chatMessages.map((message) => (
+                    <div key={message.id} className={`flex items-start ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {message.type === 'ai' && (
+                        <div className="w-8 h-8 bg-neon-cyan rounded-full flex items-center justify-center text-black font-bold text-sm mr-3 flex-shrink-0">
+                          AI
+                        </div>
+                      )}
+                      <div className={`rounded-lg p-3 max-w-[80%] shadow-sm ${
+                        message.type === 'user' 
+                          ? 'bg-neon-cyan text-black' 
+                          : 'bg-[#181c24] border border-[#444] text-[#e5e7ef]'
+                      }`}>
+                        <div className="text-sm whitespace-pre-line">{message.content}</div>
+                      </div>
+                      {message.type === 'user' && (
+                        <div className="w-8 h-8 bg-[#666] rounded-full flex items-center justify-center text-white font-bold text-sm ml-3 flex-shrink-0">
+                          U
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {isGenerating && (
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 bg-neon-cyan rounded-full flex items-center justify-center text-black font-bold text-sm mr-3 flex-shrink-0">
+                        AI
+                      </div>
+                      <div className="bg-[#181c24] border border-[#444] rounded-lg p-3 max-w-[80%] shadow-sm">
+                        <div className="text-[#00ffff] text-sm">Thinking...</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <span className="text-[#888] text-lg">Chat Preview Coming Soon...</span>
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-[#888] text-lg">Chat Preview Coming Soon...</span>
+                </div>
               )}
             </div>
             {/* Chat input at the bottom */}
@@ -140,14 +259,10 @@ export default function Chat() {
                 placeholder="Type your game prompt and press Enter..."
                 value={aiPrompt}
                 onChange={e => setAiPrompt(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleInitialPrompt();
-                  }
-                }}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
                 disabled={isGenerating}
-                autoFocus
+                autoFocus={!isRunning}
               />
             </form>
           </div>
