@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
@@ -9,6 +9,14 @@ interface LocationState {
   phaserCode: string;
   thinking: string;
   aiPrompt: string;
+}
+
+interface MasterChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  thinking: string;
+  code?: string;
+  timestamp: Date;
 }
 
 interface ChatMessage {
@@ -35,6 +43,21 @@ export default function Chat() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thinking, setThinking] = useState<string>(state.thinking);
+  const [masterConversationHistory, setMasterConversationHistory] = useState<MasterChatMessage[]>([
+    {
+      id: 'initial-user',
+      type: 'user',
+      thinking: state.aiPrompt,
+      timestamp: new Date()
+    },
+    {
+      id: 'initial-ai',
+      type: 'ai',
+      thinking: state.thinking,
+      code: state.phaserCode,
+      timestamp: new Date()
+    }
+  ]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 'initial-user',
@@ -46,57 +69,58 @@ export default function Chat() {
       id: 'initial-ai',
       type: 'ai',
       content: state.thinking,
-      code: state.phaserCode,
       timestamp: new Date()
     }
   ]);
 
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const handleInitialPrompt = async () => {
     if (!aiPrompt.trim()) return;
-    
-    // Add user message to chat
-    const userMessage: ChatMessage = {
+    // Add user message to both histories
+    const userMasterMessage: MasterChatMessage = {
       id: Date.now().toString(),
       type: 'user',
-      content: aiPrompt,
+      thinking: aiPrompt,
       timestamp: new Date()
     };
-    
-    setChatMessages(prev => [...prev, userMessage]);
+    const userChatMessage: ChatMessage = {
+      id: userMasterMessage.id,
+      type: 'user',
+      content: aiPrompt,
+      timestamp: userMasterMessage.timestamp
+    };
+    setMasterConversationHistory(prev => [...prev, userMasterMessage]);
+    setChatMessages(prev => [...prev, userChatMessage]);
     const currentPrompt = aiPrompt;
-    setAiPrompt(''); // Clear input immediately
+    setAiPrompt('');
     setIsGenerating(true);
     setError(null);
-    
-    // Convert chat messages to the format expected by the service
-    const conversationHistory = chatMessages.map(msg => ({
+    const conversationHistory = masterConversationHistory.map(msg => ({
       type: msg.type as 'user' | 'ai',
-      content: msg.content
+      content: msg.thinking + (msg.code ? `\n${msg.code}` : '')
     }));
-    
-    // Log the conversation history for debugging
-    console.log('=== CONVERSATION HISTORY ===');
-    console.log('Current prompt:', currentPrompt);
-    console.log('Message history:', conversationHistory);
-    console.log('Total messages:', conversationHistory.length);
-    console.log('===========================');
-    
     try {
       const result = await anthropicService.generatePhaserScene(currentPrompt, false, conversationHistory);
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
         setThinking(result.thinking || "");
-        
-        // Add AI response to chat (store both thinking and code)
-        const aiMessage: ChatMessage = {
+        // Add AI response to both histories
+        const aiMasterMessage: MasterChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'ai',
-          content: result.thinking || "",
+          thinking: result.thinking || "",
           code: result.code,
           timestamp: new Date()
         };
-        
-        setChatMessages(prev => [...prev, aiMessage]);
+        const aiChatMessage: ChatMessage = {
+          id: aiMasterMessage.id,
+          type: 'ai',
+          content: result.thinking || "",
+          timestamp: aiMasterMessage.timestamp
+        };
+        setMasterConversationHistory(prev => [...prev, aiMasterMessage]);
+        setChatMessages(prev => [...prev, aiChatMessage]);
         setIsRunning(false);
       } else {
         setError('No code was generated.');
@@ -104,6 +128,8 @@ export default function Chat() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
+      console.log("lebron", masterConversationHistory)
+      console.log("james", conversationHistory)
       setIsGenerating(false);
     }
   };
@@ -188,7 +214,7 @@ export default function Chat() {
   };
 
   // Handle input focus to manage game controls
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleInputFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     // Only blur input if game is running, not in code view, and user clicks outside input
     // This allows users to actually type in the input when they want to
     console.log('Input focused - allowing typing');
@@ -253,13 +279,25 @@ export default function Chat() {
                 handleInitialPrompt();
               }}
             >
-              <input
-                type="text"
-                className="w-full px-4 py-2 rounded border border-[#444] bg-[#181c24] text-white text-base focus:outline-none focus:border-[#00ffff]"
+              <textarea
+                ref={textareaRef}
+                className="w-full px-4 py-2 rounded border border-[#444] bg-[#181c24] text-white text-base focus:outline-none focus:border-[#00ffff] resize-none overflow-y-auto min-h-[44px] max-h-40"
                 placeholder="Type your game prompt and press Enter..."
                 value={aiPrompt}
-                onChange={e => setAiPrompt(e.target.value)}
-                onKeyDown={handleInputKeyDown}
+                onChange={e => {
+                  setAiPrompt(e.target.value);
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + 'px';
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleInitialPrompt();
+                  }
+                  // Otherwise, allow Shift+Enter for new lines
+                }}
                 onFocus={handleInputFocus}
                 disabled={isGenerating}
                 autoFocus={!isRunning}
