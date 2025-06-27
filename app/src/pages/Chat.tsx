@@ -19,7 +19,7 @@ export default function Chat() {
   const { projectId } = useParams();
   const navigate = useNavigate();
 
-  // State
+
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [phaserCode, setPhaserCode] = useState<string>('');
   const [showCode, setShowCode] = useState(true);

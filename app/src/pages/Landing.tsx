@@ -166,6 +166,7 @@ export default function Landing() {
           .update({ code: result.code })
           .eq('id', projectId);
         // 6. Navigate to Chat page with projectId (no state)
+        console.log("JAMES")
         navigate(`/projects/${projectId}`);
       } else {
         setError('No code was generated.');

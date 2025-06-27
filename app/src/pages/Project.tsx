@@ -16,6 +16,7 @@ const ProjectPage: React.FC = () => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
 
   useEffect(() => {
+    console.log("")
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
