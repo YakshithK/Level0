@@ -40,7 +40,7 @@ export class AnthropicService {
     if (conversationHistory.length > 0) {
       conversationHistory.forEach(msg => {
         messages.push({
-          role: msg.type === 'user' ? 'user' : 'assistant',
+          role: msg.type === 'user' ? 'user': 'assistant',
           content: msg.content
         });
       });
@@ -51,15 +51,6 @@ export class AnthropicService {
       role: 'user',
       content: promptText.trim(),
     });
-    
-    // Log the messages being sent to AI
-    console.log('=== AI SERVICE CALL ===');
-    console.log('Model:', model);
-    console.log('Is Initial Prompt:', isInitialPrompt);
-    console.log('Conversation History Length:', conversationHistory.length);
-    console.log('Total Messages to AI:', messages.length);
-    console.log('Messages:', messages);
-    console.log('========================');
     
     const response = await this.anthropic.messages.create({
       model: model,

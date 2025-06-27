@@ -1,23 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react";
 import { anthropicService } from '../services/anthropicService';
-
-interface LocationState {
-  phaserCode: string;
-  thinking: string;
-  aiPrompt: string;
-}
-
-interface MasterChatMessage {
-  id: string;
-  type: 'user' | 'ai';
-  thinking: string;
-  code?: string;
-  timestamp: Date;
-}
+import { supabase } from '../lib/utils';
+import { User } from '@supabase/supabase-js';
 
 interface ChatMessage {
   id: string;
@@ -28,108 +16,129 @@ interface ChatMessage {
 }
 
 export default function Chat() {
-  const location = useLocation();
-  const state = location.state as LocationState;
-  
-  // If no state data, redirect back to landing
-  if (!state || !state.phaserCode) {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+
+  // State
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [phaserCode, setPhaserCode] = useState<string>('');
+  const [showCode, setShowCode] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [loadingProject, setLoadingProject] = useState<boolean>(!!projectId);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Auth check
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+  }, []);
+
+  // Load project and chat messages
+  const fetchProjectAndMessages = async () => {
+    if (!projectId) {
+      setLoadingProject(false);
+      return;
+    }
+    setLoadingProject(true);
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
+    if (projectError || !project) {
+      setError('Project not found.');
+      setLoadingProject(false);
+      return;
+    }
+    setPhaserCode(project.code || '');
+    // Fetch chat messages
+    const { data: messages, error: msgError } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('connection_id', projectId)
+      .order('created_at', { ascending: true });
+    if (msgError) {
+      setError('Failed to load chat messages.');
+      setLoadingProject(false);
+      return;
+    }
+    const chatMsgs: ChatMessage[] = (messages || []).map((msg: any) => ({
+      id: msg.id,
+      type: msg.sender,
+      content: msg.message,
+      timestamp: new Date(msg.created_at)
+    }));
+    setChatMessages(chatMsgs);
+    setLoadingProject(false);
+  };
+
+  useEffect(() => {
+    fetchProjectAndMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  // Canvas focus effect
+  useEffect(() => {
+    if (!showCode && isRunning) {
+      const timer = setTimeout(focusPhaserCanvas, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showCode, isRunning]);
+
+  if (user === undefined || loadingProject) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#181c24] text-[#e5e7ef]"><span>Loading...</span></div>;
+  }
+  if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  const [phaserCode, setPhaserCode] = useState(state.phaserCode);
-  const [showCode, setShowCode] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState(''); // Clear input on navigation
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [thinking, setThinking] = useState<string>(state.thinking);
-  const [masterConversationHistory, setMasterConversationHistory] = useState<MasterChatMessage[]>([
-    {
-      id: 'initial-user',
-      type: 'user',
-      thinking: state.aiPrompt,
-      timestamp: new Date()
-    },
-    {
-      id: 'initial-ai',
-      type: 'ai',
-      thinking: state.thinking,
-      code: state.phaserCode,
-      timestamp: new Date()
-    }
-  ]);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 'initial-user',
-      type: 'user',
-      content: state.aiPrompt,
-      timestamp: new Date()
-    },
-    {
-      id: 'initial-ai',
-      type: 'ai',
-      content: state.thinking,
-      timestamp: new Date()
-    }
-  ]);
-
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
+  // Send message and always refetch
   const handleInitialPrompt = async () => {
-    if (!aiPrompt.trim()) return;
-    // Add user message to both histories
-    const userMasterMessage: MasterChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      thinking: aiPrompt,
-      timestamp: new Date()
-    };
-    const userChatMessage: ChatMessage = {
-      id: userMasterMessage.id,
-      type: 'user',
-      content: aiPrompt,
-      timestamp: userMasterMessage.timestamp
-    };
-    setMasterConversationHistory(prev => [...prev, userMasterMessage]);
-    setChatMessages(prev => [...prev, userChatMessage]);
-    const currentPrompt = aiPrompt;
-    setAiPrompt('');
+    if (!aiPrompt.trim() || !projectId) return;
     setIsGenerating(true);
     setError(null);
-    const conversationHistory = masterConversationHistory.map(msg => ({
-      type: msg.type as 'user' | 'ai',
-      content: msg.thinking + (msg.code ? `\n${msg.code}` : '')
-    }));
+    // Save user message
+    await supabase.from('chat_messages').insert([
+      {
+        connection_id: projectId,
+        sender: 'user',
+        message: aiPrompt
+      }
+    ]);
+    // Get conversation history for AI
+    const conversationHistory = chatMessages.map(msg => ({
+      type: msg.type,
+      content: msg.content + (msg.code ? `\n${msg.code}` : '')
+    })).concat({ type: 'user', content: aiPrompt });
+    setAiPrompt('');
     try {
-      const result = await anthropicService.generatePhaserScene(currentPrompt, false, conversationHistory);
+      const result = await anthropicService.generatePhaserScene(aiPrompt, false, conversationHistory);
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
-        setThinking(result.thinking || "");
-        // Add AI response to both histories
-        const aiMasterMessage: MasterChatMessage = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          thinking: result.thinking || "",
-          code: result.code,
-          timestamp: new Date()
-        };
-        const aiChatMessage: ChatMessage = {
-          id: aiMasterMessage.id,
-          type: 'ai',
-          content: result.thinking || "",
-          timestamp: aiMasterMessage.timestamp
-        };
-        setMasterConversationHistory(prev => [...prev, aiMasterMessage]);
-        setChatMessages(prev => [...prev, aiChatMessage]);
-        setIsRunning(false);
+        // Save AI message
+        await supabase.from('chat_messages').insert([
+          {
+            connection_id: projectId,
+            sender: 'ai',
+            message: result.thinking || ''
+          }
+        ]);
+        // Update project code
+        await supabase.from('projects').update({ code: result.code }).eq('id', projectId);
       } else {
         setError('No code was generated.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      console.log("lebron", masterConversationHistory)
-      console.log("james", conversationHistory)
+      await fetchProjectAndMessages();
       setIsGenerating(false);
     }
   };
@@ -143,13 +152,6 @@ export default function Chat() {
       }
     }
   }
-
-  useEffect(() => {
-    if (!showCode && isRunning) {
-      const timer = setTimeout(focusPhaserCanvas, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [showCode, isRunning]);
 
   const handleGamePreviewClick = () => {
     if (!showCode && isRunning) {
@@ -166,59 +168,7 @@ export default function Chat() {
     setIsRunning(false);
   };
 
-  // Handle input key events to prevent game controls from being captured
-  const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    // Only redirect game keys if the game canvas is currently focused
-    const canvas = document.querySelector('canvas');
-    const isCanvasFocused = canvas === document.activeElement;
-    const isInputFocused = e.currentTarget === document.activeElement;
-    
-    // If input is focused, allow all typing (including space, W, A, S, D)
-    if (isInputFocused) {
-      // Handle Enter key for form submission
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleInitialPrompt();
-      }
-      return; // Allow all other keys to work normally in input
-    }
-    
-    // If game is running, not in code view, and canvas is focused, let game controls pass through
-    if (isRunning && !showCode && isCanvasFocused) {
-      // Common game control keys - let them pass through to the game
-      const gameControlKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space', 'shift', 'control', 'alt'];
-      if (gameControlKeys.includes(e.key.toLowerCase())) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Focus the game canvas to receive the key event
-        if (canvas) {
-          canvas.focus();
-          // Dispatch the key event to the canvas
-          const keyEvent = new KeyboardEvent('keydown', {
-            key: e.key,
-            code: e.code,
-            keyCode: e.keyCode,
-            which: e.which,
-            shiftKey: e.shiftKey,
-            ctrlKey: e.ctrlKey,
-            altKey: e.altKey,
-            metaKey: e.metaKey,
-            bubbles: true,
-            cancelable: true
-          });
-          canvas.dispatchEvent(keyEvent);
-        }
-        return;
-      }
-    }
-  };
-
-  // Handle input focus to manage game controls
-  const handleInputFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
-    // Only blur input if game is running, not in code view, and user clicks outside input
-    // This allows users to actually type in the input when they want to
-    console.log('Input focused - allowing typing');
-  };
+  const handleInputFocus = () => {};
 
   return (
     <div
@@ -227,6 +177,17 @@ export default function Chat() {
       style={{ outline: 'none' }}
     >
       <div className="w-full max-w-7xl mx-auto rounded-xl shadow-lg bg-[#23272f] flex flex-col h-[calc(100vh-2rem)]">
+        {/* Header with back button */}
+        <div className="flex items-center justify-between p-4 border-b border-[#2c2f36] bg-[#23272f] flex-shrink-0">
+          <button
+            onClick={() => navigate('/projects')}
+            className="bg-[#444] text-white px-4 py-2 rounded-lg hover:bg-[#555] transition-colors flex items-center gap-2"
+          >
+            ← Back to Projects
+          </button>
+          <h1 className="text-lg font-semibold">Game Chat</h1>
+          <div className="w-20"></div> {/* Spacer for centering */}
+        </div>
         <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden w-full">
           {/* Left Side: Chat Messages */}
           <div className="flex flex-col w-1/2 min-w-0 h-full border-r border-[#2c2f36] bg-[#23272f]">
@@ -296,7 +257,6 @@ export default function Chat() {
                     e.preventDefault();
                     handleInitialPrompt();
                   }
-                  // Otherwise, allow Shift+Enter for new lines
                 }}
                 onFocus={handleInputFocus}
                 disabled={isGenerating}

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Chat from "./pages/Chat";
 import Landing from "./pages/Landing";
+import ProjectPage from "./pages/Project";
 
 const queryClient = new QueryClient();
 
@@ -11,7 +12,8 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />}/>
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/projects/:projectId" element={<Chat />} />
+        <Route path="/projects" element={<ProjectPage />} />
       </Routes>
     </BrowserRouter>
   </QueryClientProvider>

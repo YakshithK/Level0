@@ -109,16 +109,64 @@ export default function Landing() {
     setIsGenerating(true);
     setError(null);
     try {
+      // 1. Create a new project
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert([
+          {
+            user_id: user.id,
+            name: aiPrompt.slice(0, 100) || 'Untitled Project',
+            code: null
+          }
+        ])
+        .select("*")
+        .single();
+      if (projectError || !projectData) {
+        setError('Failed to create project.');
+        setIsGenerating(false);
+        return;
+      }
+      const projectId = projectData.id;
+      // 2. Add the user's prompt as the first message
+      const { error: userMsgError } = await supabase
+        .from('chat_messages')
+        .insert([
+          {
+            connection_id: projectId,
+            sender: 'user',
+            message: aiPrompt
+          }
+        ]);
+      if (userMsgError) {
+        setError('Failed to save your message.');
+        setIsGenerating(false);
+        return;
+      }
+      // 3. Get AI response
       const result = await anthropicService.generatePhaserScene(aiPrompt, true);
       if (result && result.code && result.code.trim()) {
-        // Navigate to Chat page with the generated data
-        navigate('/chat', {
-          state: {
-            phaserCode: result.code,
-            thinking: result.thinking || "",
-            aiPrompt: aiPrompt
-          }
-        });
+        // 4. Add AI response as a message (raw text, no splitting)
+        const { error: aiMsgError } = await supabase
+          .from('chat_messages')
+          .insert([
+            {
+              connection_id: projectId,
+              sender: 'ai',
+              message: result.thinking || ''
+            }
+          ]);
+        if (aiMsgError) {
+          setError('Failed to save AI message.');
+          setIsGenerating(false);
+          return;
+        }
+        // 5. Update the project with the code from the first AI response
+        await supabase
+          .from('projects')
+          .update({ code: result.code })
+          .eq('id', projectId);
+        // 6. Navigate to Chat page with projectId (no state)
+        navigate(`/projects/${projectId}`);
       } else {
         setError('No code was generated.');
       }
@@ -145,18 +193,19 @@ export default function Landing() {
         }
       });
       if (error) {
-        console.log(error);
+        console.log("Error signing up", error);
         return;
       }
       // Insert into users table
       const { error: dbError } = await supabase.from('users').insert([
         {
+          id: data.user.id,
           email: authForm.email,
           username: authForm.name,
         }
       ]);
       if (dbError) {
-        console.log(dbError);
+        console.log("Error inserting new user", dbError);
         return;
       }
       setSignupSuccess(true);
@@ -216,26 +265,34 @@ export default function Landing() {
       <header className="relative z-20 flex justify-between items-center p-6 sm:p-8">
         <Logo />
         {user ? (
-          <div className="relative">
+          <div className="flex items-center gap-4">
             <button
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-10 h-10 bg-neon-cyan rounded-full flex items-center justify-center text-black font-bold hover:bg-neon-cyan/90 transition-all duration-300 hover:scale-105"
+              onClick={() => navigate('/projects')}
+              className="bg-[#444] text-white px-4 py-2 rounded-lg hover:bg-[#555] transition-colors"
             >
-              {user.user_metadata?.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+              My Projects
             </button>
-            {showProfileDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#23272f] rounded-lg shadow-lg border border-[#444] py-2 z-50">
-                <div className="px-4 py-2 text-sm text-[#e5e7ef] border-b border-[#444]">
-                  {user.user_metadata?.username || user.email}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-10 h-10 bg-neon-cyan rounded-full flex items-center justify-center text-black font-bold hover:bg-neon-cyan/90 transition-all duration-300 hover:scale-105"
+              >
+                {user.user_metadata?.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+              </button>
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-[#23272f] rounded-lg shadow-lg border border-[#444] py-2 z-50">
+                  <div className="px-4 py-2 text-sm text-[#e5e7ef] border-b border-[#444]">
+                    {user.user_metadata?.username || user.email}
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2 text-sm text-[#888] hover:text-white hover:bg-[#181c24] transition-colors"
+                  >
+                    Sign Out
+                  </button>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2 text-sm text-[#888] hover:text-white hover:bg-[#181c24] transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : (
           <button
