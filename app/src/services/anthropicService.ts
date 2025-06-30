@@ -31,7 +31,7 @@ export class AnthropicService {
   }
 
   async generatePhaserScene(promptText: string, isInitialPrompt: boolean = true, conversationHistory: ChatMessage[] = []): Promise<{ thinking: string, code: string }> {
-    const model = isInitialPrompt ? 'claude-3-haiku-20240307' : 'claude-3-haiku-20240307'; // 'claude-sonnet-4-20250514' : 'claude-3-haiku-20240307'
+    const model = isInitialPrompt ? 'claude-opus-4-20250514' : 'claude-sonnet-4-20250514'; // 'claude-sonnet-4-20250514' : 'claude-3-haiku-20240307'
     
     // Build messages array with conversation history
     const messages: any[] = [];
