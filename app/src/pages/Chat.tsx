@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
@@ -30,6 +30,9 @@ export default function Chat() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loadingProject, setLoadingProject] = useState<boolean>(!!projectId);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [projectName, setProjectName] = useState<string>('My_Phaser_Game');
+  const [deployUrl, setDeployUrl] = useState<string | null>(null);
+  const [deploying, setDeploying] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -58,6 +61,8 @@ export default function Chat() {
       return;
     }
     setPhaserCode(project.code || '');
+    setProjectName(project.name || 'My_Phaser_Game');
+    setDeployUrl(project.deployment_url || null);
     // Fetch chat messages
     const { data: messages, error: msgError } = await supabase
       .from('chat_messages')
@@ -169,6 +174,57 @@ export default function Chat() {
   };
 
   const handleInputFocus = () => {};
+
+  // Download handler
+  const handleDownloadCode = async () => {
+    // Fetch the Phaser template
+    const response = await fetch('/phaser_template.html');
+    let template = await response.text();
+    // Replace USER_CODE
+    const htmlContent = template.replace('{{USER_CODE}}', phaserCode || '');
+    // Format filename
+    const safeName = (projectName || 'My_Phaser_Game').replace(/\s+/g, '_');
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDeploy = async () => {
+    setDeploying(true);
+    setDeployUrl(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('deploy_game', {
+        body: { userCode: phaserCode }
+      });
+      if (error || !data || !data.url) {
+        setDeployUrl(null);
+        alert('Deployment failed!');
+      } else {
+        setDeployUrl(data.url);
+        if (projectId) {
+          const { error: updateError } = await supabase
+            .from('projects')
+            .update({ deployment_url: data.url })
+            .eq('id', projectId);
+          if (updateError) {
+            alert('Failed to save deployment URL!');
+          } else {
+            await fetchProjectAndMessages();
+          }
+        }
+      }
+    } catch (err) {
+      setDeployUrl(null);
+      alert('Deployment failed!');
+    }
+    setDeploying(false);
+  };
 
   return (
     <div
@@ -317,8 +373,31 @@ export default function Chat() {
                     >
                       Run Game
                     </button>
+                    <button
+                      onClick={handleDownloadCode}
+                      className="bg-blue-500 text-white py-1 px-3 rounded text-sm hover:bg-blue-600 transition-colors"
+                    >
+                      Download Code
+                    </button>
                   </div>
                 </div>
+                {/* Deploy button logic */}
+                {deployUrl ? (
+                  <button
+                    onClick={() => window.open(deployUrl, '_blank')}
+                    className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Already Deployed (Open)
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDeploy}
+                    disabled={deploying}
+                    className="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    {deploying ? 'Deploying...' : 'Deploy Game'}
+                  </button>
+                )}
                 {/* Monaco Editor */}
                 <div className="flex-1 min-h-0">
                   <Editor
