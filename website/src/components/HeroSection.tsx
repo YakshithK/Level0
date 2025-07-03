@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -52,13 +52,14 @@ const HeroSection = () => {
             <div className="relative gradient-border mb-8">
               <div className="gradient-border-inner p-8 rounded-lg">
                 <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center glow-effect">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-neon-cyan/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <div className="w-8 h-8 bg-neon-cyan rounded-full animate-glow" />
-                    </div>
-                    <p className="text-neon-cyan font-medium text-lg">Live Demo Coming Soon</p>
-                    <p className="text-muted-foreground text-sm mt-2">Watch AI generate a game in real-time</p>
-                  </div>
+                  <video
+                    src="/Demo_V1.mp4"
+                    controls
+                    className="w-full h-full rounded-lg object-cover"
+                    poster="/placeholder.svg" // optional: use a placeholder image
+                  >
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
               </div>
             </div>
