@@ -1,0 +1,21 @@
+// utils/Constants.js
+const GAME_CONFIG = {
+    WORLD_WIDTH: 800,
+    WORLD_HEIGHT: 600,
+    GRAVITY: 600,
+    BIRD_JUMP_VELOCITY: -350,
+    PIPE_SPEED: -200,
+    PIPE_SPAWN_DELAY: 1500,
+    PIPE_GAP: 150,
+    GROUND_HEIGHT: 112
+};
+
+const COLORS = {
+    SKY: 0x87CEEB,
+    BIRD: 0xFFD700,
+    PIPE: 0x228B22,
+    GROUND: 0x8B4513,
+    WHITE: 0xFFFFFF,
+    BLACK: 0x000000,
+    RED: 0xFF0000
+}; 
