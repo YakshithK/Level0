@@ -1,8 +1,8 @@
 
-import HeroSection from "@/components/HeroSection";
-import ProcessSection from "@/components/ProcessSection";
-import TestimonialsSection from "@/components/TestimonialsSection";
-import BetaSection from "@/components/BetaSection";
+import HeroSection from "../components/HeroSection";
+import ProcessSection from "../components/ProcessSection";
+import TestimonialsSection from "../components/TestimonialsSection";
+import BetaSection from "../components/BetaSection";
 
 const Index = () => {
   return (
