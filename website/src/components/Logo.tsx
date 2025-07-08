@@ -2,13 +2,13 @@ import React from 'react';
 
 const Logo = ({ className = "", showText = true }: { className?: string, showText?: boolean }) => {
   if (!showText) {
-    // Header usage: just show a big centered image with margin above
+    // Header usage: just show a big centered image with margin above and centered horizontally
     return (
-      <div className={`flex items-center justify-center mt-8 ${className}`} style={{ height: '80px' }}>
+      <div className={`flex items-center justify-center mt-8 mx-auto ${className}`} style={{ height: '120px' }}>
         <img
           src="/logo_main_transparent.png"
           alt="Level0 Logo"
-          className="h-64 w-auto drop-shadow-lg pointer-events-none select-none"
+          className="h-80 w-auto drop-shadow-lg pointer-events-none select-none"
           style={{ maxWidth: '100%' }}
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
