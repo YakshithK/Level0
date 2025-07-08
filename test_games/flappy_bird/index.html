@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Organized Structure</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #87CEEB, #98FB98);
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <!-- Load all JavaScript files in order -->
+    <script src="utils/Constants.js"></script>
+    <script src="utils/GameState.js"></script>
+    <script src="utils/AssetManager.js"></script>
+    <script src="objects/Bird.js"></script>
+    <script src="objects/PipeManager.js"></script>
+    <script src="scenes/BootScene.js"></script>
+    <script src="scenes/MenuScene.js"></script>
+    <script src="scenes/GameScene.js"></script>
+    <script src="scenes/GameOverScene.js"></script>
+    <script src="main.js"></script>
+</body>
+</html> 
