@@ -60,18 +60,18 @@
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, #00ffff 0%, #39ff14 100%);
+    background: linear-gradient(135deg, hsl(180 100% 50%) 0%, hsl(88 100% 50%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   
   .glow-effect {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 20px hsla(180 100% 50% / 0.3);
   }
   
   .gradient-border {
-    background: linear-gradient(135deg, #00ffff 0%, #39ff14 100%);
+    background: linear-gradient(135deg, hsl(180 100% 50%) 0%, hsl(88 100% 50%) 100%);
     padding: 1px;
     border-radius: 0.5rem;
   }
