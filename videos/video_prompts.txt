@@ -1,0 +1,283 @@
+Absolutely — here is the **regenerated list of 10 before/after cartoon-style image prompts**, each with **3 game-focused variants**, ensuring every image clearly connects to **Level0's core feature**: turning prompts into **playable games** instantly.
+
+---
+
+### 🔹 **1. “Before: Coding Hell / After: Level0 Heaven”**
+
+**1A.**
+
+> Top: Dev buried in a mountain of spaghetti code, bugs flying everywhere, monitor flashing "CRASHED".
+> Bottom: Same dev watches a finished **platformer game** auto-generate from prompt: "Make a Mario-style game".
+> Text: *Before: Coding Hell / After: Level0 Heaven*
+
+**1B.**
+
+> Top: Game dev hunched over trying to fix a broken physics system in Unity.
+> Bottom: Same prompt typed into Level0, showing a working side-scrolling game.
+> Text: *Before: Endless Debugging / After: One Prompt*
+
+**1C.**
+
+> Top: Code editor showing red errors and broken enemy behavior.
+> Bottom: Cleanly generated **zombie survival game** from text input.
+> Text: *From Chaos to Clean Build*
+
+---
+
+### 🔹 **2. “Before: Weeks of Learning / After: Instant Game”**
+
+**2A.**
+
+> Top: Student watching hours of “How to build Pong in JavaScript” tutorials.
+> Bottom: Prompt typed: “Make Pong with leaderboard.” Game shown live.
+> Text: *Before: Tutorials / After: Try Prompting*
+
+**2B.**
+
+> Top: Kid with game idea but stuck learning variables and loops.
+> Bottom: Their idea built as a **bullet-hell shooter** in seconds.
+> Text: *Learn Less. Create More.*
+
+**2C.**
+
+> Top: Textbook open to "Functions in Python", student frustrated.
+> Bottom: Game made instantly from: "Create a retro-style racing game".
+> Text: *Weeks of Study vs Seconds to Play*
+
+---
+
+### 🔹 **3. “Before: Blank Screen / After: Playable Game”**
+
+**3A.**
+
+> Top: Empty code editor, blinking cursor.
+> Bottom: “Make a Flappy Bird clone” typed → working game preview shows bird flying.
+> Text: *Blank → Built*
+
+**3B.**
+
+> Top: Blank Unity scene, user confused.
+> Bottom: Game generated with Level0: 2D space shooter with stars and enemies.
+> Text: *Before: Nothing / After: Game On*
+
+**3C.**
+
+> Top: Whiteboard drawing of a top-down maze.
+> Bottom: Same maze now functional in a working game.
+> Text: *Sketch to Screen*
+
+---
+
+### 🔹 **4. “Before: Dev Block / After: Game Created”**
+
+**4A.**
+
+> Top: Dev staring at broken AI enemy logic for hours.
+> Bottom: Prompt: "Make a dungeon crawler with boss AI" → game loads.
+> Text: *Before: Writer’s Block / After: Builder’s Flow*
+
+**4B.**
+
+> Top: Red errors and failed builds everywhere.
+> Bottom: Working **tower defense game** built in seconds.
+> Text: *Error to Execution*
+
+**4C.**
+
+> Top: Dev frustrated mid-hackathon, hitting wall.
+> Bottom: Level0 builds the entire core gameplay loop.
+> Text: *Dev Block? Prompt It.*
+
+---
+
+### 🔹 **5. “Before: Indie Grind / After: Rocket Boost”**
+
+**5A.**
+
+> Top: Indie dev juggling code, sprites, SFX, UI alone.
+> Bottom: Prompt: “Build a city builder game” → game UI and grid appear.
+> Text: *From Grind to Growth*
+
+**5B.**
+
+> Top: Dev handcrafting tilemaps in Tiled.
+> Bottom: Game generates full map from prompt.
+> Text: *Before: Manual / After: Magic*
+
+**5C.**
+
+> Top: Pushing code uphill like Sisyphus.
+> Bottom: Riding rocket labeled “Level0” with full **RPG system** built.
+> Text: *One-Person Studio Boosted*
+
+---
+
+### 🔹 **6. “Before: No Code / After: Built Game”**
+
+**6A.**
+
+> Top: Kid thinking: “I wish I knew how to make games.”
+> Bottom: Prompt: "Build a Mario-style level with coins and enemies" → side-scroller loads.
+> Text: *You Don’t Need to Code.*
+
+**6B.**
+
+> Top: “How do I make a game without coding?” Googled.
+> Bottom: Level0 interface with working **rhythm game** shown.
+> Text: *No Code? No Problem.*
+
+**6C.**
+
+> Top: Blank face looking at code.
+> Bottom: Full working **first-person shooter** generated from single sentence.
+> Text: *Level0 Builds It For You*
+
+---
+
+### 🔹 **7. “Before: Hours of Coding / After: One Prompt”**
+
+**7A.**
+
+> Top: 10 hours of code still doesn’t load enemy spawner.
+> Bottom: “Make a zombie game with 3 spawn points” → working preview.
+> Text: *Before: 1000 lines / After: 1 sentence*
+
+**7B.**
+
+> Top: Dev on day 3 of creating jump physics.
+> Bottom: Prompt → character with jump + double jump system appears.
+> Text: *Jump to Results*
+
+**7C.**
+
+> Top: Dev building movement, collision, scoring manually.
+> Bottom: Level0 auto-generates a working **endless runner**.
+> Text: *Before: Dev Time / After: Game Time*
+
+---
+
+### 🔹 **8. “Before: Game Idea / After: Real Game”**
+
+**8A.**
+
+> Top: "What if there was a tower defense game with aliens?" thought bubble.
+> Bottom: Game exactly as described, playable.
+> Text: *Imagine → Build*
+
+**8B.**
+
+> Top: Sketchpad of a game mechanic.
+> Bottom: Functional game built from prompt: “Create a platformer with moving platforms and spikes.”
+> Text: *From Notebook to Now*
+
+**8C.**
+
+> Top: Friend describing game concept.
+> Bottom: You turn it into a working demo in 30 seconds.
+> Text: *Your Ideas. Instantly Playable.*
+
+---
+
+### 🔹 **9. “Before: Debug Error / After: Clean Gameplay”**
+
+**9A.**
+
+> Top: Game window says “NullReferenceException” over black screen.
+> Bottom: Game runs smoothly after Level0 builds it.
+> Text: *Bugs Out. Fun In.*
+
+**9B.**
+
+> Top: Testing code that crashes 5 times.
+> Bottom: Full game UI running flawlessly after prompt.
+> Text: *No More Debug Mode*
+
+**9C.**
+
+> Top: Bugs with faces attacking dev.
+> Bottom: Dev protected by Level0 shield, game working.
+> Text: *Built Without the Bugs*
+
+---
+
+### 🔹 **10. “Before: All Tasks / After: One Tool”**
+
+**10A.**
+
+> Top: Dev doing 10 jobs: coding, design, audio, testing, UI, monetization.
+> Bottom: Level0 automates all but the idea.
+> Text: *From Chaos to One Tool.*
+
+**10B.**
+
+> Top: Game dev sprint board with 15 to-dos.
+> Bottom: Prompt: “Build a 2-player fighting game with power-ups” → working demo appears.
+> Text: *One Prompt = One Playable*
+
+**10C.**
+
+> Top: Spreadsheet of all dev tasks (AI, music, menus).
+> Bottom: Prompt: “Create pixel RPG with random encounters.” Game built.
+> Text: *Level0 Covers It All.*
+
+---
+
+# CTA SCREEN prompts
+
+### ✅ **CTA Variant 1: Direct + Clean (Tech Style)**
+
+> A clean, minimal cartoon interface of the Level0 app with a blinking text prompt input.
+> Large bold text on top:
+> **“Type Your First Game Prompt Now”**
+> Subtext below:
+> *Join the waitlist • Try the beta • Link in bio*
+> Background: smooth gradients or blurred screenshots of actual game outputs.
+
+---
+
+### ✅ **CTA Variant 2: Meme-Style (Gen-Z Vibe)**
+
+> Cartoon character wearing sunglasses, throwing a “MAKE GAME” sign like a mic drop.
+> Bold meme font text:
+> **“Still not using Level0? Bro…”**
+> Subtext:
+> *Type one sentence. Get a full game.*
+> Button-styled text bubble:
+> **“Start Building 👇”**
+
+---
+
+### ✅ **CTA Variant 3: Retro Arcade (Gaming Nostalgia)**
+
+> 8-bit pixel art style screen with “LEVEL0” flashing like an arcade title.
+> Text styled like old arcade font:
+> **“INSERT PROMPT TO PLAY”**
+> Subtext:
+> *No code. No friction. All fun.*
+> Flashing “Start Game” button with arrow pointing to your link or @tag.
+
+---
+
+### ✅ **CTA Variant 4: Progress Bar Metaphor**
+
+> Cartoon loading screen UI with a fake progress bar:
+>
+> * 100% Prompted
+> * 100% Built
+> * 100% Playable
+>   Large text above:
+>   **“You’re 1 Prompt Away From Your First Game.”**
+>   Final button-style bubble:
+>   **Start With Level0 ➤**
+
+---
+
+### ✅ **CTA Variant 5: Social Proof / Hype**
+
+> Grid of mini screenshots of cool games made by Level0 (or fake ones for now), with sparkles and excited reactions.
+> Text on top:
+> **“Thousands Are Building Games With One Prompt.”**
+> Subtext:
+> *Be next. Start now.*
+> Bold button CTA:
+> **Level0 is Open → Link in Bio**
