@@ -8,9 +8,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
+      <BetaSection />
       <ProcessSection />
       {/* <TestimonialsSection /> */}
-      <BetaSection />
       
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 sm:px-6 lg:px-8">
