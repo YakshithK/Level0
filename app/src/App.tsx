@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Chat from "./pages/Chat";
 import Landing from "./pages/Landing";
 import ProjectPage from "./pages/Project";
+import { Analytics } from "@vercel/analytics/react"
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ const App = () => (
         <Route path="/projects" element={<ProjectPage />} />
       </Routes>
     </BrowserRouter>
+    <Analytics />
   </QueryClientProvider>
 );
 
