@@ -264,7 +264,7 @@ export default function Landing() {
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Header with Logo */}
       <header className="relative z-20 flex justify-between items-center p-6 sm:p-8">
-        <Logo />
+        <Logo showText={false} />
         {user ? (
           <div className="flex items-center gap-4">
             <button

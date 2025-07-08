@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "./ui/button";
 import { ArrowDown } from "lucide-react";
@@ -9,7 +8,7 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Header with Logo */}
       <header className="relative z-20 flex justify-between items-center p-6 sm:p-8">
-        <Logo />
+        <Logo showText={false} />
       </header>
 
       {/* Main Hero Content */}
