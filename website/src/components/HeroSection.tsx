@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { ArrowDown } from "lucide-react";
-import Logo from "@/components/Logo";
+import Logo from "./Logo";
 
 const HeroSection = () => {
   return (
