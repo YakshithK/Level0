@@ -1,225 +1,109 @@
-Absolutely — here is the **regenerated list of 10 before/after cartoon-style image prompts**, each with **3 game-focused variants**, ensuring every image clearly connects to **Level0's core feature**: turning prompts into **playable games** instantly.
+LEVEL0 BEFORE/AFTER IMAGE PROMPTS (GPT-READY COPY/PASTE FORMAT)
 
----
+Each entry below is a fully detailed image generation prompt. These are vertically stacked, two-panel cartoon-style images where:
 
-### 🔹 **1. “Before: Coding Hell / After: Level0 Heaven”**
+Top panel is the BEFORE scenario (without Level0)
 
-**1A.**
+Bottom panel is the AFTER scenario (after using Level0)
 
-> Top: Dev buried in a mountain of spaghetti code, bugs flying everywhere, monitor flashing "CRASHED".
-> Bottom: Same dev watches a finished **platformer game** auto-generate from prompt: "Make a Mario-style game".
-> Text: *Before: Coding Hell / After: Level0 Heaven*
+Each prompt is ready to copy/paste into GPT or any image model and will result in a complete game-related cartoon image.
 
-**1B.**
+🔹 1. “Before: Coding Hell / After: Level0 Heaven”
 
-> Top: Game dev hunched over trying to fix a broken physics system in Unity.
-> Bottom: Same prompt typed into Level0, showing a working side-scrolling game.
-> Text: *Before: Endless Debugging / After: One Prompt*
+1A
+Prompt: Create a vertically stacked, two-panel cartoon-style image. In the top panel (BEFORE), show a frustrated game developer at a cluttered desk with three computer monitors showing red errors like "CRASHED", "Segmentation Fault", and "SyntaxError". The wires are tangled, a coffee mug is spilled, and the developer is sweating and overwhelmed. In the bottom panel (AFTER), show the same developer now relaxed and smiling at a clean desk. The monitor displays a working platformer game being auto-generated from the visible text prompt: “Make a Mario-style game.” Overlay the top panel with “Before: Coding Hell” and the bottom with “After: Level0 Heaven.”
 
-**1C.**
+1B
+Prompt: Create a two-panel vertical cartoon image. In the top panel (BEFORE), show a game developer slouched over a Unity scene editor, struggling with physics settings. They look tired, frustrated, and the word “gravity bug” appears on their notepad. In the bottom panel (AFTER), show the developer smiling after typing: “Side scroller with gravity + jump physics” into a Level0 interface. The preview window shows a working side-scrolling game with smooth gravity. Overlay: “Before: Endless Debugging” / “After: One Prompt.”
 
-> Top: Code editor showing red errors and broken enemy behavior.
-> Bottom: Cleanly generated **zombie survival game** from text input.
-> Text: *From Chaos to Clean Build*
+1C
+Prompt: Create a vertically stacked cartoon-style image. In the top panel (BEFORE), show a code editor with broken enemy AI logic and terminal errors like “npm run dev failed”. The dev has wide eyes and a chaotic workspace. In the bottom panel (AFTER), show a working zombie survival game being generated after typing: “Top-down zombie shooter with AI enemies.” The zombies move intelligently toward the player. Overlay: “From Chaos to Clean Build.”
 
----
+🔹 2. “Before: Weeks of Learning / After: Instant Game”
 
-### 🔹 **2. “Before: Weeks of Learning / After: Instant Game”**
+2A
+Prompt: Create a vertical two-panel cartoon. In the top panel (BEFORE), a student is buried in textbooks and browser tabs like “How to build Pong in JavaScript”. They look confused and overwhelmed. In the bottom panel (AFTER), the same student types: “Make Pong with leaderboard.” into the Level0 interface. A working Pong game with a visible leaderboard appears. Top text: “Before: Tutorials” / Bottom text: “After: Try Prompting.”
 
-**2A.**
+2B
+Prompt: Generate a two-panel vertical cartoon image. In the top panel (BEFORE), show a kid sketching a bullet-hell game in a notebook but stuck on learning loops and variables. They look stuck. In the bottom panel (AFTER), they type: “Bullet-hell shooter with red and blue enemies” into Level0 and the working game preview loads instantly. Overlay: “Learn Less. Create More.”
 
-> Top: Student watching hours of “How to build Pong in JavaScript” tutorials.
-> Bottom: Prompt typed: “Make Pong with leaderboard.” Game shown live.
-> Text: *Before: Tutorials / After: Try Prompting*
+2C
+Prompt: Create a stacked cartoon image. Top panel (BEFORE): student with a Python book open to the “functions” chapter, face buried in hands in frustration. Bottom panel (AFTER): student types: “Retro racing game with nitro boost” into Level0. Pixel cars race across screen. Overlay: “Weeks of Study vs Seconds to Play.”
 
-**2B.**
+🔹 3. “Before: Blank Screen / After: Playable Game”
 
-> Top: Kid with game idea but stuck learning variables and loops.
-> Bottom: Their idea built as a **bullet-hell shooter** in seconds.
-> Text: *Learn Less. Create More.*
+3A
+Prompt: Create a two-panel cartoon image, stacked vertically. In the top panel (BEFORE), show a completely blank code editor with a blinking cursor. The developer stares at the screen in confusion. In the bottom panel (AFTER), the same developer has typed the prompt: “Make a Flappy Bird clone” into Level0. A preview shows a working Flappy Bird game with the bird flying between pipes. Overlay: “Before: Blank Screen” / “After: Playable Game.”
 
-**2C.**
+3B
+Prompt: Generate a vertical two-panel cartoon. In the top panel (BEFORE), show an empty Unity editor grid. A developer is scratching their head, surrounded by question marks. In the bottom panel (AFTER), the prompt “2D space shooter with enemies and lasers” is entered into Level0. The preview shows spaceships and a scrolling starfield. Overlay: “Before: Nothing” / “After: Game On.”
 
-> Top: Textbook open to "Functions in Python", student frustrated.
-> Bottom: Game made instantly from: "Create a retro-style racing game".
-> Text: *Weeks of Study vs Seconds to Play*
+3C
+Prompt: Create a cartoon image with two vertical panels. In the top panel (BEFORE), a whiteboard shows a rough maze sketch and a character is shown confused, pointing at it. In the bottom panel (AFTER), a prompt “Top-down maze with traps and win condition” is entered into Level0. The same maze is now animated and playable. Overlay: “Sketch to Screen.”
 
----
+🔹 4. “Before: Dev Block / After: Game Created”
 
-### 🔹 **3. “Before: Blank Screen / After: Playable Game”**
+4A
+Prompt: Create a stacked cartoon image. In the top panel (BEFORE), show a game developer staring at a blank code editor late at night (clock says 2:00 AM). Their thought bubble says “Dungeon + boss?” In the bottom panel (AFTER), the developer has typed the prompt: “Dungeon crawler with boss at level 3.” A working dungeon boss fight appears. Overlay: “From Blocked to Built.”
 
-**3A.**
+4B
+Prompt: Generate a two-panel vertical cartoon image. In the top panel (BEFORE), show a panicked developer surrounded by red popup errors like “Missing Script”, “NullReference”, and “Texture Not Found.” In the bottom panel (AFTER), the same developer types: “Tower defense with 3 lanes” into Level0 and watches a working tower defense game. Overlay: “Error to Execution.”
 
-> Top: Empty code editor, blinking cursor.
-> Bottom: “Make a Flappy Bird clone” typed → working game preview shows bird flying.
-> Text: *Blank → Built*
+4C
+Prompt: Create a two-panel cartoon image. In the top panel (BEFORE), a tired hackathon developer lies slumped over a desk covered in sticky notes labeled “broken idea”, “debug later”, and “scrap this.” In the bottom panel (AFTER), the dev types: “Platformer with jump pads and powerups” into Level0. The preview shows the game fully functional. Overlay: “Dev Block? Prompt It.”
 
-**3B.**
+🔹 5. “Before: Indie Grind / After: Rocket Boost”
 
-> Top: Blank Unity scene, user confused.
-> Bottom: Game generated with Level0: 2D space shooter with stars and enemies.
-> Text: *Before: Nothing / After: Game On*
+5A
+Prompt: Create a vertical two-panel cartoon image. In the top panel (BEFORE), show a solo game developer carrying a huge boulder labeled “Code, UI, Art, Sound” uphill, looking exhausted. In the bottom panel (AFTER), show the same developer riding a rocket labeled “Level0,” smiling as the prompt “City builder with zones and upgrades” is typed in. A city building game appears on the screen. Overlay: “From Grind to Growth.”
 
-**3C.**
+5B
+Prompt: Create a two-panel cartoon image. Top panel (BEFORE): developer meticulously placing tilemaps in a level editor, looking drained. Bottom panel (AFTER): Level0 generates a full map from the typed prompt: “Generate town map with roads and shops.” The map appears clean and colorful. Overlay: “Before: Manual / After: Magic.”
 
-> Top: Whiteboard drawing of a top-down maze.
-> Bottom: Same maze now functional in a working game.
-> Text: *Sketch to Screen*
+5C
+Prompt: Generate a vertically stacked cartoon. In the top panel (BEFORE), show the dev pushing a giant stone labeled “Solo Dev Work” up a hill. In the bottom panel (AFTER), they’re now flying in a rocket labeled “Level0” after typing: “Build RPG with inventory + dialogue.” The RPG preview shows a character and dialogue box. Overlay: “One-Person Studio Boosted.”
 
----
 
-### 🔹 **4. “Before: Dev Block / After: Game Created”**
 
-**4A.**
+🔹 6. “Before: No Code / After: Built Game”
 
-> Top: Dev staring at broken AI enemy logic for hours.
-> Bottom: Prompt: "Make a dungeon crawler with boss AI" → game loads.
-> Text: *Before: Writer’s Block / After: Builder’s Flow*
+6APrompt: Create a two-panel vertical cartoon image. In the top panel (BEFORE), show a kid sitting at a desk, looking confused and thinking “I wish I knew how to make games” with a blank screen on their laptop. In the bottom panel (AFTER), show the same kid smiling as they type “Build a Mario-style level with coins and enemies” into the Level0 interface. The screen displays a colorful side-scrolling platformer game with jumping characters and collectible coins. Overlay text: “Before: No Code / After: Built Game.”
 
-**4B.**
+6BPrompt: Generate a vertically stacked cartoon-style image. In the top panel (BEFORE), show a person googling on their phone: “How do I make a game without coding?” They look frustrated and unsure. In the bottom panel (AFTER), show the Level0 interface on a laptop screen with a fully functional rhythm game loaded, featuring moving notes and a score counter. The user is smiling confidently. Overlay text: “Before: No Code Skills / After: Game Ready.”
 
-> Top: Red errors and failed builds everywhere.
-> Bottom: Working **tower defense game** built in seconds.
-> Text: *Error to Execution*
+6CPrompt: Create a two-panel cartoon image, stacked vertically. In the top panel (BEFORE), show a person staring blankly at a complex block of game code on a monitor, face confused. In the bottom panel (AFTER), the person types a prompt: “Create a first-person shooter with AI enemies” into Level0, and the monitor shows a playable FPS game with a character shooting. Overlay: “Before: Stuck / After: Play.”
 
-**4C.**
+🔹 7. “Before: Hours of Coding / After: One Prompt”
 
-> Top: Dev frustrated mid-hackathon, hitting wall.
-> Bottom: Level0 builds the entire core gameplay loop.
-> Text: *Dev Block? Prompt It.*
+7APrompt: Create a two-panel cartoon. In the top panel (BEFORE), show a developer exhausted at a desk surrounded by coffee cups and code windows open for 10 hours with error messages. In the bottom panel (AFTER), show the same developer happily typing “Make a zombie game with 3 spawn points” into Level0, with a working zombie survival game preview on the monitor. Overlay text: “Before: 10 Hours Coding / After: 1 Sentence.”
 
----
+7BPrompt: Create a vertical cartoon image. Top panel (BEFORE): developer frustrated on day 3 trying to code jump physics for a character with sticky notes “Jump bug” and “Double jump”. Bottom panel (AFTER): developer types “Character with jump + double jump” into Level0, and the screen shows a character smoothly jumping twice. Overlay: “Before: Struggle / After: Instant Jump.”
 
-### 🔹 **5. “Before: Indie Grind / After: Rocket Boost”**
+7CPrompt: Create a stacked cartoon image. In the top panel (BEFORE), developer manually codes movement, collision detection, and scoring with a tired expression. In the bottom panel (AFTER), developer uses Level0 to auto-generate an endless runner game with obstacles and score counter. Overlay text: “Before: Dev Time / After: Game Time.”
 
-**5A.**
+🔹 8. “Before: Game Idea / After: Real Game”
 
-> Top: Indie dev juggling code, sprites, SFX, UI alone.
-> Bottom: Prompt: “Build a city builder game” → game UI and grid appear.
-> Text: *From Grind to Growth*
+8APrompt: Create a vertical two-panel cartoon image. In the top panel (BEFORE), a person imagines a tower defense game with aliens, shown as a thought bubble with rough sketches. In the bottom panel (AFTER), they type “Tower defense game with aliens” into Level0, and a fully playable tower defense game with alien enemies appears on screen. Overlay: “Before: Idea / After: Game.”
 
-**5B.**
+8BPrompt: Create a cartoon image stacked vertically. Top panel (BEFORE): a notebook with a rough sketch of a platformer game mechanic; the person looks thoughtful and unsure. Bottom panel (AFTER): prompt “Platformer with moving platforms and spikes” typed into Level0, showing a working game with platforms moving and spikes as hazards. Overlay: “From Sketch to Play.”
 
-> Top: Dev handcrafting tilemaps in Tiled.
-> Bottom: Game generates full map from prompt.
-> Text: *Before: Manual / After: Magic*
+8CPrompt: Create a two-panel vertical cartoon. Top panel (BEFORE), a person describes a game concept excitedly to a friend. Bottom panel (AFTER), the person uses Level0 to turn that description into a working game demo loaded on their computer. Overlay: “Your Ideas / Instantly Playable.”
 
-**5C.**
+🔹 9. “Before: Debug Error / After: Clean Gameplay”
 
-> Top: Pushing code uphill like Sisyphus.
-> Bottom: Riding rocket labeled “Level0” with full **RPG system** built.
-> Text: *One-Person Studio Boosted*
+9APrompt: Create a vertically stacked cartoon. In the top panel (BEFORE), show a game window with a big red error message “NullReferenceException” and a frustrated developer face. In the bottom panel (AFTER), the developer smiles as the game runs smoothly with enemies moving and UI showing score. Overlay: “Before: Bugs / After: Fun.”
 
----
+9BPrompt: Create a two-panel cartoon image. Top panel (BEFORE): developer frustrated testing code, the game crashes repeatedly. Bottom panel (AFTER): the screen shows a fully functional game UI running without errors after using Level0. Overlay: “Before: Debug Mode / After: Play Mode.”
 
-### 🔹 **6. “Before: No Code / After: Built Game”**
+9CPrompt: Create a stacked cartoon-style image. Top panel (BEFORE), bugs depicted as little monsters attacking the developer. Bottom panel (AFTER), the developer protected by a shield labeled “Level0” and game working perfectly. Overlay: “Bugs Out / Fun In.”
 
-**6A.**
+🔹 10. “Before: All Tasks / After: One Tool”
 
-> Top: Kid thinking: “I wish I knew how to make games.”
-> Bottom: Prompt: "Build a Mario-style level with coins and enemies" → side-scroller loads.
-> Text: *You Don’t Need to Code.*
+10APrompt: Create a vertical two-panel cartoon. In the top panel (BEFORE), show a developer overwhelmed juggling 10 different tasks: coding, design, audio, UI, testing, and marketing. The developer looks exhausted. In the bottom panel (AFTER), show the same developer happily using Level0, with the screen showing a single prompt and a working game. Overlay: “Before: Chaos / After: One Tool.”
 
-**6B.**
+10BPrompt: Create a two-panel cartoon image. Top panel (BEFORE), a project sprint board with 15 to-do items visible and stressed dev. Bottom panel (AFTER), dev types “Build 2-player fighting game with power-ups” into Level0, a working demo appears on the screen. Overlay: “Before: Many Tasks / After: One Prompt.”
 
-> Top: “How do I make a game without coding?” Googled.
-> Bottom: Level0 interface with working **rhythm game** shown.
-> Text: *No Code? No Problem.*
-
-**6C.**
-
-> Top: Blank face looking at code.
-> Bottom: Full working **first-person shooter** generated from single sentence.
-> Text: *Level0 Builds It For You*
-
----
-
-### 🔹 **7. “Before: Hours of Coding / After: One Prompt”**
-
-**7A.**
-
-> Top: 10 hours of code still doesn’t load enemy spawner.
-> Bottom: “Make a zombie game with 3 spawn points” → working preview.
-> Text: *Before: 1000 lines / After: 1 sentence*
-
-**7B.**
-
-> Top: Dev on day 3 of creating jump physics.
-> Bottom: Prompt → character with jump + double jump system appears.
-> Text: *Jump to Results*
-
-**7C.**
-
-> Top: Dev building movement, collision, scoring manually.
-> Bottom: Level0 auto-generates a working **endless runner**.
-> Text: *Before: Dev Time / After: Game Time*
-
----
-
-### 🔹 **8. “Before: Game Idea / After: Real Game”**
-
-**8A.**
-
-> Top: "What if there was a tower defense game with aliens?" thought bubble.
-> Bottom: Game exactly as described, playable.
-> Text: *Imagine → Build*
-
-**8B.**
-
-> Top: Sketchpad of a game mechanic.
-> Bottom: Functional game built from prompt: “Create a platformer with moving platforms and spikes.”
-> Text: *From Notebook to Now*
-
-**8C.**
-
-> Top: Friend describing game concept.
-> Bottom: You turn it into a working demo in 30 seconds.
-> Text: *Your Ideas. Instantly Playable.*
-
----
-
-### 🔹 **9. “Before: Debug Error / After: Clean Gameplay”**
-
-**9A.**
-
-> Top: Game window says “NullReferenceException” over black screen.
-> Bottom: Game runs smoothly after Level0 builds it.
-> Text: *Bugs Out. Fun In.*
-
-**9B.**
-
-> Top: Testing code that crashes 5 times.
-> Bottom: Full game UI running flawlessly after prompt.
-> Text: *No More Debug Mode*
-
-**9C.**
-
-> Top: Bugs with faces attacking dev.
-> Bottom: Dev protected by Level0 shield, game working.
-> Text: *Built Without the Bugs*
-
----
-
-### 🔹 **10. “Before: All Tasks / After: One Tool”**
-
-**10A.**
-
-> Top: Dev doing 10 jobs: coding, design, audio, testing, UI, monetization.
-> Bottom: Level0 automates all but the idea.
-> Text: *From Chaos to One Tool.*
-
-**10B.**
-
-> Top: Game dev sprint board with 15 to-dos.
-> Bottom: Prompt: “Build a 2-player fighting game with power-ups” → working demo appears.
-> Text: *One Prompt = One Playable*
-
-**10C.**
-
-> Top: Spreadsheet of all dev tasks (AI, music, menus).
-> Bottom: Prompt: “Create pixel RPG with random encounters.” Game built.
-> Text: *Level0 Covers It All.*
-
+10CPrompt: Create a vertically stacked cartoon image. Top panel (BEFORE), a spreadsheet showing multiple dev roles: AI, music, menus, art, testing. Bottom panel (AFTER), dev types “Create pixel RPG with random encounters” into Level0, game loads with pixel art characters and battle screen. Overlay: “Level0 Covers It All.”
 ---
 
 # CTA SCREEN prompts
