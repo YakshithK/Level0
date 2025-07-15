@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react"
 import Tos from "./pages/Tos";
 import Privacy from "./pages/Privacy";
+import "./index.css";
 
 const queryClient = new QueryClient();
 
