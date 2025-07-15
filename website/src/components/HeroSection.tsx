@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ChevronDown } from "lucide-react";
 import Logo from "./Logo";
 
 const HeroSection = () => {
@@ -33,6 +34,13 @@ const HeroSection = () => {
       toast.error("Something went wrong, Please Try again")
     } finally {
       setIsSubmitting(false)
+    }
+  };
+
+  const scrollToDemo = () => {
+    const demoSection = document.getElementById('demo-section');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -129,11 +137,24 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Demo section - now secondary */}
-          <div className="max-w-4xl mx-auto">
-            <p className="text-lg text-muted-foreground mb-6">
-              See how it works
+          {/* Demo CTA Button */}
+          <div className="max-w-md mx-auto mb-8">
+            <Button
+              onClick={scrollToDemo}
+              variant="outline"
+              size="lg"
+              className="group border-neon-cyan/30 bg-background/50 backdrop-blur-sm hover:bg-neon-cyan/10 hover:border-neon-cyan/60 transition-all duration-300 glow-effect h-14 px-8 text-lg font-medium"
+            >
+              <span className="text-neon-cyan">Watch it in action</span>
+              <ChevronDown className="ml-2 h-5 w-5 text-neon-cyan group-hover:translate-y-1 transition-transform duration-300" />
+            </Button>
+            <p className="text-sm text-muted-foreground mt-3">
+              See how Level0 transforms ideas into games instantly
             </p>
+          </div>
+
+          {/* Demo section - now secondary */}
+          <div id="demo-section" className="max-w-4xl mx-auto">
             <div className="relative gradient-border">
               <div className="gradient-border-inner p-6 rounded-lg">
                 <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center glow-effect">
