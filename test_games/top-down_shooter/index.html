@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top-Down Shooter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <!-- Phaser.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    
+    <!-- Sprites -->
+    <script src="sprites/Player.js"></script>
+    <script src="sprites/Enemy.js"></script>
+    <script src="sprites/Bullet.js"></script>
+    
+    <!-- Scenes -->
+    <script src="scenes/MainScene.js"></script>
+    <script src="scenes/UIScene.js"></script>
+    <script src="scenes/GameOverScene.js"></script>
+    
+    <!-- Main Game -->
+    <script src="main.js"></script>
+</body>
+</html>
