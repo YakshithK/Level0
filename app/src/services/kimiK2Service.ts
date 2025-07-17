@@ -1,15 +1,11 @@
-import Together from 'together-ai';
+import { createSDK } from 'moonshot-node';
 import systemPrompt from "../level0_system_prompt.txt?raw";
 
-const TOGETHER_API_KEY = import.meta.env.VITE_TOGETHER_API_KEY || '';
+const MOONSHOT_API_KEY = import.meta.env.VITE_MOONSHOT_API_KEY || '';
 
 interface ChatMessage {
   type: 'user' | 'ai';
   content: string;
-}
-
-function isTextBlock(block: any): block is { type: 'text'; text: string } {
-  return block && block.type === 'text' && typeof block.text === 'string';
 }
 
 function stripCodeBlock(code: string): string {
@@ -20,22 +16,19 @@ function stripCodeBlock(code: string): string {
 }
 
 export class KimiK2Service {
-  private together: Together;
+  private moonshot: ReturnType<typeof createSDK>;
 
   constructor(apiKey?: string) {
-    this.together = new Together({
-      apiKey: apiKey || TOGETHER_API_KEY
+    this.moonshot = createSDK({
+      accessToken: apiKey || MOONSHOT_API_KEY,
     });
   }
 
   async generatePhaserScene(promptText: string, isInitialPrompt: boolean = true, conversationHistory: ChatMessage[] = []): Promise<{ thinking: string, code: string }> {
-    console.log(TOGETHER_API_KEY)
-    const model = 'moonshotai/Kimi-K2-Instruct';
+    const model = 'moonshot-v1-128k';
 
     // Build messages array with conversation history
     const messages: any[] = [];
-
-    // Add conversation history if provided
     if (conversationHistory.length > 0) {
       conversationHistory.forEach(msg => {
         messages.push({
@@ -44,14 +37,12 @@ export class KimiK2Service {
         });
       });
     }
-
-    // Add the current prompt (without system prompt)
     messages.push({
       role: 'user',
       content: promptText.trim(),
     });
 
-    const response = await this.together.chat.completions.create({
+    const response = await this.moonshot.chat.createCompletion.request({
       model: model,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -61,9 +52,8 @@ export class KimiK2Service {
       temperature: 0.6
     });
 
-    // Kimi K2 returns choices[0].message.content
+    // Moonshot returns response.choices[0].message.content
     const fullText = response.choices[0]?.message?.content || '';
-    // Extract <Thinking>...</Thinking> and code block
     let thinking = '';
     let code = '';
     const thinkingMatch = fullText.match(/<Thinking>([\s\S]*?)<\/Thinking>/i);
@@ -76,7 +66,7 @@ export class KimiK2Service {
     } else {
       code = stripCodeBlock(fullText);
     }
-    console.log("KimiK2 thinking", response);
+    console.log("Moonshot KimiK2 thinking", response);
     return { thinking, code };
   }
 }
