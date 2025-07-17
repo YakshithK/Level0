@@ -3,7 +3,6 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react";
-import { kimiK2Service } from '../services/kimiK2Service';
 import { supabase } from '../lib/utils';
 import { User } from '@supabase/supabase-js';
 
@@ -124,7 +123,14 @@ export default function Chat() {
     })).concat({ type: 'user', content: aiPrompt });
     setAiPrompt('');
     try {
-      const result = await kimiK2Service.generatePhaserScene(aiPrompt, false, conversationHistory);
+      const { data, error } = await supabase.functions.invoke('kimi_k2_proxy', {
+        body: {
+          messages: conversationHistory.map(msg => ({ role: msg.type === 'user' ? 'user' : 'assistant', content: msg.content })),
+          systemPrompt: undefined // or import systemPrompt if needed
+        }
+      });
+      if (error) throw new Error(error.message || 'Kimi K2 proxy error');
+      const result = data;
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
         // Save AI message

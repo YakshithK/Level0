@@ -54,6 +54,7 @@
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
+    "moonshot-node": "^0.0.5",
     "next-themes": "^0.3.0",
     "phaser": "^3.90.0",
     "react": "^18.3.1",
@@ -67,8 +68,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8",
-    "together-ai": "0.20.0"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

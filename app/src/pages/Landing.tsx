@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
-import { kimiK2Service } from '../services/kimiK2Service';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import { supabase } from '../lib/utils';
@@ -143,7 +142,14 @@ export default function Landing() {
         return;
       }
       // 3. Get AI response
-      const result = await kimiK2Service.generatePhaserScene(aiPrompt, true);
+      const { data, error } = await supabase.functions.invoke('kimi_k2_proxy', {
+        body: {
+          messages: [{ role: 'user', content: aiPrompt }],
+          systemPrompt: undefined // or import systemPrompt if needed
+        }
+      });
+      if (error) throw new Error(error.message || 'Kimi K2 proxy error');
+      const result = data;
       if (result && result.code && result.code.trim()) {
         // 4. Add AI response as a message (raw text, no splitting)
         const { error: aiMsgError } = await supabase
