@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
-import { anthropicService } from '../services/anthropicService';
+import { kimiK2Service } from '../services/kimiK2Service';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import { supabase } from '../lib/utils';
@@ -143,7 +143,7 @@ export default function Landing() {
         return;
       }
       // 3. Get AI response
-      const result = await anthropicService.generatePhaserScene(aiPrompt, true);
+      const result = await kimiK2Service.generatePhaserScene(aiPrompt, true);
       if (result && result.code && result.code.trim()) {
         // 4. Add AI response as a message (raw text, no splitting)
         const { error: aiMsgError } = await supabase

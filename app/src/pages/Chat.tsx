@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react";
-import { anthropicService } from '../services/anthropicService';
+import { kimiK2Service } from '../services/kimiK2Service';
 import { supabase } from '../lib/utils';
 import { User } from '@supabase/supabase-js';
 
@@ -124,7 +124,7 @@ export default function Chat() {
     })).concat({ type: 'user', content: aiPrompt });
     setAiPrompt('');
     try {
-      const result = await anthropicService.generatePhaserScene(aiPrompt, false, conversationHistory);
+      const result = await kimiK2Service.generatePhaserScene(aiPrompt, false, conversationHistory);
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
         // Save AI message
