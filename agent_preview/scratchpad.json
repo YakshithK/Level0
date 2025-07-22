@@ -1,0 +1,26 @@
+[
+  {
+    "step": 1,
+    "instruction": "Identify the section of code responsible for generating the original output.",
+    "expected_outcome": "Locate the code block where the output string is defined or constructed.",
+    "completed": false
+  },
+  {
+    "step": 2,
+    "instruction": "Modify the code to assign the string 'hi lebron' to the output variable.",
+    "expected_outcome": "The code now assigns the string 'hi lebron' to the variable that controls the output.",
+    "completed": false
+  },
+  {
+    "step": 3,
+    "instruction": "Run the modified code.",
+    "expected_outcome": "The program executes with the altered output assignment.",
+    "completed": false
+  },
+  {
+    "step": 4,
+    "instruction": "Verify that the program now outputs 'hi lebron'.",
+    "expected_outcome": "The console or output stream displays 'hi lebron'.",
+    "completed": false
+  }
+]
