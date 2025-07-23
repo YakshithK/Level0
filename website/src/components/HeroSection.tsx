@@ -124,7 +124,6 @@ const HeroSection = () => {
                   Be among the first to experience the future of AI game building. 
                   Early access starts soon, and spots are limited.
                 </p>
-
                 <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
                   <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <Input
@@ -145,7 +144,34 @@ const HeroSection = () => {
                     </Button>
                   </div>
                 </form>
-
+                {/* Referral Share Section */}
+                <div className="mt-8 mb-8 text-center">
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    🎉 Invite friends, get early access faster!
+                  </h3>
+                  <p className="text-muted-foreground mb-4 text-sm">
+                    Share this link with others. The more you refer, the sooner you get in.
+                  </p>
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <Input
+                      type="text"
+                      readOnly
+                      value="https://level0.app"
+                      onClick={(e) => e.currentTarget.select()}
+                      className="w-full sm:w-auto flex-grow cursor-pointer text-sm text-muted-foreground"
+                    />
+                    <Button
+                      type="button"
+                      className="h-10 px-4 text-sm bg-neon-cyan text-black hover:bg-neon-cyan/90 font-semibold glow-effect"
+                      onClick={() => {
+                        navigator.clipboard.writeText("https://level0.games?ref=yourname");
+                        toast.success("Referral link copied!");
+                      }}
+                    >
+                      📋 Copy Link
+                    </Button>
+                  </div>
+                </div>
                 <div className="text-sm text-muted-foreground space-y-2">
                   <p className="flex items-center justify-center gap-2">
                     <span>🎮</span> Full access to Level0 beta

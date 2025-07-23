@@ -1,26 +1,26 @@
 [
   {
     "step": 1,
-    "instruction": "Identify the section of code responsible for generating the original output.",
-    "expected_outcome": "Locate the code block where the output string is defined or constructed.",
+    "instruction": "Analyze the original phrase 'hello world'.",
+    "expected_outcome": "Identify the phrase that will be the source for the replacement.",
     "completed": false
   },
   {
     "step": 2,
-    "instruction": "Modify the code to assign the string 'hi lebron' to the output variable.",
-    "expected_outcome": "The code now assigns the string 'hi lebron' to the variable that controls the output.",
+    "instruction": "Analyze the target phrase 'hi lebron'.",
+    "expected_outcome": "Understand the new phrase that will replace the original phrase.",
     "completed": false
   },
   {
     "step": 3,
-    "instruction": "Run the modified code.",
-    "expected_outcome": "The program executes with the altered output assignment.",
+    "instruction": "Identify the substring to be removed from 'hello world'. This will likely be the entire phrase 'hello world' if the intention is a complete replacement.",
+    "expected_outcome": "Determine that 'hello world' is the substring that should be replaced.",
     "completed": false
   },
   {
     "step": 4,
-    "instruction": "Verify that the program now outputs 'hi lebron'.",
-    "expected_outcome": "The console or output stream displays 'hi lebron'.",
+    "instruction": "Substitute the substring 'hello world' with 'hi lebron'.",
+    "expected_outcome": "The final phrase will be 'hi lebron'.",
     "completed": false
   }
 ]

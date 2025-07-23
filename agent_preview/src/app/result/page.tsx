@@ -1,6 +1,5 @@
-import MonacoEditor from "../components/MonacoEditor";
-import FileExplorer from "../components/FileExplorer";
-import PromptInput from "../components/PromptInput";
+"use client";
+
 import React, { useState, useEffect } from "react";
 
 export default function Result() {
