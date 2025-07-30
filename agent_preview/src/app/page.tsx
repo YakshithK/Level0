@@ -1,137 +1,359 @@
 "use client";
 
-import MonacoEditor from "../components/MonacoEditor";
-import FileExplorer from "../components/FileExplorer";
-import PromptInput from "../components/PromptInput";
-import PlanTracker from "../components/PlanTracker";
-import DiffViewer from "../components/DiffViewer";
 import React, { useState, useEffect } from "react";
-import { retrieveRelevantChunks } from "../../retriever";
-import { buildPrompt } from "../../promptBuilder";
-import { pipeline } from '@xenova/transformers';
-
-const fileMap: Record<string, string> = {
-  "example-project/hello.ts": `// Example file for the file explorer and Monaco editor demo\nexport const hello = () => {\n  return "Hello, world!";\n};`
-};
+import ChatPanel from "../components/ChatPanel";
+import RightPanel from "../components/RightPanel";
+import type { Message, PlanStep } from "../components/ChatPanel";
 
 export default function Home() {
-  const [fileContent, setFileContent] = useState<string>(fileMap["example-project/hello.ts"]);
-  const [selectedFile, setSelectedFile] = useState<string>("example-project/hello.ts");
-  const [prompt, setPrompt] = useState<string>("");
-  const [plan, setPlan] = useState<string[]>([]);
+  // State management
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [planSteps, setPlanSteps] = useState<PlanStep[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const [pendingDiff, setPendingDiff] = useState<any>(null);
-  const [pendingFile, setPendingFile] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isStopped, setIsStopped] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  
+  // File management
+  const [selectedFile, setSelectedFile] = useState<string>("example-project/hello.ts");
+  const [fileContent, setFileContent] = useState<string>("");
+  const [changeCounter, setChangeCounter] = useState<number>(0);
+  
+  // Diff management - now supports multiple pending diffs
+  const [pendingDiffs, setPendingDiffs] = useState<any[]>([]);
 
+  // Load initial file
   useEffect(() => {
-    setFileContent(fileMap[selectedFile] || "");
+    async function fetchFile() {
+      if (selectedFile) {
+        const res = await fetch(`/api/files?file=${encodeURIComponent(selectedFile)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFileContent(data.content ?? "");
+        } else {
+          setFileContent("");
+        }
+      }
+    }
+    fetchFile();
   }, [selectedFile]);
 
+  // Manual refresh handler
+  const handleRefresh = async () => {
+    if (selectedFile) {
+      const res = await fetch(`/api/files?file=${encodeURIComponent(selectedFile)}&t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFileContent(data.content ?? "");
+        setChangeCounter((prev) => prev + 1);
+      }
+    }
+  };
+
+  // Chat submission handler
   const handlePromptSubmit = async () => {
-    console.log("[UI] User submitted prompt:", prompt);
-    const res = await fetch("/api/retrieve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, topK: 5 })
-    });
-    const relevantChunks = await res.json();
-    console.log("[UI] Retrieved relevantChunks:", relevantChunks);
-    const smartPrompt = `User request: ${prompt}\n\nRelevant files:` + relevantChunks.map((c: any) => `\n--- ${c.file} ---\n${c.code}\n`).join("");
-    console.log("[UI] Smart prompt:", smartPrompt);
-    alert(smartPrompt);
-    // Use the /api/plan endpoint for planning
+    if (!currentPrompt.trim() || isProcessing) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: currentPrompt,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setError("");
+    setIsProcessing(true);
+    setIsStopped(false); // Reset stop flag for new execution
+    
     try {
+      // Add system message about planning
+      const planningMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'system',
+        content: 'Analyzing your request and creating execution plan...',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, planningMessage]);
+
+      // Get plan from API
       const planRes = await fetch("/api/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt: currentPrompt })
       });
+      
+      if (!planRes.ok) {
+        throw new Error(`Plan API returned ${planRes.status}`);
+      }
+      
       const steps = await planRes.json();
       console.log("[UI] Plan steps:", steps);
-      setPlan(Array.isArray(steps) ? steps : ["Plan API did not return an array."]);
+      
+      // Convert plan to PlanStep format
+      const formattedSteps: PlanStep[] = Array.isArray(steps) 
+        ? steps.map((step, index) => ({
+            step: typeof step === 'object' ? step.instruction || step.description || step.step || JSON.stringify(step) : step,
+            completed: false,
+            isActive: index === 0
+          }))
+        : [{ step: "Failed to generate plan", completed: false, isActive: false }];
+
+      setPlanSteps(formattedSteps);
       setCurrentStep(0);
+
+      // Add assistant confirmation
+      const assistantMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        type: 'assistant',
+        content: `I've created a ${formattedSteps.length}-step plan to implement your request. I'll now execute each step and show you the changes for review.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+
     } catch (e) {
-      console.log("[UI] Plan API error:", e);
-      setPlan(["Failed to fetch plan from API."]);
-      setCurrentStep(0);
+      console.error("[UI] Plan API error:", e);
+      setError("Failed to generate plan. Please check your API configuration and try again.");
+      const errorMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        type: 'system',
+        content: 'Failed to generate execution plan. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
+      setCurrentPrompt("");
     }
-    console.log("[UI] Plan state after submit:", plan);
   };
 
-  // When a plan is generated, execute each step in order
+  // Stop execution handler
+  const handleStop = () => {
+    setIsStopped(true);
+    setIsProcessing(false);
+    
+    const stopMessage: Message = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: 'Execution stopped by user.',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, stopMessage]);
+  };
+
+  // Execute plan steps - modified to continue without waiting for user acceptance
   useEffect(() => {
-    async function runPlan() {
-      if (plan.length > 0) {
-        for (let i = 0; i < plan.length; i++) {
-          setCurrentStep(i);
-          const step = plan[i] as any;
-          const task = typeof step === 'object' ? step.instruction || step.description || step.step || JSON.stringify(step) : step;
-          console.log(`[UI] Executing plan step ${i + 1}:`, task);
-          // Run executor agent for each step
+    async function runStep() {
+      if (planSteps.length > 0 && currentStep < planSteps.length && !isProcessing && !isStopped) {
+        setIsProcessing(true);
+        setError("");
+        
+        // Update current step as active
+        setPlanSteps(prev => prev.map((step, index) => ({
+          ...step,
+          isActive: index === currentStep
+        })));
+
+        const step = planSteps[currentStep];
+        console.log(`[UI] Executing plan step ${currentStep + 1}:`, step.step);
+        
+        try {
           const res = await fetch("/api/execute-task", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ task })
+            body: JSON.stringify({ task: step.step })
           });
+          
+          if (!res.ok) {
+            throw new Error(`Execute task API returned ${res.status}`);
+          }
+          
           const result = await res.json();
-          console.log(`[UI] Executor result for step ${i + 1}:`, result);
-          setPendingDiff(result);
-          setPendingFile(result.mainFile);
+          console.log(`[UI] Executor result for step ${currentStep + 1}:`, result);
+          
+          // Check for generation errors
+          if (!result.updated || result.updated.trim() === "") {
+            result.error = "Generated code is empty or invalid";
+          }
+          
+          // Add to pending diffs queue instead of waiting for user acceptance
+          setPendingDiffs(prev => [...prev, { ...result, stepIndex: currentStep }]);
+          
           // Show the updated file in Monaco if the selected file matches
           if (selectedFile === result.mainFile) {
             setFileContent(result.updated);
           }
-          // Wait for user to accept before continuing
-          return;
+
+          // Mark step as completed and move to next immediately
+          setPlanSteps(prev => prev.map((step, index) => 
+            index === currentStep 
+              ? { ...step, completed: true, isActive: false }
+              : step
+          ));
+
+          // Add step completion message
+          const stepMessage: Message = {
+            id: Date.now().toString(),
+            type: 'assistant',
+            content: `Step ${currentStep + 1} completed and queued for review. Continuing to next step...`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, stepMessage]);
+
+          // Move to next step automatically
+          setCurrentStep(prev => prev + 1);
+          
+        } catch (error) {
+          console.error(`[UI] Error executing step ${currentStep + 1}:`, error);
+          setError(`Failed to execute step ${currentStep + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            type: 'system',
+            content: `Error executing step ${currentStep + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        } finally {
+          setIsProcessing(false);
         }
       }
     }
-    runPlan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan]);
+    runStep();
+  }, [planSteps, currentStep, isProcessing, isStopped, selectedFile]);
 
-  const handleAccept = async () => {
-    if (!pendingDiff) return;
-    console.log("[UI] User accepted change for file:", pendingDiff.mainFile);
-    await fetch("/api/apply-change", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ file: pendingDiff.mainFile, content: pendingDiff.updated })
-    });
-    // Mark step as completed and move to next
-    setPendingDiff(null);
-    setPendingFile("");
-    setPlan((prev) => prev.map((step, idx) => idx === currentStep ? (typeof step === 'object' ? { ...step, completed: true } : step) : step));
-    setCurrentStep((prev) => prev + 1);
-    console.log("[UI] Plan state after accept:", plan);
+  // Handle accepting individual changes
+  const handleAccept = async (index?: number) => {
+    const diffIndex = index ?? 0;
+    const diff = pendingDiffs[diffIndex];
+    if (!diff) return;
+    
+    setIsProcessing(true);
+    setError("");
+    
+    try {
+      console.log("[UI] User accepted change for file:", diff.mainFile);
+      
+      const response = await fetch("/api/apply-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: diff.mainFile, content: diff.updated })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to apply changes: ${response.status}`);
+      }
+      
+      // Remove the applied diff from pending diffs
+      setPendingDiffs(prev => prev.filter((_, i) => i !== diffIndex));
+      
+      const acceptMessage: Message = {
+        id: Date.now().toString(),
+        type: 'system',
+        content: `Changes applied successfully to ${diff.mainFile}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, acceptMessage]);
+      
+      await handleRefresh();
+      
+    } catch (error) {
+      console.error("[UI] Error applying changes:", error);
+      setError(`Failed to apply changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  // Handle discarding individual changes
+  const handleDiscard = async (index?: number) => {
+    const diffIndex = index ?? 0;
+    const diff = pendingDiffs[diffIndex];
+    if (!diff) return;
+    
+    // Remove the discarded diff from pending diffs
+    setPendingDiffs(prev => prev.filter((_, i) => i !== diffIndex));
+    setError("");
+    
+    const discardMessage: Message = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: `Changes discarded for ${diff.mainFile}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, discardMessage]);
+  };
+
+  // Handle accepting all pending changes
+  const handleAcceptAll = async () => {
+    if (pendingDiffs.length === 0) return;
+    
+    setIsProcessing(true);
+    setError("");
+    
+    try {
+      // Apply all changes sequentially
+      for (const diff of pendingDiffs) {
+        const response = await fetch("/api/apply-change", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: diff.mainFile, content: diff.updated })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to apply changes to ${diff.mainFile}: ${response.status}`);
+        }
+      }
+      
+      const acceptAllMessage: Message = {
+        id: Date.now().toString(),
+        type: 'system',
+        content: `All ${pendingDiffs.length} changes applied successfully`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, acceptAllMessage]);
+      
+      // Clear all pending diffs
+      setPendingDiffs([]);
+      
+      await handleRefresh();
+      
+    } catch (error) {
+      console.error("[UI] Error applying all changes:", error);
+      setError(`Failed to apply all changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   return (
-    <div className="flex h-screen">
-      <FileExplorer onSelect={setSelectedFile} />
-      <main className="flex-1 flex flex-col">
-        <div className="flex-1">
-          <MonacoEditor
-            value={fileContent}
-            language="typescript"
-            onChange={value => setFileContent(value ?? "")}
-          />
-        </div>
-        <PromptInput
-          value={prompt}
-          onChange={setPrompt}
-          onSubmit={handlePromptSubmit}
-        />
-        <PlanTracker steps={plan} currentStep={currentStep} />
-        {pendingDiff && (
-          <div className="mt-4">
-            <div className="mb-2 font-semibold">Review the change below and accept to apply:</div>
-            <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={handleAccept}>
-              Accept Change
-            </button>
-          </div>
-        )}
-      </main>
+    <div className="flex h-screen bg-gray-900 text-white">
+      {/* Left Panel - Chat */}
+      <ChatPanel
+        messages={messages}
+        planSteps={planSteps}
+        currentPrompt={currentPrompt}
+        onPromptChange={setCurrentPrompt}
+        onSubmit={handlePromptSubmit}
+        onStop={handleStop}
+        isProcessing={isProcessing}
+      />
+
+      {/* Right Panel - Code/Files */}
+      <RightPanel
+        selectedFile={selectedFile}
+        fileContent={fileContent}
+        onFileSelect={setSelectedFile}
+        onFileContentChange={setFileContent}
+        changeCounter={changeCounter}
+        onRefresh={handleRefresh}
+        isProcessing={isProcessing}
+        pendingDiffs={pendingDiffs}
+        onAcceptDiff={handleAccept}
+        onDiscardDiff={handleDiscard}
+        onAcceptAllDiffs={handleAcceptAll}
+        error={error}
+      />
     </div>
   );
 }

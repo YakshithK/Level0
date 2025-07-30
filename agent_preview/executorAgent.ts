@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import fs from "fs";
 import path from "path";
-import { retrieveRelevantChunks } from "../retriever";
+import { retrieveRelevantChunks } from "./retriever";
 import { diff_match_patch } from "diff-match-patch";
 
 function buildExecutorPrompt(task: string, relevantChunks: any[]) {
@@ -9,40 +9,43 @@ function buildExecutorPrompt(task: string, relevantChunks: any[]) {
   for (const chunk of relevantChunks) {
     prompt += `\n--- ${chunk.file} ---\n${chunk.code}\n`;
   }
-  prompt += "\n\nReturn ONLY the full new file content for the main file you are asked to change. Do not include any markdown or code block formatting.";
+  prompt += "\n\nReturn ONLY the full new file content for the main file you are asked to change. Do not include any markdown or code block formatting or thinking. Make sure it's complete correct code syntax based on the language.yes";
   return prompt;
 }
 
 export async function executeTask(task: string, topK = 5) {
-  console.log("[executorAgent] Starting executeTask for task:", task);
+  // const apiKey = process.env.TOGETHER_API_KEY;
+  // Together API code commented out
+  // console.log("[executorAgent] Starting executeTask for task:", task);
   // 1. Retrieve relevant code chunks
   const relevantChunks = await retrieveRelevantChunks(task, topK);
   console.log("[executorAgent] Retrieved relevantChunks:", relevantChunks);
   // 2. Build the prompt
   const prompt = buildExecutorPrompt(task, relevantChunks);
   console.log("[executorAgent] Built prompt:", prompt);
-  // 3. Call KimiK2 (Together AI)
-  const response = await fetch("https://api.together.xyz/v1/chat/completions", {
+  // 3. Call OpenAI API instead
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer YOUR_TOGETHER_API_KEY`,
+      "Authorization": `Bearer ${openaiApiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "kimiK2",
+      model: "gpt-4o", // or "gpt-3.5-turbo"
       messages: [
-        { role: "system", content: "You are a helpful agent that edits code files as instructed." },
+        { role: "system", content: "You are a helpful agent that edits code files as instructed. You are an expert at what you do and follow 100% instructions. Make sure all the code works based on the language given." },
         { role: "user", content: prompt }
       ],
       temperature: 0.2
     })
   });
   const data = await response.json() as any;
-  console.log("[executorAgent] KimiK2 API response:", data);
+  console.log("[executorAgent] OpenAI API response:", data);
   const content = data.choices?.[0]?.message?.content || "";
   // Remove code block markers if present
   const newFileContent = content.replace(/```[a-z]*|```/g, "").trim();
-  console.log("[executorAgent] New file content from KimiK2:", newFileContent);
+  console.log("[executorAgent] New file content from OpenAI:", newFileContent);
   // 4. Compare original and updated using diff-match-patch
   const dmp = new diff_match_patch();
   const mainFile = relevantChunks[0]?.file || "unknown";

@@ -11,7 +11,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ value, language, onChange }
   return (
     <Editor
       height="100%"
-      defaultLanguage={language}
+      language={language}
       value={value}
       onChange={onChange}
       theme="vs-dark"

@@ -1,26 +1,14 @@
 [
   {
     "step": 1,
-    "instruction": "Analyze the original phrase 'hello world'.",
-    "expected_outcome": "Identify the phrase that will be the source for the replacement.",
+    "instruction": "Locate the code section responsible for defining the return value.",
+    "expected_outcome": "Identification of the variable, string, or code block that determines the output.",
     "completed": false
   },
   {
     "step": 2,
-    "instruction": "Analyze the target phrase 'hi lebron'.",
-    "expected_outcome": "Understand the new phrase that will replace the original phrase.",
-    "completed": false
-  },
-  {
-    "step": 3,
-    "instruction": "Identify the substring to be removed from 'hello world'. This will likely be the entire phrase 'hello world' if the intention is a complete replacement.",
-    "expected_outcome": "Determine that 'hello world' is the substring that should be replaced.",
-    "completed": false
-  },
-  {
-    "step": 4,
-    "instruction": "Substitute the substring 'hello world' with 'hi lebron'.",
-    "expected_outcome": "The final phrase will be 'hi lebron'.",
+    "instruction": "Replace the current return value with the string \"yo im lebron wsg\".",
+    "expected_outcome": "The code now returns the exact string \"yo im lebron wsg\".",
     "completed": false
   }
 ]

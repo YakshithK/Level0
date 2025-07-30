@@ -18,7 +18,7 @@ export async function POST(request: Request) {
           {
             parts: [
               {
-                text: `Break this request into a step-by-step plan. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] The request: ${prompt}`
+                text: `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] The request: ${prompt}`
               }
             ]
           }
