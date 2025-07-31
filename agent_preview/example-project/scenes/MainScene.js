@@ -21,8 +21,6 @@ class MainScene extends Phaser.Scene {
         
         // Create player
         this.player = new Player(this, 400, 300);
-        this.player.health = 200; // Set player's health to 200
-        this.player.maxHealth = 200; // Set player's max health to 200
         
         // Create groups
         this.bullets = this.physics.add.group({

@@ -1,26 +1,38 @@
 [
   {
     "step": 1,
-    "instruction": "Open the `sprites/Player.js` file.",
-    "expected_outcome": "The `Player.js` file is open and ready for editing.",
+    "instruction": "Create an `index.html` file.",
+    "expected_outcome": "A file named `index.html` exists.",
     "completed": false
   },
   {
     "step": 2,
-    "instruction": "Locate the `health` and `maxHealth` properties within the Player class constructor.",
-    "expected_outcome": "The lines `this.health = 100;` and `this.maxHealth = 100;` are found.",
+    "instruction": "Add the basic HTML structure (DOCTYPE, html, head, body tags) with character set, viewport settings, title, and basic styling for centering the game canvas.",
+    "expected_outcome": "The `index.html` file contains the basic HTML structure with meta tags and styling.",
     "completed": false
   },
   {
     "step": 3,
-    "instruction": "Change the values of both `this.health` and `this.maxHealth` to 200.",
-    "expected_outcome": "The lines now read `this.health = 200;` and `this.maxHealth = 200;`.",
+    "instruction": "Add a div with the id `game-container` inside the body. This will be the parent element for the Phaser canvas.",
+    "expected_outcome": "A div element with `id=\"game-container\"` is present within the `body` of the HTML.",
     "completed": false
   },
   {
     "step": 4,
-    "instruction": "Save the `sprites/Player.js` file.",
-    "expected_outcome": "The changes are saved to the `Player.js` file.",
+    "instruction": "Include the Phaser library using a CDN link.",
+    "expected_outcome": "A `<script>` tag with `src=\"https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js\"` is present in the `index.html` file, ideally before any other script tags.",
+    "completed": false
+  },
+  {
+    "step": 5,
+    "instruction": "Include the game's JavaScript files (sprites, scenes, and main.js) using `<script>` tags, ensuring they are loaded in the correct order: sprites, then scenes, then the main game logic (`main.js`).",
+    "expected_outcome": "`<script>` tags for `Player.js`, `Enemy.js`, `Bullet.js`, `MainScene.js`, `UIScene.js`, `GameOverScene.js`, and `main.js` are present in the `index.html` file, in that specific order. They should be placed after the Phaser CDN script tag.",
+    "completed": false
+  },
+  {
+    "step": 6,
+    "instruction": "Place all `<script>` tags inside the `<body>` tag, typically at the end just before the closing `</body>` tag for optimal loading performance.",
+    "expected_outcome": "All `<script>` tags are located within the `<body>` tag and placed before the closing `</body>` tag.",
     "completed": false
   }
 ]
