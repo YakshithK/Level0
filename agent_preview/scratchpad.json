@@ -1,14 +1,26 @@
 [
   {
     "step": 1,
-    "instruction": "Locate the code section responsible for defining the return value.",
-    "expected_outcome": "Identification of the variable, string, or code block that determines the output.",
+    "instruction": "Open the `sprites/Player.js` file.",
+    "expected_outcome": "The `Player.js` file is open and ready for editing.",
     "completed": false
   },
   {
     "step": 2,
-    "instruction": "Replace the current return value with the string \"yo im lebron wsg\".",
-    "expected_outcome": "The code now returns the exact string \"yo im lebron wsg\".",
+    "instruction": "Locate the `health` and `maxHealth` properties within the Player class constructor.",
+    "expected_outcome": "The lines `this.health = 100;` and `this.maxHealth = 100;` are found.",
+    "completed": false
+  },
+  {
+    "step": 3,
+    "instruction": "Change the values of both `this.health` and `this.maxHealth` to 200.",
+    "expected_outcome": "The lines now read `this.health = 200;` and `this.maxHealth = 200;`.",
+    "completed": false
+  },
+  {
+    "step": 4,
+    "instruction": "Save the `sprites/Player.js` file.",
+    "expected_outcome": "The changes are saved to the `Player.js` file.",
     "completed": false
   }
 ]

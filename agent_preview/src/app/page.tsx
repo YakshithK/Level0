@@ -16,12 +16,39 @@ export default function Home() {
   const [error, setError] = useState<string>("");
   
   // File management
-  const [selectedFile, setSelectedFile] = useState<string>("example-project/hello.ts");
+  const [selectedFile, setSelectedFile] = useState<string>("");
   const [fileContent, setFileContent] = useState<string>("");
   const [changeCounter, setChangeCounter] = useState<number>(0);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   // Diff management - now supports multiple pending diffs
   const [pendingDiffs, setPendingDiffs] = useState<any[]>([]);
+
+  // Load first available file on startup
+  useEffect(() => {
+    async function loadFirstFile() {
+      try {
+        const res = await fetch("/api/files");
+        if (res.ok) {
+          const files = await res.json();
+          if (files.length > 0) {
+            // Find the first TypeScript/JavaScript file, or just use the first file
+            const firstCodeFile = files.find((f: any) => 
+              f.name.endsWith('.ts') || f.name.endsWith('.js') || f.name.endsWith('.tsx') || f.name.endsWith('.jsx')
+            );
+            const fileToSelect = firstCodeFile || files[0];
+            setSelectedFile(fileToSelect.path);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load initial file list:", error);
+      }
+    }
+    
+    if (!selectedFile) {
+      loadFirstFile();
+    }
+  }, [selectedFile]);
 
   // Load initial file
   useEffect(() => {
@@ -172,17 +199,41 @@ export default function Home() {
           const result = await res.json();
           console.log(`[UI] Executor result for step ${currentStep + 1}:`, result);
           
-          // Check for generation errors
-          if (!result.updated || result.updated.trim() === "") {
-            result.error = "Generated code is empty or invalid";
-          }
-          
-          // Add to pending diffs queue instead of waiting for user acceptance
-          setPendingDiffs(prev => [...prev, { ...result, stepIndex: currentStep }]);
-          
-          // Show the updated file in Monaco if the selected file matches
-          if (selectedFile === result.mainFile) {
-            setFileContent(result.updated);
+          // Handle new multi-file format
+          if (result.modifiedFiles && Array.isArray(result.modifiedFiles)) {
+            // Process each modified file
+            result.modifiedFiles.forEach((fileResult: any) => {
+              // Check for generation errors
+              if (!fileResult.updated || fileResult.updated.trim() === "") {
+                fileResult.error = "Generated code is empty or invalid";
+              }
+              
+              // Add to pending diffs queue with mainFile property for compatibility
+              setPendingDiffs(prev => [...prev, { 
+                ...fileResult, 
+                mainFile: fileResult.file, // Add mainFile for backward compatibility
+                stepIndex: currentStep 
+              }]);
+              
+              // Show the updated file in Monaco if the selected file matches
+              if (selectedFile === fileResult.file) {
+                setFileContent(fileResult.updated);
+              }
+            });
+          } else {
+            // Handle legacy single-file format (fallback)
+            // Check for generation errors
+            if (!result.updated || result.updated.trim() === "") {
+              result.error = "Generated code is empty or invalid";
+            }
+            
+            // Add to pending diffs queue
+            setPendingDiffs(prev => [...prev, { ...result, stepIndex: currentStep }]);
+            
+            // Show the updated file in Monaco if the selected file matches
+            if (selectedFile === result.mainFile) {
+              setFileContent(result.updated);
+            }
           }
 
           // Mark step as completed and move to next immediately
@@ -257,6 +308,11 @@ export default function Home() {
       setMessages(prev => [...prev, acceptMessage]);
       
       await handleRefresh();
+      
+      // If this was a new file, trigger file list refresh
+      if (diff.is_new_file) {
+        setRefreshTrigger(prev => prev + 1);
+      }
       
     } catch (error) {
       console.error("[UI] Error applying changes:", error);
@@ -353,6 +409,7 @@ export default function Home() {
         onDiscardDiff={handleDiscard}
         onAcceptAllDiffs={handleAcceptAll}
         error={error}
+        refreshTrigger={refreshTrigger}
       />
     </div>
   );

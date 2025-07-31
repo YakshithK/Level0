@@ -1,9 +1,34 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { retrieveRelevantChunks } from "../../../../retriever";
 
 export async function POST(request: Request) {
   const { prompt } = await request.json();
+
+  // Log the prompt being sent to plan generation
+  console.log(`\n=== PLAN API: Request Received ===`);
+  console.log(`Prompt: "${prompt}"`);
+  console.log(`===================================\n`);
+
+  // Retrieve relevant files for context
+  const relevantChunks = await retrieveRelevantChunks(prompt);
+  
+  // Log the files that were found
+  console.log(`\n=== PLAN API: Files Found for Planning ===`);
+  const fileNames = relevantChunks.map(chunk => chunk.file);
+  console.log('Related files found:', fileNames.length > 0 ? fileNames : 'No files found');
+  console.log(`==========================================\n`);
+
+  // Build enhanced prompt with file context
+  const enhancedPrompt = relevantChunks.length > 0 
+    ? `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] 
+
+Context from relevant files:
+${relevantChunks.map(chunk => `**${chunk.file}:**\n${chunk.code ? chunk.code.substring(0, 500) : 'No content'}...`).join('\n\n')}
+
+The request: ${prompt}`
+    : `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] The request: ${prompt}`;
 
   const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
@@ -11,14 +36,14 @@ export async function POST(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-goog-api-key": process.env.GEMINI_API_KEY // or just leave it blank for now
+        "X-goog-api-key": process.env.GEMINI_API_KEY || ""
       },
       body: JSON.stringify({
         contents: [
           {
             parts: [
               {
-                text: `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] The request: ${prompt}`
+                text: enhancedPrompt
               }
             ]
           }

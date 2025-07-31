@@ -17,9 +17,10 @@ interface RightPanelProps {
   onDiscardDiff: (index?: number) => void;
   onAcceptAllDiffs: () => void;
   error?: string;
+  refreshTrigger?: number;
 }
 
-type ViewMode = 'code' | 'files' | 'review' | 'preview';
+type ViewMode = 'code' | 'review' | 'preview';
 
 export default function RightPanel({
   selectedFile,
@@ -33,10 +34,12 @@ export default function RightPanel({
   onAcceptDiff,
   onDiscardDiff,
   onAcceptAllDiffs,
-  error
+  error,
+  refreshTrigger
 }: RightPanelProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('code');
   const [showInlineDiff, setShowInlineDiff] = useState<boolean>(false);
+  const [isFileExplorerCollapsed, setIsFileExplorerCollapsed] = useState<boolean>(false);
 
   // Auto-switch to review mode when there are pending diffs
   React.useEffect(() => {
@@ -62,18 +65,6 @@ export default function RightPanel({
           >
             <div className="flex items-center space-x-2">
               <span>Code</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setViewMode('files')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              viewMode === 'files'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <span>Files</span>
             </div>
           </button>
           <button
@@ -107,6 +98,24 @@ export default function RightPanel({
           </button>
         </div>
         <div className="flex items-center space-x-3">
+          {viewMode === 'code' && (
+            <button
+              onClick={() => setIsFileExplorerCollapsed(!isFileExplorerCollapsed)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                !isFileExplorerCollapsed
+                  ? 'bg-gray-600 text-white'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+              title={isFileExplorerCollapsed ? "Show Files" : "Hide Files"}
+            >
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <span>{isFileExplorerCollapsed ? 'Show' : 'Hide'} Files</span>
+              </div>
+            </button>
+          )}
           <button
             onClick={onRefresh}
             disabled={isProcessing}
@@ -118,16 +127,44 @@ export default function RightPanel({
       </div>
       <div className="flex-1 relative">
         {viewMode === 'code' && (
-          <MonacoEditor
-            key={selectedFile + '-' + changeCounter}
-            value={fileContent}
-            language="typescript"
-            onChange={(value) => onFileContentChange(value ?? "")}
-          />
-        )}
-        {viewMode === 'files' && (
-          <div className="h-full overflow-auto">
-            <FileExplorer onSelect={onFileSelect} />
+          <div className="h-full flex">
+            {/* File Explorer Sidebar */}
+            {!isFileExplorerCollapsed && (
+              <div className="w-80 flex-shrink-0 border-r border-gray-700 bg-gray-900">
+                <FileExplorer onSelect={onFileSelect} refreshTrigger={refreshTrigger} />
+              </div>
+            )}
+            
+            {/* Main Editor Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {/* Toggle Button */}
+              <button
+                onClick={() => setIsFileExplorerCollapsed(!isFileExplorerCollapsed)}
+                className="p-2 bg-gray-800 hover:bg-gray-700 border-b border-gray-700 transition-colors self-start"
+                title={isFileExplorerCollapsed ? "Show Files" : "Hide Files"}
+              >
+                <svg 
+                  className={`w-4 h-4 text-gray-400 transition-transform ${
+                    isFileExplorerCollapsed ? 'rotate-0' : 'rotate-180'
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              {/* Monaco Editor */}
+              <div className="flex-1 min-h-0">
+                <MonacoEditor
+                  key={selectedFile + '-' + changeCounter}
+                  value={fileContent}
+                  language="typescript"
+                  onChange={(value) => onFileContentChange(value ?? "")}
+                />
+              </div>
+            </div>
           </div>
         )}
         {viewMode === 'preview' && (

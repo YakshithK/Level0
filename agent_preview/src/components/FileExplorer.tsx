@@ -16,7 +16,7 @@ interface FileTreeNode {
   isExpanded?: boolean;
 }
 
-const FileExplorer: React.FC<{ onSelect: (file: string) => void }> = ({ onSelect }) => {
+const FileExplorer: React.FC<{ onSelect: (file: string) => void, refreshTrigger?: number }> = ({ onSelect, refreshTrigger }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<string>("");
@@ -76,7 +76,7 @@ const FileExplorer: React.FC<{ onSelect: (file: string) => void }> = ({ onSelect
         setFileTree(tree);
       })
       .catch(() => setFileTree([]));
-  }, []);
+  }, [refreshTrigger]); // Add refreshTrigger as dependency
 
   const handleFileSelect = (filePath: string, type: string) => {
     if (type === 'file') {

@@ -5,21 +5,45 @@ import { retrieveRelevantChunks } from "./retriever";
 import { diff_match_patch } from "diff-match-patch";
 
 function buildExecutorPrompt(task: string, relevantChunks: any[]) {
-  let prompt = `Task: ${task}\n\nRelevant code:`;
+  let prompt = `Task: ${task}\n\nRelevant code files:\n`;
   for (const chunk of relevantChunks) {
     prompt += `\n--- ${chunk.file} ---\n${chunk.code}\n`;
   }
-  prompt += "\n\nReturn ONLY the full new file content for the main file you are asked to change. Do not include any markdown or code block formatting or thinking. Make sure it's complete correct code syntax based on the language.yes";
+  prompt += `\n\nAnalyze the task and determine which files need to be modified or created. You can modify existing files or create entirely new files as needed.
+
+Format your response as JSON:
+{
+  "files_to_modify": [
+    {
+      "filename": "exact_filename_from_above_or_new_filepath",
+      "new_content": "complete_file_content_here",
+      "is_new_file": false
+    }
+  ],
+  "files_to_create": [
+    {
+      "filename": "new/file/path.js",
+      "new_content": "complete_file_content_here",
+      "is_new_file": true
+    }
+  ]
+}
+
+For new files, use appropriate file paths relative to the project root. Return ONLY the JSON response. Make sure all code is syntactically correct.`;
   return prompt;
 }
 
 export async function executeTask(task: string, topK = 5) {
   // const apiKey = process.env.TOGETHER_API_KEY;
   // Together API code commented out
-  // console.log("[executorAgent] Starting executeTask for task:", task);
+  console.log("[executorAgent] Starting executeTask for task:", task);
+  
   // 1. Retrieve relevant code chunks
   const relevantChunks = await retrieveRelevantChunks(task, topK);
   console.log("[executorAgent] Retrieved relevantChunks:", relevantChunks);
+  console.log("[executorAgent] Related files found:", relevantChunks.map(chunk => chunk.file));
+  console.log("[executorAgent] Task prompt:", task);
+  
   // 2. Build the prompt
   const prompt = buildExecutorPrompt(task, relevantChunks);
   console.log("[executorAgent] Built prompt:", prompt);
@@ -41,31 +65,106 @@ export async function executeTask(task: string, topK = 5) {
     })
   });
   const data = await response.json() as any;
-  console.log("[executorAgent] OpenAI API response:", data);
   const content = data.choices?.[0]?.message?.content || "";
-  // Remove code block markers if present
-  const newFileContent = content.replace(/```[a-z]*|```/g, "").trim();
-  console.log("[executorAgent] New file content from OpenAI:", newFileContent);
-  // 4. Compare original and updated using diff-match-patch
+  
+  // Parse the JSON response to get multiple files
+  let filesToModify: any[] = [];
+  let filesToCreate: any[] = [];
+  try {
+    // Remove code block markers if present
+    const cleanContent = content.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleanContent);
+    filesToModify = parsed.files_to_modify || [];
+    filesToCreate = parsed.files_to_create || [];
+  } catch (error) {
+    console.error("[executorAgent] Failed to parse multi-file response, falling back to single file");
+    // Fallback: treat as single file content
+    const newFileContent = content.replace(/```[a-z]*|```/g, "").trim();
+    const mainFile = relevantChunks[0]?.file || "unknown";
+    filesToModify = [{
+      filename: mainFile,
+      new_content: newFileContent,
+      is_new_file: false
+    }];
+  }
+
+  console.log(`[executorAgent] Files to modify: ${filesToModify.map(f => f.filename).join(', ')}`);
+  console.log(`[executorAgent] Files to create: ${filesToCreate.map(f => f.filename).join(', ')}`);
+
+  // 4. Process each file that needs modification or creation
+  const results: any[] = [];
   const dmp = new diff_match_patch();
-  const mainFile = relevantChunks[0]?.file || "unknown";
-  const original = relevantChunks[0]?.code || "";
-  const diff = dmp.diff_main(original, newFileContent);
-  dmp.diff_cleanupSemantic(diff);
-  console.log("[executorAgent] Diff:", diff);
-  // 5. Store pending change (do not overwrite original yet)
+  
+  // 5. Store pending changes for all modified/created files
   const pendingPath = path.join(process.cwd(), "pending_changes.json");
-  let pending = {};
+  let pending: any = {};
   if (fs.existsSync(pendingPath)) {
     pending = JSON.parse(fs.readFileSync(pendingPath, "utf8"));
   }
-  pending[mainFile] = {
-    original,
-    updated: newFileContent,
-    diff,
+
+  // Process existing files to modify
+  for (const fileToModify of filesToModify) {
+    const filename = fileToModify.filename;
+    const newContent = fileToModify.new_content;
+    
+    // Find the original content for this file
+    const originalChunk = relevantChunks.find(chunk => chunk.file === filename);
+    const originalContent = originalChunk?.code || "";
+    
+    // Generate diff
+    const diff = dmp.diff_main(originalContent, newContent);
+    dmp.diff_cleanupSemantic(diff);
+    
+    // Store in pending changes
+    pending[filename] = {
+      original: originalContent,
+      updated: newContent,
+      diff,
+      task,
+      is_new_file: false
+    };
+    
+    results.push({
+      file: filename,
+      original: originalContent,
+      updated: newContent,
+      diff,
+      is_new_file: false
+    });
+  }
+
+  // Process new files to create
+  for (const fileToCreate of filesToCreate) {
+    const filename = fileToCreate.filename;
+    const newContent = fileToCreate.new_content;
+    const originalContent = ""; // New files have no original content
+    
+    // Generate diff (from empty to new content)
+    const diff = dmp.diff_main(originalContent, newContent);
+    dmp.diff_cleanupSemantic(diff);
+    
+    // Store in pending changes
+    pending[filename] = {
+      original: originalContent,
+      updated: newContent,
+      diff,
+      task,
+      is_new_file: true
+    };
+    
+    results.push({
+      file: filename,
+      original: originalContent,
+      updated: newContent,
+      diff,
+      is_new_file: true
+    });
+  }
+
+  fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
+  
+  return {
+    modifiedFiles: results,
     task
   };
-  fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
-  console.log("[executorAgent] Pending changes written to", pendingPath);
-  return { mainFile, original, updated: newFileContent, diff };
 }

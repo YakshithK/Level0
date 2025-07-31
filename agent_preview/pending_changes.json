@@ -1,1 +1,33 @@
-{}
+{
+  "example-project\\hello.ts": {
+    "original": "hello = () => {\r\n  return \"Hello, world!\";\r\n}",
+    "updated": "hello = () => {\n  return \"Hello, world!\";\n}\n\nclass Player {\n  constructor() {\n    this.health = 200;\n  }\n}\n\nconst player = new Player();\nconsole.log(`Player starts with ${player.health} health.`);",
+    "diff": [
+      [
+        0,
+        "hello = () => {"
+      ],
+      [
+        -1,
+        "\r"
+      ],
+      [
+        0,
+        "\n  return \"Hello, world!\";"
+      ],
+      [
+        -1,
+        "\r"
+      ],
+      [
+        0,
+        "\n}"
+      ],
+      [
+        1,
+        "\n\nclass Player {\n  constructor() {\n    this.health = 200;\n  }\n}\n\nconst player = new Player();\nconsole.log(`Player starts with ${player.health} health.`);"
+      ]
+    ],
+    "task": "Test the game/application to ensure the player starts with 200 health."
+  }
+}

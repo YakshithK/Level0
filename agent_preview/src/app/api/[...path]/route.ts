@@ -30,10 +30,30 @@ export async function GET(
     if (!fs.existsSync(resolvedPath)) {
       return new NextResponse("File not found", { status: 404 });
     }
+
+    const fileExt = path.extname(resolvedPath).toLowerCase();
     
-    // Read the file
+    // Handle image files
+    if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico'].includes(fileExt)) {
+      const imageBuffer = fs.readFileSync(resolvedPath);
+      
+      let contentType = 'image/png';
+      if (fileExt === '.jpg' || fileExt === '.jpeg') contentType = 'image/jpeg';
+      else if (fileExt === '.gif') contentType = 'image/gif';
+      else if (fileExt === '.svg') contentType = 'image/svg+xml';
+      else if (fileExt === '.webp') contentType = 'image/webp';
+      else if (fileExt === '.ico') contentType = 'image/x-icon';
+      
+      return new NextResponse(imageBuffer, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }
+
+    // Read the file as text for other file types
     let content = fs.readFileSync(resolvedPath, "utf-8");
-    const fileExt = path.extname(resolvedPath);
     
     // If it's a TypeScript file, do basic conversion to JavaScript
     if (fileExt === '.ts') {
@@ -43,7 +63,7 @@ export async function GET(
         .replace(/export\s+/g, '') // Remove export keywords for browser compatibility
         .replace(/import.*from.*['"];?\n?/g, ''); // Remove import statements
     }
-    
+
     // Determine content type
     let contentType = 'text/plain';
     if (fileExt === '.js' || fileExt === '.ts') {
