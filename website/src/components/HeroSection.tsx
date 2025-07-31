@@ -144,7 +144,7 @@ const HeroSection = () => {
                     </Button>
                   </div>
                 </form>
-                {/* Referral Share Section */}
+                {/* Referral Share Section */} 
                 <div className="mt-8 mb-8 text-center">
                   <h3 className="text-xl font-semibold mb-2 text-white">
                     🎉 Invite friends, get early access faster!
@@ -152,11 +152,12 @@ const HeroSection = () => {
                   <p className="text-muted-foreground mb-4 text-sm">
                     Share this link with others. The more you refer, the sooner you get in.
                   </p>
+
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                     <Input
                       type="text"
                       readOnly
-                      value="https://level0.app"
+                      value={`https://level0.app/?ref=${encodeURIComponent((email || "yourname").replace("@", "~"))}`}
                       onClick={(e) => e.currentTarget.select()}
                       className="w-full sm:w-auto flex-grow cursor-pointer text-sm text-muted-foreground"
                     />
@@ -164,7 +165,8 @@ const HeroSection = () => {
                       type="button"
                       className="h-10 px-4 text-sm bg-neon-cyan text-black hover:bg-neon-cyan/90 font-semibold glow-effect"
                       onClick={() => {
-                        navigator.clipboard.writeText("https://level0.games?ref=yourname");
+                        const link = `https://level0.app/?ref=${encodeURIComponent((email || "yourname").replace("@", "~"))}`;
+                        navigator.clipboard.writeText(link);
                         toast.success("Referral link copied!");
                       }}
                     >
