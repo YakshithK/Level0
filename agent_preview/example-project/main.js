@@ -1,11 +1,10 @@
-// main.js
-import GameScene from './js/scenes/GameScene.js';
-
+// Game configuration
 const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
-    scene: [GameScene],
+    parent: 'game-container',
+    backgroundColor: '#2c3e50',
     physics: {
         default: 'arcade',
         arcade: {
@@ -13,7 +12,8 @@ const config = {
             debug: false
         }
     },
-    parent: 'game-container'
+    scene: [GameScene]
 };
 
+// Create the game
 const game = new Phaser.Game(config);

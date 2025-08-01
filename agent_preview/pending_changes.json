@@ -29,5 +29,97 @@
       ]
     ],
     "task": "Test the game/application to ensure the player starts with 200 health."
+  },
+  "scenes/GameScene.js": {
+    "original": "class GameScene extends Phaser.Scene {\n    constructor() {\n        super({ key: 'GameScene' });\n        this.score = 0;\n        this.scoreText = null;\n    }\n    \n    create() {\n        // Set world bounds\n        this.physics.world.setBounds(0, 0, 800, 600);\n        \n        // Create player\n        this.player = new Player(this, 400, 300);\n        \n        // Create coins group\n        this.coins = this.physics.add.group();\n        \n        // Spawn initial coins\n        this.spawnCoins();\n        \n        // Set up collision between player and coins\n        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);\n        \n        // Create score display\n        this.scoreText = this.add.text(16, 16, 'Score: 0', {\n            fontSize: '32px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Create high score display\n        this.highScoreText = this.add.text(16, 56, 'High Score: ' + this.getHighScore(), {\n            fontSize: '24px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Timer to spawn new coins\n        this.time.addEvent({\n            delay: 2000,\n            callback: this.spawnCoins,\n            callbackScope: this,\n            loop: true\n        });\n    }\n    \n    update() {\n        this.player.update();\n    }\n    \n    spawnCoins() {\n        // Spawn 3-5 coins randomly\n        const numCoins = Phaser.Math.Between(3, 5);\n        \n        for (let i = 0; i < numCoins; i++) {\n            const x = Phaser.Math.Between(50, 750);\n            const y = Phaser.Math.Between(50, 550);\n            const coin = new Coin(this, x, y);\n            this.coins.add(coin);\n        }\n    }\n    \n    collectCoin(player, coin) {\n        // Play collect animation\n        coin.collect();\n        \n        // Update score\n        this.score += 10;\n        this.scoreText.setText('Score: ' + this.score);\n        \n        // Check for new high score\n        if (this.score > this.getHighScore()) {\n            this.setHighScore(this.score);\n            this.highScoreText.setText('High Score: ' + this.score);\n        }\n        \n        // Create floating score text\n        const floatingText = this.add.text(coin.x, coin.y, '+10', {\n            fontSize: '24px',\n            fill: '#ffff00',\n            stroke: '#000000',\n            strokeThickness: 3\n        });\n        \n        this.tweens.add({\n            targets: floatingText,\n            y: coin.y - 50,\n            alpha: 0,\n            duration: 1000,\n            onComplete: () => floatingText.destroy()\n        });\n    }\n    \n    getHighScore() {\n        return parseInt(localStorage.getItem('highScore') || '0');\n    }\n    \n    setHighScore(score) {\n        localStorage.setItem('highScore', score.toString());\n    }\n}",
+    "updated": "class GameScene extends Phaser.Scene {\n    constructor() {\n        super({ key: 'GameScene' });\n        this.score = 0;\n        this.scoreText = null;\n    }\n    \n    create() {\n        // Set world bounds\n        this.physics.world.setBounds(0, 0, 800, 600);\n        \n        // Create player\n        this.player = new Player(this, 400, 300);\n        \n        // Create coins group\n        this.coins = this.physics.add.group();\n        \n        // Spawn initial coins\n        this.spawnCoins();\n        \n        // Set up collision between player and coins\n        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);\n        \n        // Create score display\n        this.scoreText = this.add.text(16, 16, 'Score: 0', {\n            fontSize: '32px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Create high score display\n        this.highScoreText = this.add.text(16, 56, 'High Score: ' + this.getHighScore(), {\n            fontSize: '24px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Timer to spawn new coins\n        this.time.addEvent({\n            delay: 2000,\n            callback: this.spawnCoins,\n            callbackScope: this,\n            loop: true\n        });\n    }\n    \n    update() {\n        this.player.update();\n    }\n    \n    spawnCoins() {\n        // Spawn only one coin\n        const x = Phaser.Math.Between(50, 750);\n        const y = Phaser.Math.Between(50, 550);\n        const coin = new Coin(this, x, y);\n        this.coins.add(coin);\n    }\n    \n    collectCoin(player, coin) {\n        // Play collect animation\n        coin.collect();\n        \n        // Update score\n        this.score += 10;\n        this.scoreText.setText('Score: ' + this.score);\n        \n        // Check for new high score\n        if (this.score > this.getHighScore()) {\n            this.setHighScore(this.score);\n            this.highScoreText.setText('High Score: ' + this.score);\n        }\n        \n        // Create floating score text\n        const floatingText = this.add.text(coin.x, coin.y, '+10', {\n            fontSize: '24px',\n            fill: '#ffff00',\n            stroke: '#000000',\n            strokeThickness: 3\n        });\n        \n        this.tweens.add({\n            targets: floatingText,\n            y: coin.y - 50,\n            alpha: 0,\n            duration: 1000,\n            onComplete: () => floatingText.destroy()\n        });\n    }\n    \n    getHighScore() {\n        return parseInt(localStorage.getItem('highScore') || '0');\n    }\n    \n    setHighScore(score) {\n        localStorage.setItem('highScore', score.toString());\n    }\n}",
+    "diff": [
+      [
+        0,
+        "class GameScene extends Phaser.Scene {\n    constructor() {\n        super({ key: 'GameScene' });\n        this.score = 0;\n        this.scoreText = null;\n    }\n    \n    create() {\n        // Set world bounds\n        this.physics.world.setBounds(0, 0, 800, 600);\n        \n        // Create player\n        this.player = new Player(this, 400, 300);\n        \n        // Create coins group\n        this.coins = this.physics.add.group();\n        \n        // Spawn initial coins\n        this.spawnCoins();\n        \n        // Set up collision between player and coins\n        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);\n        \n        // Create score display\n        this.scoreText = this.add.text(16, 16, 'Score: 0', {\n            fontSize: '32px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Create high score display\n        this.highScoreText = this.add.text(16, 56, 'High Score: ' + this.getHighScore(), {\n            fontSize: '24px',\n            fill: '#ffffff',\n            stroke: '#000000',\n            strokeThickness: 4\n        });\n        \n        // Timer to spawn new coins\n        this.time.addEvent({\n            delay: 2000,\n            callback: this.spawnCoins,\n            callbackScope: this,\n            loop: true\n        });\n    }\n    \n    update() {\n        this.player.update();\n    }\n    \n    spawnCoins() {\n        // Spawn "
+      ],
+      [
+        -1,
+        "3-5 coins randomly\n        const numCoins = Phaser.Math.Between(3, 5);\n        \n        for (let i = 0; i < numCoins; i++) {\n "
+      ],
+      [
+        1,
+        "only one coin\n"
+      ],
+      [
+        0,
+        "        "
+      ],
+      [
+        -1,
+        "   "
+      ],
+      [
+        0,
+        "const x = Phaser.Math.Between(50, 750);\n"
+      ],
+      [
+        -1,
+        "    "
+      ],
+      [
+        0,
+        "        const y = Phaser.Math.Between(50, 550);\n        "
+      ],
+      [
+        -1,
+        " "
+      ],
+      [
+        -1,
+        "   "
+      ],
+      [
+        0,
+        "const coin = new Coin(this, x, y);\n        "
+      ],
+      [
+        -1,
+        "    "
+      ],
+      [
+        0,
+        "this.coins.add(coin);\n"
+      ],
+      [
+        -1,
+        "        }\n"
+      ],
+      [
+        0,
+        "    }\n    \n    collectCoin(player, coin) {\n        // Play collect animation\n        coin.collect();\n        \n        // Update score\n        this.score += 10;\n        this.scoreText.setText('Score: ' + this.score);\n        \n        // Check for new high score\n        if (this.score > this.getHighScore()) {\n            this.setHighScore(this.score);\n            this.highScoreText.setText('High Score: ' + this.score);\n        }\n        \n        // Create floating score text\n        const floatingText = this.add.text(coin.x, coin.y, '+10', {\n            fontSize: '24px',\n            fill: '#ffff00',\n            stroke: '#000000',\n            strokeThickness: 3\n        });\n        \n        this.tweens.add({\n            targets: floatingText,\n            y: coin.y - 50,\n            alpha: 0,\n            duration: 1000,\n            onComplete: () => floatingText.destroy()\n        });\n    }\n    \n    getHighScore() {\n        return parseInt(localStorage.getItem('highScore') || '0');\n    }\n    \n    setHighScore(score) {\n        localStorage.setItem('highScore', score.toString());\n    }\n}"
+      ]
+    ],
+    "task": "In `GameScene.js`, modify the `spawnCoins` method to only spawn one coin.",
+    "is_new_file": false
+  },
+  "index.html": {
+    "original": "",
+    "updated": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Coin Collector Game</title>\n    <style>\n        body {\n            margin: 0;\n            padding: 0;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            min-height: 100vh;\n            background: #1a1a1a;\n            font-family: Arial, sans-serif;\n        }\n        #game-container {\n            border: 2px solid #333;\n            border-radius: 8px;\n        }\n        canvas {\n            display: block;\n        }\n    </style>\n</head>\n<body>\n    <div id=\"game-container\"></div>\n    \n    <!-- Phaser.js -->\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js\"></script>\n    \n    <!-- Include your sprite files here in the order they need to be loaded -->\n    <script src=\"sprites/Player.js\"></script>\n    <script src=\"sprites/Coin.js\"></script>\n    <script src=\"sprites/Bullet.js\"></script>\n    <script src=\"sprites/Enemy.js\"></script>\n    \n    <!-- Include your scene files here -->\n    <script src=\"scenes/GameScene.js\"></script>\n    \n    <!-- Main Game file (should be last) -->\n    <script src=\"main.js\"></script>\n</body>\n</html>",
+    "diff": [
+      [
+        1,
+        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Coin Collector Game</title>\n    <style>\n        body {\n            margin: 0;\n            padding: 0;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            min-height: 100vh;\n            background: #1a1a1a;\n            font-family: Arial, sans-serif;\n        }\n        #game-container {\n            border: 2px solid #333;\n            border-radius: 8px;\n        }\n        canvas {\n            display: block;\n        }\n    </style>\n</head>\n<body>\n    <div id=\"game-container\"></div>\n    \n    <!-- Phaser.js -->\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js\"></script>\n    \n    <!-- Include your sprite files here in the order they need to be loaded -->\n    <script src=\"sprites/Player.js\"></script>\n    <script src=\"sprites/Coin.js\"></script>\n    <script src=\"sprites/Bullet.js\"></script>\n    <script src=\"sprites/Enemy.js\"></script>\n    \n    <!-- Include your scene files here -->\n    <script src=\"scenes/GameScene.js\"></script>\n    \n    <!-- Main Game file (should be last) -->\n    <script src=\"main.js\"></script>\n</body>\n</html>"
+      ]
+    ],
+    "task": "In `GameScene.js`, modify the `spawnCoins` method to only spawn one coin.",
+    "is_new_file": true
+  },
+  "main.js": {
+    "original": "// Game configuration\nconst config = {\n    type: Phaser.AUTO,\n    width: 800,\n    height: 600,\n    parent: 'game-container',\n    backgroundColor: '#2c3e50',\n    physics: {\n        default: 'arcade',\n        arcade: {\n            gravity: { y: 0 },\n            debug: false\n        }\n    },\n    scene: [GameScene]\n};\n\n// Create the game\nconst game = new Phaser.Game(config);",
+    "updated": "",
+    "diff": [
+      [
+        -1,
+        "// Game configuration\nconst config = {\n    type: Phaser.AUTO,\n    width: 800,\n    height: 600,\n    parent: 'game-container',\n    backgroundColor: '#2c3e50',\n    physics: {\n        default: 'arcade',\n        arcade: {\n            gravity: { y: 0 },\n            debug: false\n        }\n    },\n    scene: [GameScene]\n};\n\n// Create the game\nconst game = new Phaser.Game(config);"
+      ]
+    ],
+    "task": "Modify the coin collection logic in `GameScene.js` to call `spawnCoins` after a coin is collected.",
+    "is_new_file": false
   }
 }

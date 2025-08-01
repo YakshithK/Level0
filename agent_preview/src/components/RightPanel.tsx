@@ -16,6 +16,7 @@ interface RightPanelProps {
   onAcceptDiff: (index?: number) => void;
   onDiscardDiff: (index?: number) => void;
   onAcceptAllDiffs: () => void;
+  onRejectAllDiffs: () => void;
   error?: string;
   refreshTrigger?: number;
 }
@@ -34,6 +35,7 @@ export default function RightPanel({
   onAcceptDiff,
   onDiscardDiff,
   onAcceptAllDiffs,
+  onRejectAllDiffs,
   error,
   refreshTrigger
 }: RightPanelProps) {
@@ -179,13 +181,28 @@ export default function RightPanel({
                 Review Changes ({pendingDiffs.length})
               </h3>
               {pendingDiffs.length > 1 && (
-                <button
-                  onClick={onAcceptAllDiffs}
-                  disabled={isProcessing}
-                  className="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-800 text-white rounded-md transition-colors"
-                >
-                  Accept All Changes
-                </button>
+                <div className="mb-4 flex items-center space-x-3">
+                  <button
+                    onClick={onAcceptAllDiffs}
+                    disabled={isProcessing}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-800 text-white rounded-md transition-colors flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Accept All Changes</span>
+                  </button>
+                  <button
+                    onClick={onRejectAllDiffs}
+                    disabled={isProcessing}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-800 text-white rounded-md transition-colors flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Reject All Changes</span>
+                  </button>
+                </div>
               )}
             </div>
             {pendingDiffs.length === 0 ? (

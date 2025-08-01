@@ -384,6 +384,23 @@ export default function Home() {
       setIsProcessing(false);
     }
   };
+
+  // Handle rejecting all pending changes
+  const handleRejectAll = async () => {
+    if (pendingDiffs.length === 0) return;
+    
+    const rejectAllMessage: Message = {
+      id: Date.now().toString(),
+      type: 'system',
+      content: `All ${pendingDiffs.length} changes rejected`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, rejectAllMessage]);
+    
+    // Clear all pending diffs without applying them
+    setPendingDiffs([]);
+  };
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Left Panel - Chat */}
@@ -417,6 +434,7 @@ export default function Home() {
           onAcceptDiff={handleAccept}
           onDiscardDiff={handleDiscard}
           onAcceptAllDiffs={handleAcceptAll}
+          onRejectAllDiffs={handleRejectAll}
           error={error}
           refreshTrigger={refreshTrigger}
         />

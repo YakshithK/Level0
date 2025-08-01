@@ -1,32 +1,26 @@
 [
   {
     "step": 1,
-    "instruction": "Set up a basic Phaser project with necessary files (GameScene.js, Player.js).",
-    "expected_outcome": "Phaser project structure created.",
+    "instruction": "In `GameScene.js`, add a method to increase the player's size when a coin is collected. This might involve scaling the player's sprite or modifying its width and height.",
+    "expected_outcome": "The player's visual representation grows larger after collecting a coin.",
     "completed": false
   },
   {
     "step": 2,
-    "instruction": "Create a Player sprite in Player.js with initial properties (e.g., position, speed).",
-    "expected_outcome": "Player sprite class defined.",
+    "instruction": "Modify the coin collection logic in `GameScene.js` to call the player size increase method when the player overlaps with a coin.",
+    "expected_outcome": "When the player touches a coin, the coin disappears, and the player's size increases.",
     "completed": false
   },
   {
     "step": 3,
-    "instruction": "Load the Player sprite and any necessary assets (e.g., ship image) in the GameScene's preload function.",
-    "expected_outcome": "Assets loaded and ready to use.",
+    "instruction": "In `GameScene.js`, modify the `spawnCoins` method to only spawn one coin.",
+    "expected_outcome": "Only one coin is present in the game at any given time.",
     "completed": false
   },
   {
     "step": 4,
-    "instruction": "Create an instance of the Player sprite in the GameScene's create function and add it to the scene.",
-    "expected_outcome": "Player sprite visible on the screen.",
-    "completed": false
-  },
-  {
-    "step": 5,
-    "instruction": "Implement WASD input handling in the GameScene's update function to move the Player sprite.",
-    "expected_outcome": "Player sprite moves according to WASD keys pressed.",
+    "instruction": "Modify the coin collection logic in `GameScene.js` to call `spawnCoins` after a coin is collected.",
+    "expected_outcome": "After a coin is collected, a new coin appears elsewhere in the game world.",
     "completed": false
   }
 ]
