@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Test</h1>
+    <div id="game-container"></div>
+    
+    <!-- Phaser.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+    
+    <script>
+        // Simple scene class
+        class SimpleScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'SimpleScene' });
+                console.log('SimpleScene constructor called');
+            }
+            
+            create() {
+                console.log('SimpleScene create called');
+                this.add.text(400, 300, 'Simple Scene Working!', {
+                    fontSize: '32px',
+                    color: '#ffffff'
+                }).setOrigin(0.5);
+            }
+        }
+        
+        console.log('SimpleScene class defined:', typeof SimpleScene);
+        
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            scene: [SimpleScene]
+        };
+        
+        try {
+            console.log('Creating game with config:', config);
+            const game = new Phaser.Game(config);
+            console.log('Game created successfully');
+        } catch (error) {
+            console.error('Game creation failed:', error);
+        }
+    </script>
+</body>
+</html> 

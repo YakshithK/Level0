@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Space Shooter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        #debug-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Space Shooter Debug</h1>
+    <div id="debug-info">
+        <p>Loading game...</p>
+        <div id="console-output"></div>
+    </div>
+    <div id="game-container"></div>
+    
+    <!-- Phaser.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+    
+    <!-- Utils (load first) -->
+    <script src="utils/Constants.js"></script>
+    
+    <!-- Sprites (load before scenes) -->
+    <script src="sprites/PlayerSprite.js"></script>
+    <script src="sprites/EnemySprite.js"></script>
+    <script src="sprites/BulletSprite.js"></script>
+    
+    <!-- Scenes (load before main) -->
+    <script src="scenes/MainMenuScene.js"></script>
+    <script src="scenes/GameScene.js"></script>
+    <script src="scenes/GameOverScene.js"></script>
+    
+    <!-- Main Game file (load last) -->
+    <script src="main.js"></script>
+    
+    <script>
+        // Debug console output
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const debugOutput = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            debugOutput.innerHTML += '<p style="color: #00ff00;">LOG: ' + args.join(' ') + '</p>';
+        };
+        
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            debugOutput.innerHTML += '<p style="color: #ff0000;">ERROR: ' + args.join(' ') + '</p>';
+        };
+        
+        // Check if CONSTANTS is loaded
+        console.log('CONSTANTS loaded:', typeof CONSTANTS !== 'undefined');
+        if (typeof CONSTANTS !== 'undefined') {
+            console.log('CONSTANTS content:', CONSTANTS);
+        }
+        
+        // Check if scenes are loaded
+        console.log('MainMenuScene loaded:', typeof MainMenuScene !== 'undefined');
+        console.log('GameScene loaded:', typeof GameScene !== 'undefined');
+        console.log('GameOverScene loaded:', typeof GameOverScene !== 'undefined');
+        
+        // Check if sprites are loaded
+        console.log('PlayerSprite loaded:', typeof PlayerSprite !== 'undefined');
+        console.log('EnemySprite loaded:', typeof EnemySprite !== 'undefined');
+        console.log('BulletSprite loaded:', typeof BulletSprite !== 'undefined');
+    </script>
+</body>
+</html> 

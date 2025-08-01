@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Space Shooter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test - Space Shooter</h1>
+    <div id="game-container"></div>
+    
+    <!-- Phaser.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+    
+    <script>
+        console.log('Phaser loaded:', typeof Phaser);
+        
+        // Test basic Phaser functionality
+        const testConfig = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            scene: {
+                create: function() {
+                    console.log('Test scene created successfully');
+                    this.add.text(400, 300, 'Test Scene Working!', {
+                        fontSize: '32px',
+                        color: '#ffffff'
+                    }).setOrigin(0.5);
+                }
+            }
+        };
+        
+        try {
+            const testGame = new Phaser.Game(testConfig);
+            console.log('Test game created successfully');
+        } catch (error) {
+            console.error('Test game creation failed:', error);
+        }
+    </script>
+</body>
+</html> 
