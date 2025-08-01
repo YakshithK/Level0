@@ -1,0 +1,31 @@
+{
+  "name": "phaser-examples",
+  "description": "Phaser Examples",
+  "main": "",
+  "authors": [
+    "Nathachai Thongniran"
+  ],
+  "keywords": [
+    "phaser",
+    "examples"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "moment": "^2.18.1",
+    "phaser": "^2.6.2",
+    "lodash": "^4.17.4",
+    "faker": "^0.0.2",
+    "jquery": "^3.2.1"
+  }
+}

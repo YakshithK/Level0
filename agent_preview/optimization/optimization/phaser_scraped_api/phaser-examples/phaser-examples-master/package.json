@@ -1,0 +1,32 @@
+{
+  "name": "phaser-examples",
+  "version": "0.0.0",
+  "description": "Phaser Examples",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jojoee/phaser-examples.git"
+  },
+  "keywords": [
+    "phaser",
+    "examples"
+  ],
+  "author": "Nathachai Thongniran",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jojoee/phaser-examples/issues"
+  },
+  "homepage": "https://github.com/jojoee/phaser-examples#readme",
+  "devDependencies": {
+    "browser-sync": "^2.10.1",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb-base": "^11.3.2",
+    "eslint-plugin-import": "^2.7.0",
+    "gulp": "^3.9.0",
+    "webshot": "^0.18.0"
+  },
+  "scripts": {
+    "lint": "eslint gulpfile.js",
+    "prestart": "bower install && npm install",
+    "start": "gulp default"
+  }
+}

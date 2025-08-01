@@ -1,0 +1,352 @@
+[
+  {
+    "type": "scene_class",
+    "code": "class Boot extends Phaser.Scene {\n    preload() {\n        this.load.pack(\"pack\", \"assets/asset-pack.json\");\n    }\n    create() {\n        this.scene.start(\"OriginMigration\");\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "scene_class",
+    "code": "class TestListFieldScene extends Phaser.Scene {\n    constructor() {\n        super(\"TestListFieldScene\");\n        /* START-USER-CTR-CODE */\n        // Write your code here.\n        /* END-USER-CTR-CODE */\n    }\n    editorCreate() {\n        // dino\n        const dino = this.add.image(337, 193, \"dino\");\n        // lists\n        const list = [dino];\n        const emptyList = [];\n        this.list = list;\n        this.emptyList = emptyList;\n        this.events.emit(\"scene-awake\");\n    }\n    /* START-USER-CODE */\n    // Write your code here\n    create() {\n        this.editorCreate();\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "scene_class",
+    "code": "class TestOneObjectScene extends Phaser.Scene {\n    constructor() {\n        super(\"TestOneObjectScene\");\n        /* START-USER-CTR-CODE */\n        // Write your code here.\n        /* END-USER-CTR-CODE */\n    }\n    editorCreate() {\n        // dino\n        const dino = this.add.image(482, 178, \"dino\");\n        this.dino = dino;\n        this.events.emit(\"scene-awake\");\n    }\n    /* START-USER-CODE */\n    // Write your code here\n    create() {\n        this.editorCreate();\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "scene_class",
+    "code": "class Issue154 extends Phaser.Scene {\n    constructor() {\n        super(\"Issue154\");\n        /* START-USER-CTR-CODE */\n        // Write your code here.\n        /* END-USER-CTR-CODE */\n    }\n    editorCreate() {\n        // derivedContainer1Prefab\n        const derivedContainer1Prefab = new DerivedContainer1Prefab(this, 134, 96);\n        this.add.existing(derivedContainer1Prefab);\n        this.events.emit(\"scene-awake\");\n    }\n    /* START-USER-CODE */\n    // Write your code here\n    create() {\n        this.editorCreate();\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "scene_class",
+    "code": "class OriginMigration extends Phaser.Scene {\n    constructor() {\n        super(\"OriginMigration\");\n        /* START-USER-CTR-CODE */\n        // Write your code here.\n        /* END-USER-CTR-CODE */\n    }\n    editorCreate() {\n        // textWithOriginPrefab\n        const textWithOriginPrefab = new TextWithOriginPrefab(this, 205, 269);\n        this.add.existing(textWithOriginPrefab);\n        textWithOriginPrefab.setOrigin(0.5, 0.5);\n        this.events.emit(\"scene-awake\");\n    }\n    /* START-USER-CODE */\n    // Write your code here\n    create() {\n        this.editorCreate();\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "scene_class",
+    "code": "class PrefabAwakeTest extends Phaser.Scene {\n    constructor() {\n        super(\"PrefabAwakeTest\");\n        /* START-USER-CTR-CODE */\n        // Write your code here.\n        /* END-USER-CTR-CODE */\n    }\n    editorCreate() {\n        // withoutAwakeEventPrefab\n        const withoutAwakeEventPrefab = new WithoutAwakeEventPrefab(this, 59, 79);\n        this.add.existing(withoutAwakeEventPrefab);\n        // withAwakeEventPrefab\n        const withAwakeEventPrefab = new WithAwakeEventPrefab(this, 99, 197);\n        this.add.existing(withAwakeEventPrefab);\n        this.events.emit(\"scene-awake\");\n    }\n    /* START-USER-CODE */\n    // Write your code here\n    create() {\n        this.editorCreate();\n    }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n        this.load.pack(\"pack\", \"assets/asset-pack.json\");\n    }",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n        this.scene.start(\"OriginMigration\");\n    }",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n        if (this.dino) {\n            this.dino.y -= 1;\n        }\n    }",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload () {\n  game.load.image('earth', 'assets/light_sand.png')\n  game.load.spritesheet('dude', 'assets/dude.png', 64, 64)\n  game.load.spritesheet('enemy', 'assets/dude.png', 64, 64)\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create () {\n  socket = io.connect()\n\n  // Resize our game world to be a 2000 x 2000 square\n  game.world.setBounds(-500, -500, 1000, 1000)\n\n  // Our tiled scrolling background\n  land = game.add.tileSprite(0, 0, 800, 600, 'earth')\n  land.fixedToCamera = true\n\n  // The base of our player\n  var startX = Math.round(Math.random() * (1000) - 500)\n  var startY = Math.round(Math.random() * (1000) - 500)\n  player = game.add.sprite(startX, startY, 'dude')\n  player.anchor.setTo(0.5, 0.5)\n  player.animations.add('move', [0, 1, 2, 3, 4, 5, 6, 7], 20, true)\n  player.animations.add('stop', [3], 20, true)\n\n  // This will force it to decelerate and limit its speed\n  // player.body.drag.setTo(200, 200)\n  game.physics.enable(player, Phaser.Physics.ARCADE);\n  player.body.maxVelocity.setTo(400, 400)\n  player.body.collideWorldBounds = true\n\n  // Create some baddies to waste :)\n  enemies = []\n\n  player.bringToTop()\n\n  game.camera.follow(player)\n  game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300)\n  game.camera.focusOnXY(0, 0)\n\n  cursors = game.input.keyboard.createCursorKeys()\n\n  // Start listening for events\n  setEventHandlers()\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n    this.none = this.left || this.right || this.up ? false : true\n\n    if (!this.none || this.none !== this.prevNone) {\n      let total = 0\n      if (this.left) total += 1\n      if (this.right) total += 2\n      if (this.up) total += 4\n      let str36 = total.toString(36)\n\n      this.channel.emit('playerMove', str36)\n    }\n\n    this.prevNone = this.none\n  }",
+    "file": "controls.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n    let move = {\n      left: false,\n      right: false,\n      up: false,\n      none: true\n    }\n    if (this.cursors.left.isDown) {\n      move.left = true\n      move.none = false\n    } else if (this.cursors.right.isDown) {\n      move.right = true\n      move.none = false\n    }\n\n    if (this.cursors.up.isDown) {\n      move.up = true\n      move.none = false\n    }\n\n    if (move.left || move.right || move.up || move.none !== this.prevNoMovement) {\n      let total = 0\n      if (move.left) total += 1\n      if (move.right) total += 2\n      if (move.up) total += 4\n      let str36 = total.toString(36)\n\n      this.channel.emit('playerMove', str36)\n    }\n\n    this.prevNoMovement = move.none\n  }",
+    "file": "cursors.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n    this.load.image('controls', 'assets/controls.png')\n    this.load.spritesheet('fullscreen', 'assets/fullscreen.png', {\n      frameWidth: 64,\n      frameHeight: 64\n    })\n    this.load.spritesheet('player', 'assets/player.png', {\n      frameWidth: 32,\n      frameHeight: 48\n    })\n  }",
+    "file": "gameScene.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n    if (this.move.left) this.setVelocityX(-160)\n    else if (this.move.right) this.setVelocityX(160)\n    else this.setVelocityX(0)\n\n    if (this.move.up && this.body.onFloor()) this.setVelocityY(-550)\n  }",
+    "file": "player.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n\n    this.title = this.add.text(this.game.config.width * 0.5, 128, \"GAME OVER\", {\n      fontFamily: 'monospace',\n      fontSize: 48,\n      fontStyle: 'bold',\n      color: '#ffffff',\n      align: 'center'\n    });\n    this.title.setOrigin(0.5);\n\n    this.sfx = {\n      btnOver: this.sound.add(\"sndBtnOver\"),\n      btnDown: this.sound.add(\"sndBtnDown\")\n    };\n\n    this.btnRestart = this.add.sprite(\n      this.game.config.width * 0.5,\n      this.game.config.height * 0.5,\n      \"sprBtnRestart\"\n    );\n\n    this.btnRestart.setInteractive();\n\n    this.btnRestart.on(\"pointerover\", function() {\n      this.btnRestart.setTexture(\"sprBtnRestartHover\"); // set the button texture to sprBtnPlayHover\n      this.sfx.btnOver.play(); // play the button over sound\n    }, this);\n\n    this.btnRestart.on(\"pointerout\", function() {\n      this.setTexture(\"sprBtnRestart\");\n    });\n\n    this.btnRestart.on(\"pointerdown\", function() {\n      this.btnRestart.setTexture(\"sprBtnRestartDown\");\n      this.sfx.btnDown.play();\n    }, this);\n\n    this.btnRestart.on(\"pointerup\", function() {\n      this.btnRestart.setTexture(\"sprBtnRestart\");\n      this.scene.start(\"SceneMain\");\n    }, this);\n\n    this.backgrounds = [];\n    for (var i = 0; i < 5; i++) {\n      var keys = [\"sprBg0\", \"sprBg1\"];\n      var key = keys[Phaser.Math.Between(0, keys.length - 1)];\n      var bg = new ScrollingBackground(this, key, i * 10);\n      this.backgrounds.push(bg);\n    }\n  }",
+    "file": "SceneGameOver.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n    for (var i = 0; i < this.backgrounds.length; i++) {\n      this.backgrounds[i].update();\n    }\n  }",
+    "file": "SceneGameOver.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n    this.load.spritesheet(\"sprExplosion\", \"content/sprExplosion.png\", {\n      frameWidth: 32,\n      frameHeight: 32\n    });\n    this.load.spritesheet(\"sprEnemy0\", \"content/sprEnemy0.png\", {\n      frameWidth: 16,\n      frameHeight: 16\n    });\n    this.load.image(\"sprEnemy1\", \"content/sprEnemy1.png\");\n    this.load.spritesheet(\"sprEnemy2\", \"content/sprEnemy2.png\", {\n      frameWidth: 16,\n      frameHeight: 16\n    });\n    this.load.image(\"sprLaserEnemy0\", \"content/sprLaserEnemy0.png\");\n    this.load.image(\"sprLaserPlayer\", \"content/sprLaserPlayer.png\");\n    this.load.spritesheet(\"sprPlayer\", \"content/sprPlayer.png\", {\n      frameWidth: 16,\n      frameHeight: 16\n    });\n\n    this.load.audio(\"sndExplode0\", \"content/sndExplode0.wav\");\n    this.load.audio(\"sndExplode1\", \"content/sndExplode1.wav\");\n    this.load.audio(\"sndLaser\", \"content/sndLaser.wav\");\n  }",
+    "file": "SceneMain.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n    this.load.image(\"sprBg0\", \"content/sprBg0.png\");\n    this.load.image(\"sprBg1\", \"content/sprBg1.png\");\n    this.load.image(\"sprBtnPlay\", \"content/sprBtnPlay.png\");\n    this.load.image(\"sprBtnPlayHover\", \"content/sprBtnPlayHover.png\");\n    this.load.image(\"sprBtnPlayDown\", \"content/sprBtnPlayDown.png\");\n    this.load.image(\"sprBtnRestart\", \"content/sprBtnRestart.png\");\n    this.load.image(\"sprBtnRestartHover\", \"content/sprBtnRestartHover.png\");\n    this.load.image(\"sprBtnRestartDown\", \"content/sprBtnRestartDown.png\");\n    this.load.audio(\"sndBtnOver\", \"content/sndBtnOver.wav\");\n    this.load.audio(\"sndBtnDown\", \"content/sndBtnDown.wav\");\n  }",
+    "file": "SceneMainMenu.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n    this.sfx = {\n      btnOver: this.sound.add(\"sndBtnOver\"),\n      btnDown: this.sound.add(\"sndBtnDown\")\n    };\n\n    this.btnPlay = this.add.sprite(\n      this.game.config.width * 0.5,\n      this.game.config.height * 0.5,\n      \"sprBtnPlay\"\n    );\n\n    this.btnPlay.setInteractive();\n\n    this.btnPlay.on(\"pointerover\", function() {\n      this.btnPlay.setTexture(\"sprBtnPlayHover\"); // set the button texture to sprBtnPlayHover\n      this.sfx.btnOver.play(); // play the button over sound\n    }, this);\n\n    this.btnPlay.on(\"pointerout\", function() {\n      this.setTexture(\"sprBtnPlay\");\n    });\n\n    this.btnPlay.on(\"pointerdown\", function() {\n      this.btnPlay.setTexture(\"sprBtnPlayDown\");\n      this.sfx.btnDown.play();\n    }, this);\n\n    this.btnPlay.on(\"pointerup\", function() {\n      this.btnPlay.setTexture(\"sprBtnPlay\");\n      this.scene.start(\"SceneMain\");\n    }, this);\n\n    this.title = this.add.text(this.game.config.width * 0.5, 128, \"SPACE SHOOTER\", {\n      fontFamily: 'monospace',\n      fontSize: 48,\n      fontStyle: 'bold',\n      color: '#ffffff',\n      align: 'center'\n    });\n    this.title.setOrigin(0.5);\n\n    this.backgrounds = [];\n    for (var i = 0; i < 5; i++) {\n      var keys = [\"sprBg0\", \"sprBg1\"];\n      var key = keys[Phaser.Math.Between(0, keys.length - 1)];\n      var bg = new ScrollingBackground(this, key, i * 10);\n      this.backgrounds.push(bg);\n    }\n  }",
+    "file": "SceneMainMenu.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n    for (var i = 0; i < this.backgrounds.length; i++) {\n      this.backgrounds[i].update();\n    }\n  }",
+    "file": "SceneMainMenu.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n        const progress = this.add.graphics();\n\n        // Register a load progress event to show a load bar\n        this.load.on('progress', (value) => {\n            progress.clear();\n            progress.fillStyle(0xffffff, 1);\n            progress.fillRect(0, this.sys.game.config.height / 2, this.sys.game.config.width * value, 60);\n        });\n\n        // Register a load complete event to launch the title screen when all files are loaded\n        this.load.on('complete', () => {\n            // prepare all animations, defined in a separate file\n            makeAnimations(this);\n            progress.destroy();\n            this.scene.start('TitleScene');\n        });\n\n        this.load.image('background-clouds', 'assets/images/clouds.png'); // 16-bit later\n\n        // Tilemap with a lot of objects and tile-properties tricks\n        this.load.tilemapTiledJSON('map', 'assets/tilemaps/super-mario.json');\n\n        // I load the tiles as a spritesheet so I can use it for both sprites and tiles,\n        // Normally you should load it as an image.\n        this.load.spritesheet('tiles', 'assets/images/super-mario.png', {\n            frameWidth: 16,\n            frameHeight: 16,\n            spacing: 2\n        });\n\n        // Support for switching between 8-bit and 16-bit tiles\n        this.load.spritesheet('tiles-16bit', 'assets/images/super-mario-16bit.png', {\n            frameWidth: 16,\n            frameHeight: 16,\n            spacing: 2\n        });\n\n        // Spritesheets ",
+    "file": "BootScene.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n        this.load.atlas('mario-sprites', 'assets/mario-sprites.png', 'assets/mario-sprites.json');\n    }",
+    "file": "TitleScene.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update(time, delta) {\n        if (this.registry.get('restartScene')) {\n            this.restartScene();\n        }\n        this.blink -= delta;\n        if (this.blink < 0) {\n            this.pressX.alpha = this.pressX.alpha === 1 ? 0 : 1;\n            this.blink = 500;\n        }\n\n        if (!this.registry.get('attractMode')) {}\n        if (this.startKey.isDown) {\n            this.startGame();\n        }\n    }",
+    "file": "TitleScene.js"
+  },
+  {
+    "type": "game_config",
+    "code": "let config = {\n            key: 'title',\n            frames: [{\n                frame: 'title',\n                key: 'mario-sprites'\n            }]\n        }",
+    "file": "TitleScene.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  // Image layers from Tiled can't be exported to Phaser 3 (as yet)\n  // So we add the background image separately\n  this.load.image('background', 'assets/images/background.png');\n  // Load the tileset image file, needed for the map to know what\n  // tiles to draw on the screen\n  this.load.image('tiles', 'assets/tilesets/platformPack_tilesheet.png');\n  // Even though we load the tilesheet with the spike image, we need to\n  // load the Spike image separately for Phaser 3 to render it\n  this.load.image('spike', 'assets/images/spike.png');\n  // Load the export Tiled JSON\n  this.load.tilemapTiledJSON('map', 'assets/tilemaps/level1.json');\n  // Load player animations from the player spritesheet and atlas JSON\n  this.load.atlas('player', 'assets/images/kenney_player.png',\n    'assets/images/kenney_player_atlas.json');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  // init keyboard commands\n  game.input.keyboard.addCallbacks(null, null, onKeyUp);\n\n  // initialize map\n  initMap();\n\n  // initialize ascii display\n  asciidisplay = [];\n  for (var y = 0; y < ROWS; y++) {\n    var newRow = [];\n    asciidisplay.push(newRow);\n    for (var x = 0; x < COLS; x++)\n      newRow.push(initCell('', x, y));\n  }\n\n  // initialize actors\n  initActors();\n\n  // draw level\n  drawMap();\n  drawActors();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.load.image('sky', 'assets/sky.png');\n  game.load.image('ground', 'assets/platform.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  //  We're going to be using physics, so enable the Arcade Physics system\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  //  A simple background for our game\n  game.add.sprite(0, 0, 'sky');\n  //  The platforms group contains the ground and the 2 ledges we can jump on\n  platforms = game.add.group();\n  //  We will enable physics for any object that is created in this group\n  platforms.enableBody = true;\n  // Here we create the ground.\n  var ground = platforms.create(0, game.world.height - 64, 'ground');\n  //  Scale it to fit the width of the game (the original sprite is 400x32 in size)\n  ground.scale.setTo(2, 2);\n  //  This stops it from falling away when you jump on it\n  ground.body.immovable = true;\n  //  Now let's create two ledges\n  var ledge = platforms.create(400, 400, 'ground');\n  ledge.body.immovable = true;\n  ledge = platforms.create(-150, 250, 'ground');\n  ledge.body.immovable = true;\n  // The player and its settings\n  player = game.add.sprite(32, game.world.height - 150, 'dude');\n  //  We need to enable physics on the player\n  game.physics.arcade.enable(player);\n  //  Player physics properties. Give the little guy a slight bounce.\n  player.body.bounce.y = 0.2;\n  player.body.gravity.y = 300;\n  player.body.collideWorldBounds = true;\n  //  Our two animations, walking left and right.\n  player.animations.add('left', [0, 1, 2, 3], 10, true);\n  player.animations.add('right', [5, 6, 7, 8], 10, true);\n  //  Finally some stars to collect\n  stars = game.add.gr",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  //  Collide the player and the stars with the platforms\n  game.physics.arcade.collide(player, platforms);\n  game.physics.arcade.collide(stars, platforms);\n  //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function\n  game.physics.arcade.overlap(player, stars, collectStar, null, this);\n  //  Reset the players velocity (movement)\n  player.body.velocity.x = 0;\n  if (cursors.left.isDown) {\n    //  Move to the left\n    player.body.velocity.x = -150;\n    player.animations.play('left');\n  } else if (cursors.right.isDown) {\n    //  Move to the right\n    player.body.velocity.x = 150;\n    player.animations.play('right');\n  } else {\n    //  Stand still\n    player.animations.stop();\n    player.frame = 4;\n  }\n  //  Allow the player to jump if they are touching the ground.\n  if (cursors.up.isDown && player.body.touching.down) {\n    player.body.velocity.y = -350;\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  LOG.info('preload');\n  loadAssets();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  LOG.info('create');\n\n  // enable plugin\n  // game.plugins.add(Phaser.Plugin.Inspector);\n\n  // set bg\n  GAME.background = GAME.add.tileSprite(0, 0, GAME.world.width, GAME.world.height, 'background');\n\n  // set physics\n  GAME.physics.startSystem(Phaser.Physics.ARCADE);\n  GAME.physics.arcade.gravity.y = GRAVITY;\n\n  // set player\n  // player sprite\n  GAME.player = GAME.add.sprite(0,0,'player');\n  // player animation - but not including last frame (last sprite)\n  GAME.player.animations.add('fly', [0, 1, 2], 10, true);\n  // player physic\n  GAME.physics.arcade.enableBody(GAME.player);\n  GAME.player.body.collideWorldBounds = true;\n\n  // set wall\n  // group them together into a single manageable game object.\n  GAME.walls = GAME.add.group();\n  GAME.spawnWall(300);\n  GAME.spawnWall(300, true);\n\n  // set welcome text\n  var headerText = 'TOUCH TO\\nSTART GAME';\n  GAME.headerText = GAME.add.text(GAME.world.centerX, GAME.world.height / 5, headerText, GAME_FONT_STYLE);\n  GAME.headerText.anchor.setTo(0.5, 0.5);\n\n  // set sound\n  GAME.jetSnd = GAME.add.audio('jet', SOUND_VOLUME);\n  GAME.scoreSnd = GAME.add.audio('score', SOUND_VOLUME);\n  GAME.hurtSnd = GAME.add.audio('hurt', SOUND_VOLUME);\n\n  // set input\n  // when user click on the screen\n  GAME.input.onDown.add(GAME.jump, GAME);\n\n  welcomeScreen();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  var bmd = game.add.bitmapData(100, 100);\n  bmd.ctx.fillStyle = '#00ff00';\n  bmd.ctx.arc(50, 50, 50, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('good', bmd);\n  var bmd = game.add.bitmapData(64, 64);\n  bmd.ctx.fillStyle = '#ff0000';\n  bmd.ctx.arc(32, 32, 32, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('bad', bmd);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  game.physics.arcade.gravity.y = 300;\n  good_objects = createGroup(4, game.cache.getBitmapData('good'));\n  bad_objects = createGroup(4, game.cache.getBitmapData('bad'));\n  slashes = game.add.graphics(0, 0);\n  scoreLabel = game.add.text(10, 10, 'Tip: get the green ones!');\n  scoreLabel.fill = 'white';\n  emitter = game.add.emitter(0, 0, 300);\n  emitter.makeParticles('parts');\n  emitter.gravity = 300;\n  emitter.setYSpeed(-400, 400);\n  throwObject();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  throwObject();\n  points.push({\n    x: game.input.x,\n    y: game.input.y\n  });\n  points = points.splice(points.length - 10, points.length);\n  //game.add.sprite(game.input.x, game.input.y, 'hit');\n  if (points.length < 1 || points[0].x == 0) {\n    return;\n  }\n  slashes.clear();\n  slashes.beginFill(0xFFFFFF);\n  slashes.alpha = .5;\n  slashes.moveTo(points[0].x, points[0].y);\n  for (var i = 1; i < points.length; i++) {\n    slashes.lineTo(points[i].x, points[i].y);\n  }\n  slashes.endFill();\n  for (var i = 1; i < points.length; i++) {\n    line = new Phaser.Line(points[i].x, points[i].y, points[i - 1].x, points[i - 1].y);\n    game.debug.geom(line);\n    good_objects.forEachExists(checkIntersects);\n    bad_objects.forEachExists(checkIntersects);\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  var bmd = game.add.bitmapData(64, 64);\n  bmd.ctx.fillStyle = '#ffee00';\n  bmd.ctx.arc(32, 32, 32, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('circle', bmd);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  //var blurX = game.add.filter('BlurX');\n  //var blurY = game.add.filter('BlurY');\n  //slashes.filters = [blurX, blurY];\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  game.physics.arcade.gravity.y = 200;\n  objects = game.add.group();\n  objects.enableBody = true;\n  objects.physicsBodyType = Phaser.Physics.ARCADE;\n  objects.createMultiple(4, game.cache.getBitmapData('circle'));\n  objects.setAll('checkWorldBounds', true);\n  objects.setAll('outOfBoundsKill', true);\n  slashes = game.add.graphics(0, 0);\n  game.physics.enable(slashes, Phaser.Physics.ARCADE);\n  game.physics.enable(objects, Phaser.Physics.ARCADE);\n  scoreLabel = game.add.text(10, 10, 'Score');\n  scoreLabel.fill = 'white';\n  throwObject()\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  throwObject();\n  points.push({\n    x: game.input.activePointer.position.x,\n    y: game.input.activePointer.position.y\n  });\n  points = points.splice(points.length - 10, points.length);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;\n  game.scale.setScreenSize = true;\n  game.scale.pageAlignHorizontally = true;\n  game.scale.pageAlignVertically = true;\n  game.forceSingleUpdate = true;\n  game.load.image('sky', 'assets/sky10.png');\n  game.load.image('cloud', 'assets/cloud.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.image('phaser', 'assets/phaser.png');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.load.crossOrigin = \"Anonymous\";\n  game.load.image('fireblob', 'assets/fireblob.png');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  var text = game.add.text(10, 10, 'Click or touch to move ship', {\n      fill: 'white'\n    })\n    // create the sprite's primative\n  var bmd = game.add.bitmapData(32, 32);\n  drawTriangle(bmd);\n  // create the sprite\n  sprite = game.add.sprite(game.width / 2, game.height / 2, bmd);\n  // create the physics body -before- attaching an emitter to the sprite\n  game.physics.arcade.enableBody(sprite);\n  sprite.body.collideWorldBounds = true;\n  sprite.anchor.setTo(0.5, 0.5);\n  //create an emitter\n  emitter = game.add.emitter(0, 0, 1000);\n  emitter.makeParticles('fireblob');\n  // Attach the emitter to the sprite\n  sprite.addChild(emitter);\n  //position the emitter relative to the sprite's anchor location\n  emitter.y = 0;\n  emitter.x = -16;\n  // setup options for the emitter\n  emitter.lifespan = 500;\n  emitter.maxParticleSpeed = new Phaser.Point(-100, 50);\n  emitter.minParticleSpeed = new Phaser.Point(-200, -50);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  sprite.rotation = game.physics.arcade.angleToPointer(sprite);\n  if (game.input.activePointer.isDown) {\n    game.physics.arcade.accelerateToPointer(sprite);\n    sprite.body.drag.setTo(0, 0);\n    // emit a single particle every frame that the mouse is down\n    emitter.emitParticle();\n  } else {\n    sprite.body.acceleration.set(0, 0);\n    sprite.body.drag.setTo(25, 25);\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  // load assets\n  game.load.image('sky', 'assets/sky.png');\n  game.load.image('ground', 'assets/platform.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  // set physics\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n\n  // set sky\n  game.add.sprite(0, 0, 'sky');\n\n  // set platforms\n  platforms = game.add.group();\n  platforms.enableBody = true;\n\n  // set ground\n  var ground;\n  ground = platforms.create(0, game.world.height - 64, 'ground');\n  ground.scale.setTo(2, 2);\n  ground.body.immovable = true;\n\n  // set ledges\n  var ledge;\n  ledge = platforms.create(400, 400, 'ground');\n  ledge.body.immovable = true;\n  ledge = platforms.create(-150, 250, 'ground');\n  ledge.body.immovable = true;\n\n  // set player\n  player = game.add.sprite(32, game.world.height - 150, 'dude');\n  game.physics.arcade.enable(player);\n  player.body.bounce.y = 0.2;\n  player.body.gravity.y = 300;\n  player.body.collideWorldBounds = true;\n  player.animations.add('left', [0, 1, 2, 3], 10, true);\n  player.animations.add('right', [5, 6, 7, 8], 10, true);\n\n  // set star\n  stars = game.add.group();\n  stars.enableBody = true;\n\n  // generate starts\n  for (var i = 0; i < 12; i++) {\n    var star;\n    star = stars.create(i * 70, 0, 'star');\n    star.body.gravity.y = 300;\n    star.body.bounce.y = 0.7 + Math.random() * 0.2;\n  }\n\n  // set score\n  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });\n\n  // set controll\n  cursors = game.input.keyboard.createCursorKeys();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  // collide\n  game.physics.arcade.collide(player, platforms);\n  game.physics.arcade.collide(stars, platforms);\n\n  // check collision\n  game.physics.arcade.overlap(player, stars, collectStar, null, this);\n\n  // reset player v x\n  player.body.velocity.x = 0;\n\n  // move left\n  if (cursors.left.isDown) {\n    player.body.velocity.x = -150;\n    player.animations.play('left');\n\n  // move right\n  } else if (cursors.right.isDown) {\n    player.body.velocity.x = 150;\n    player.animations.play('right');\n\n  // idle\n  } else {\n    player.animations.stop();\n    player.frame = 4;\n  }\n  \n  // Allow the player to jump if they are touching the ground.\n  if (cursors.up.isDown && player.body.touching.down) {\n    player.body.velocity.y = -350;\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  // Load the Google WebFont Loader script\n  game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.stage.setBackgroundColor(0x2d2d2d);\n  otherFonts();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload () {\n  game.load.image('earth', 'assets/light_sand.png')\n  game.load.spritesheet('dude', 'assets/dude.png', 64, 64)\n  game.load.spritesheet('enemy', 'assets/dude.png', 64, 64)\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create () {\n  socket = io.connect()\n\n  // Resize our game world to be a 2000 x 2000 square\n  game.world.setBounds(-500, -500, 1000, 1000)\n\n  // Our tiled scrolling background\n  land = game.add.tileSprite(0, 0, 800, 600, 'earth')\n  land.fixedToCamera = true\n\n  // The base of our player\n  var startX = Math.round(Math.random() * (1000) - 500)\n  var startY = Math.round(Math.random() * (1000) - 500)\n  player = game.add.sprite(startX, startY, 'dude')\n  player.anchor.setTo(0.5, 0.5)\n  player.animations.add('move', [0, 1, 2, 3, 4, 5, 6, 7], 20, true)\n  player.animations.add('stop', [3], 20, true)\n\n  // This will force it to decelerate and limit its speed\n  // player.body.drag.setTo(200, 200)\n  game.physics.enable(player, Phaser.Physics.ARCADE);\n  player.body.maxVelocity.setTo(400, 400)\n  player.body.collideWorldBounds = true\n\n  // Create some baddies to waste :)\n  enemies = []\n\n  player.bringToTop()\n\n  game.camera.follow(player)\n  game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300)\n  game.camera.focusOnXY(0, 0)\n\n  cursors = game.input.keyboard.createCursorKeys()\n\n  // Start listening for events\n  setEventHandlers()\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  // init keyboard commands\n  game.input.keyboard.addCallbacks(null, null, onKeyUp);\n\n  // initialize map\n  initMap();\n\n  // initialize ascii display\n  asciidisplay = [];\n  for (var y = 0; y < ROWS; y++) {\n    var newRow = [];\n    asciidisplay.push(newRow);\n    for (var x = 0; x < COLS; x++)\n      newRow.push(initCell('', x, y));\n  }\n\n  // initialize actors\n  initActors();\n\n  // draw level\n  drawMap();\n  drawActors();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.load.image('sky', 'assets/sky.png');\n  game.load.image('ground', 'assets/platform.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  //  We're going to be using physics, so enable the Arcade Physics system\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  //  A simple background for our game\n  game.add.sprite(0, 0, 'sky');\n  //  The platforms group contains the ground and the 2 ledges we can jump on\n  platforms = game.add.group();\n  //  We will enable physics for any object that is created in this group\n  platforms.enableBody = true;\n  // Here we create the ground.\n  var ground = platforms.create(0, game.world.height - 64, 'ground');\n  //  Scale it to fit the width of the game (the original sprite is 400x32 in size)\n  ground.scale.setTo(2, 2);\n  //  This stops it from falling away when you jump on it\n  ground.body.immovable = true;\n  //  Now let's create two ledges\n  var ledge = platforms.create(400, 400, 'ground');\n  ledge.body.immovable = true;\n  ledge = platforms.create(-150, 250, 'ground');\n  ledge.body.immovable = true;\n  // The player and its settings\n  player = game.add.sprite(32, game.world.height - 150, 'dude');\n  //  We need to enable physics on the player\n  game.physics.arcade.enable(player);\n  //  Player physics properties. Give the little guy a slight bounce.\n  player.body.bounce.y = 0.2;\n  player.body.gravity.y = 300;\n  player.body.collideWorldBounds = true;\n  //  Our two animations, walking left and right.\n  player.animations.add('left', [0, 1, 2, 3], 10, true);\n  player.animations.add('right', [5, 6, 7, 8], 10, true);\n  //  Finally some stars to collect\n  stars = game.add.gr",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  //  Collide the player and the stars with the platforms\n  game.physics.arcade.collide(player, platforms);\n  game.physics.arcade.collide(stars, platforms);\n  //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function\n  game.physics.arcade.overlap(player, stars, collectStar, null, this);\n  //  Reset the players velocity (movement)\n  player.body.velocity.x = 0;\n  if (cursors.left.isDown) {\n    //  Move to the left\n    player.body.velocity.x = -150;\n    player.animations.play('left');\n  } else if (cursors.right.isDown) {\n    //  Move to the right\n    player.body.velocity.x = 150;\n    player.animations.play('right');\n  } else {\n    //  Stand still\n    player.animations.stop();\n    player.frame = 4;\n  }\n  //  Allow the player to jump if they are touching the ground.\n  if (cursors.up.isDown && player.body.touching.down) {\n    player.body.velocity.y = -350;\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  LOG.info('preload');\n  loadAssets();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  LOG.info('create');\n\n  // enable plugin\n  // game.plugins.add(Phaser.Plugin.Inspector);\n\n  // set bg\n  GAME.background = GAME.add.tileSprite(0, 0, GAME.world.width, GAME.world.height, 'background');\n\n  // set physics\n  GAME.physics.startSystem(Phaser.Physics.ARCADE);\n  GAME.physics.arcade.gravity.y = GRAVITY;\n\n  // set player\n  // player sprite\n  GAME.player = GAME.add.sprite(0,0,'player');\n  // player animation - but not including last frame (last sprite)\n  GAME.player.animations.add('fly', [0, 1, 2], 10, true);\n  // player physic\n  GAME.physics.arcade.enableBody(GAME.player);\n  GAME.player.body.collideWorldBounds = true;\n\n  // set wall\n  // group them together into a single manageable game object.\n  GAME.walls = GAME.add.group();\n  GAME.spawnWall(300);\n  GAME.spawnWall(300, true);\n\n  // set welcome text\n  var headerText = 'TOUCH TO\\nSTART GAME';\n  GAME.headerText = GAME.add.text(GAME.world.centerX, GAME.world.height / 5, headerText, GAME_FONT_STYLE);\n  GAME.headerText.anchor.setTo(0.5, 0.5);\n\n  // set sound\n  GAME.jetSnd = GAME.add.audio('jet', SOUND_VOLUME);\n  GAME.scoreSnd = GAME.add.audio('score', SOUND_VOLUME);\n  GAME.hurtSnd = GAME.add.audio('hurt', SOUND_VOLUME);\n\n  // set input\n  // when user click on the screen\n  GAME.input.onDown.add(GAME.jump, GAME);\n\n  welcomeScreen();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  var bmd = game.add.bitmapData(100, 100);\n  bmd.ctx.fillStyle = '#00ff00';\n  bmd.ctx.arc(50, 50, 50, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('good', bmd);\n  var bmd = game.add.bitmapData(64, 64);\n  bmd.ctx.fillStyle = '#ff0000';\n  bmd.ctx.arc(32, 32, 32, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('bad', bmd);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  game.physics.arcade.gravity.y = 300;\n  good_objects = createGroup(4, game.cache.getBitmapData('good'));\n  bad_objects = createGroup(4, game.cache.getBitmapData('bad'));\n  slashes = game.add.graphics(0, 0);\n  scoreLabel = game.add.text(10, 10, 'Tip: get the green ones!');\n  scoreLabel.fill = 'white';\n  emitter = game.add.emitter(0, 0, 300);\n  emitter.makeParticles('parts');\n  emitter.gravity = 300;\n  emitter.setYSpeed(-400, 400);\n  throwObject();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  throwObject();\n  points.push({\n    x: game.input.x,\n    y: game.input.y\n  });\n  points = points.splice(points.length - 10, points.length);\n  //game.add.sprite(game.input.x, game.input.y, 'hit');\n  if (points.length < 1 || points[0].x == 0) {\n    return;\n  }\n  slashes.clear();\n  slashes.beginFill(0xFFFFFF);\n  slashes.alpha = .5;\n  slashes.moveTo(points[0].x, points[0].y);\n  for (var i = 1; i < points.length; i++) {\n    slashes.lineTo(points[i].x, points[i].y);\n  }\n  slashes.endFill();\n  for (var i = 1; i < points.length; i++) {\n    line = new Phaser.Line(points[i].x, points[i].y, points[i - 1].x, points[i - 1].y);\n    game.debug.geom(line);\n    good_objects.forEachExists(checkIntersects);\n    bad_objects.forEachExists(checkIntersects);\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  var bmd = game.add.bitmapData(64, 64);\n  bmd.ctx.fillStyle = '#ffee00';\n  bmd.ctx.arc(32, 32, 32, 0, Math.PI * 2);\n  bmd.ctx.fill();\n  game.cache.addBitmapData('circle', bmd);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  //var blurX = game.add.filter('BlurX');\n  //var blurY = game.add.filter('BlurY');\n  //slashes.filters = [blurX, blurY];\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  game.physics.arcade.gravity.y = 200;\n  objects = game.add.group();\n  objects.enableBody = true;\n  objects.physicsBodyType = Phaser.Physics.ARCADE;\n  objects.createMultiple(4, game.cache.getBitmapData('circle'));\n  objects.setAll('checkWorldBounds', true);\n  objects.setAll('outOfBoundsKill', true);\n  slashes = game.add.graphics(0, 0);\n  game.physics.enable(slashes, Phaser.Physics.ARCADE);\n  game.physics.enable(objects, Phaser.Physics.ARCADE);\n  scoreLabel = game.add.text(10, 10, 'Score');\n  scoreLabel.fill = 'white';\n  throwObject()\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  throwObject();\n  points.push({\n    x: game.input.activePointer.position.x,\n    y: game.input.activePointer.position.y\n  });\n  points = points.splice(points.length - 10, points.length);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;\n  game.scale.setScreenSize = true;\n  game.scale.pageAlignHorizontally = true;\n  game.scale.pageAlignVertically = true;\n  game.forceSingleUpdate = true;\n  game.load.image('sky', 'assets/sky10.png');\n  game.load.image('cloud', 'assets/cloud.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.image('phaser', 'assets/phaser.png');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  game.load.crossOrigin = \"Anonymous\";\n  game.load.image('fireblob', 'assets/fireblob.png');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n  var text = game.add.text(10, 10, 'Click or touch to move ship', {\n      fill: 'white'\n    })\n    // create the sprite's primative\n  var bmd = game.add.bitmapData(32, 32);\n  drawTriangle(bmd);\n  // create the sprite\n  sprite = game.add.sprite(game.width / 2, game.height / 2, bmd);\n  // create the physics body -before- attaching an emitter to the sprite\n  game.physics.arcade.enableBody(sprite);\n  sprite.body.collideWorldBounds = true;\n  sprite.anchor.setTo(0.5, 0.5);\n  //create an emitter\n  emitter = game.add.emitter(0, 0, 1000);\n  emitter.makeParticles('fireblob');\n  // Attach the emitter to the sprite\n  sprite.addChild(emitter);\n  //position the emitter relative to the sprite's anchor location\n  emitter.y = 0;\n  emitter.x = -16;\n  // setup options for the emitter\n  emitter.lifespan = 500;\n  emitter.maxParticleSpeed = new Phaser.Point(-100, 50);\n  emitter.minParticleSpeed = new Phaser.Point(-200, -50);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  sprite.rotation = game.physics.arcade.angleToPointer(sprite);\n  if (game.input.activePointer.isDown) {\n    game.physics.arcade.accelerateToPointer(sprite);\n    sprite.body.drag.setTo(0, 0);\n    // emit a single particle every frame that the mouse is down\n    emitter.emitParticle();\n  } else {\n    sprite.body.acceleration.set(0, 0);\n    sprite.body.drag.setTo(25, 25);\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  // load assets\n  game.load.image('sky', 'assets/sky.png');\n  game.load.image('ground', 'assets/platform.png');\n  game.load.image('star', 'assets/star.png');\n  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  // set physics\n  game.physics.startSystem(Phaser.Physics.ARCADE);\n\n  // set sky\n  game.add.sprite(0, 0, 'sky');\n\n  // set platforms\n  platforms = game.add.group();\n  platforms.enableBody = true;\n\n  // set ground\n  var ground;\n  ground = platforms.create(0, game.world.height - 64, 'ground');\n  ground.scale.setTo(2, 2);\n  ground.body.immovable = true;\n\n  // set ledges\n  var ledge;\n  ledge = platforms.create(400, 400, 'ground');\n  ledge.body.immovable = true;\n  ledge = platforms.create(-150, 250, 'ground');\n  ledge.body.immovable = true;\n\n  // set player\n  player = game.add.sprite(32, game.world.height - 150, 'dude');\n  game.physics.arcade.enable(player);\n  player.body.bounce.y = 0.2;\n  player.body.gravity.y = 300;\n  player.body.collideWorldBounds = true;\n  player.animations.add('left', [0, 1, 2, 3], 10, true);\n  player.animations.add('right', [5, 6, 7, 8], 10, true);\n\n  // set star\n  stars = game.add.group();\n  stars.enableBody = true;\n\n  // generate starts\n  for (var i = 0; i < 12; i++) {\n    var star;\n    star = stars.create(i * 70, 0, 'star');\n    star.body.gravity.y = 300;\n    star.body.bounce.y = 0.7 + Math.random() * 0.2;\n  }\n\n  // set score\n  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });\n\n  // set controll\n  cursors = game.input.keyboard.createCursorKeys();\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "update_method",
+    "code": "update() {\n  // collide\n  game.physics.arcade.collide(player, platforms);\n  game.physics.arcade.collide(stars, platforms);\n\n  // check collision\n  game.physics.arcade.overlap(player, stars, collectStar, null, this);\n\n  // reset player v x\n  player.body.velocity.x = 0;\n\n  // move left\n  if (cursors.left.isDown) {\n    player.body.velocity.x = -150;\n    player.animations.play('left');\n\n  // move right\n  } else if (cursors.right.isDown) {\n    player.body.velocity.x = 150;\n    player.animations.play('right');\n\n  // idle\n  } else {\n    player.animations.stop();\n    player.frame = 4;\n  }\n  \n  // Allow the player to jump if they are touching the ground.\n  if (cursors.up.isDown && player.body.touching.down) {\n    player.body.velocity.y = -350;\n  }\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "preload_method",
+    "code": "preload() {\n  // Load the Google WebFont Loader script\n  game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');\n}",
+    "file": "game.js"
+  },
+  {
+    "type": "create_method",
+    "code": "create() {\n  game.stage.setBackgroundColor(0x2d2d2d);\n  otherFonts();\n}",
+    "file": "game.js"
+  }
+]

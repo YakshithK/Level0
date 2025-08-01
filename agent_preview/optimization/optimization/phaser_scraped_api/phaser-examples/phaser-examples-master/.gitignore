@@ -1,0 +1,11 @@
+# dependency
+node_modules/
+bower_components/
+
+# backup
+bk
+bk*
+
+# lock
+yarn.lock
+package-lock.json

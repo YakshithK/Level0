@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Shooter</title>
+    <title>Your Game Title</title>
     <style>
         body {
             margin: 0;
@@ -28,22 +28,15 @@
     <div id="game-container"></div>
     
     <!-- Phaser.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
     
-    <!-- Utils (load first) -->
-    <script src="utils/Constants.js"></script>
+    <!-- Include your sprite files here in the order they need to be loaded -->
+    <script src="js/sprites/Player.js"></script>
     
-    <!-- Sprites (load before scenes) -->
-    <script src="sprites/PlayerSprite.js"></script>
-    <script src="sprites/EnemySprite.js"></script>
-    <script src="sprites/BulletSprite.js"></script>
+    <!-- Include your scene files here -->
+    <script src="js/scenes/GameScene.js"></script>
     
-    <!-- Scenes (load before main) -->
-    <script src="scenes/MainMenuScene.js"></script>
-    <script src="scenes/GameScene.js"></script>
-    <script src="scenes/GameOverScene.js"></script>
-    
-    <!-- Main Game file (load last) -->
+    <!-- Main Game file (should be last) -->
     <script src="main.js"></script>
 </body>
 </html>

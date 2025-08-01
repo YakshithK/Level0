@@ -14,6 +14,8 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isStopped, setIsStopped] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<"openai" | "kimi">("openai");
+  const [ragEnabled, setRagEnabled] = useState<boolean>(true);
   
   // File management
   const [selectedFile, setSelectedFile] = useState<string>("");
@@ -189,7 +191,7 @@ export default function Home() {
           const res = await fetch("/api/execute-task", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ task: step.step })
+            body: JSON.stringify({ task: step.step, model: selectedModel, ragEnabled })
           });
           
           if (!res.ok) {
@@ -385,32 +387,40 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Left Panel - Chat */}
-      <ChatPanel
-        messages={messages}
-        planSteps={planSteps}
-        currentPrompt={currentPrompt}
-        onPromptChange={setCurrentPrompt}
-        onSubmit={handlePromptSubmit}
-        onStop={handleStop}
-        isProcessing={isProcessing}
-      />
+      <div className="w-96 flex-shrink-0">
+        <ChatPanel
+          messages={messages}
+          planSteps={planSteps}
+          currentPrompt={currentPrompt}
+          onPromptChange={setCurrentPrompt}
+          onSubmit={handlePromptSubmit}
+          onStop={handleStop}
+          isProcessing={isProcessing}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          ragEnabled={ragEnabled}
+          onRagToggle={setRagEnabled}
+        />
+      </div>
 
       {/* Right Panel - Code/Files */}
-      <RightPanel
-        selectedFile={selectedFile}
-        fileContent={fileContent}
-        onFileSelect={setSelectedFile}
-        onFileContentChange={setFileContent}
-        changeCounter={changeCounter}
-        onRefresh={handleRefresh}
-        isProcessing={isProcessing}
-        pendingDiffs={pendingDiffs}
-        onAcceptDiff={handleAccept}
-        onDiscardDiff={handleDiscard}
-        onAcceptAllDiffs={handleAcceptAll}
-        error={error}
-        refreshTrigger={refreshTrigger}
-      />
+      <div className="flex-1">
+        <RightPanel
+          selectedFile={selectedFile}
+          fileContent={fileContent}
+          onFileSelect={setSelectedFile}
+          onFileContentChange={setFileContent}
+          changeCounter={changeCounter}
+          onRefresh={handleRefresh}
+          isProcessing={isProcessing}
+          pendingDiffs={pendingDiffs}
+          onAcceptDiff={handleAccept}
+          onDiscardDiff={handleDiscard}
+          onAcceptAllDiffs={handleAcceptAll}
+          error={error}
+          refreshTrigger={refreshTrigger}
+        />
+      </div>
     </div>
   );
 }

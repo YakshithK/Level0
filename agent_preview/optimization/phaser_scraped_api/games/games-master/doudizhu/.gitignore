@@ -1,0 +1,6 @@
+/node_modules/*
+/build/*
+.eslintcache
+package-lock.json
+src/.idea/*
+start.sh

@@ -52,8 +52,8 @@ export default function RightPanel({
   const currentFileDiff = pendingDiffs.find(diff => diff.mainFile === selectedFile);
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-900 min-w-0">
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700">
+    <div className="h-screen flex flex-col bg-gray-900">
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center space-x-1">
           <button
             onClick={() => setViewMode('code')}
@@ -125,7 +125,7 @@ export default function RightPanel({
           </button>
         </div>
       </div>
-      <div className="flex-1 relative">
+      <div className="flex-1 min-h-0">
         {viewMode === 'code' && (
           <div className="h-full flex">
             {/* File Explorer Sidebar */}
@@ -168,7 +168,9 @@ export default function RightPanel({
           </div>
         )}
         {viewMode === 'preview' && (
-          <Preview selectedFile={selectedFile} onRefresh={onRefresh} />
+          <div className="h-full">
+            <Preview selectedFile={selectedFile} onRefresh={onRefresh} />
+          </div>
         )}
         {viewMode === 'review' && (
           <div className="h-full overflow-auto p-4">
