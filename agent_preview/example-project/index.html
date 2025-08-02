@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoring System Game</title>
+    <title>Top-Down Shooter</title>
     <style>
         body {
             margin: 0;
@@ -30,14 +30,17 @@
     <!-- Phaser.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
     
-    <!-- Include your sprite files here in the order they need to be loaded -->
+    <!-- Sprites -->
     <script src="sprites/Player.js"></script>
-    <script src="sprites/Coin.js"></script>
+    <script src="sprites/Enemy.js"></script>
+    <script src="sprites/Bullet.js"></script>
     
-    <!-- Include your scene files here -->
-    <script src="scenes/GameScene.js"></script>
+    <!-- Scenes -->
+    <script src="scenes/MainScene.js"></script>
+    <script src="scenes/UIScene.js"></script>
+    <script src="scenes/GameOverScene.js"></script>
     
-    <!-- Main Game file (should be last) -->
+    <!-- Main Game -->
     <script src="main.js"></script>
 </body>
 </html>

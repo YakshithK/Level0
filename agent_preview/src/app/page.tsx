@@ -14,7 +14,6 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isStopped, setIsStopped] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<"openai" | "kimi">("openai");
   const [ragEnabled, setRagEnabled] = useState<boolean>(true);
   
   // File management
@@ -191,7 +190,7 @@ export default function Home() {
           const res = await fetch("/api/execute-task", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ task: step.step, model: selectedModel, ragEnabled })
+            body: JSON.stringify({ task: step.step, ragEnabled })
           });
           
           if (!res.ok) {
@@ -413,8 +412,6 @@ export default function Home() {
           onSubmit={handlePromptSubmit}
           onStop={handleStop}
           isProcessing={isProcessing}
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
           ragEnabled={ragEnabled}
           onRagToggle={setRagEnabled}
         />

@@ -34,7 +34,7 @@ Your agent is a V0/Lovable-style AI coding assistant with advanced RAG (Retrieva
 ┌─────────────────────▼───────────────────────────────────────────┐
 │                     LLM LAYER                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│         [OpenAI GPT-4O]  +  [Kimi K2 Instruct]                 │
+│         [Kimi K2 Instruct]                                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,7 +89,7 @@ User Review → Accept/Reject
 - 🎯 **Purpose**: Main chat interface with AI assistant
 - 🔧 **Features**: 
   - Message history
-  - Model selector (GPT-4O / Kimi K2)
+  - Fixed model (Kimi K2)
   - **RAG toggle** (enable/disable code examples)
   - Plan step tracking
 - 📡 **Connects to**: `/api/plan`, messaging system
@@ -141,7 +141,7 @@ Output: { steps: PlanStep[] }
 ```typescript
 // Executes individual plan steps
 POST /api/execute-task
-Input: { task: string, model: "openai"|"kimi", ragEnabled: boolean }
+Input: { task: string, ragEnabled: boolean }
 Output: { diffs: Diff[], newFiles: File[] }
 ```
 
@@ -315,7 +315,7 @@ example-project/
 - **File System APIs**
 
 ### **AI Integration**
-- **OpenAI GPT-4O** via API
+- **Kimi K2 Instruct** via Groq API
 - **Kimi K2 Instruct** via Groq API
 - **Dual model switching**
 

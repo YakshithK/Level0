@@ -1,7 +1,47 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { retrieveRelevantChunks } from "../../../../retriever";
+import { GoogleGenAI, Type } from '@google/genai';
+import { retrieveRelevantChunks } from "../retriever";
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+const tools = [
+  {
+    functionDeclarations: [
+      {
+        name: 'create_implementation_plan',
+        description: 'Generate a structured implementation plan with numbered steps for a software development task. Each step should be actionable, specific, and include an expected outcome. The plan should be logically ordered and appropriate for the complexity of the request.',
+        parameters: {
+          type: Type.OBJECT,
+          required: ["steps"],
+          properties: {
+            steps: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                required: ["step", "description", "expected_outcome"],
+                properties: {
+                  step: {
+                    type: Type.NUMBER,
+                  },
+                  description: {
+                    type: Type.STRING,
+                  },
+                  expected_outcome: {
+                    type: Type.STRING,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  }
+];
 
 export async function POST(request: Request) {
   const { prompt } = await request.json();
@@ -11,78 +51,80 @@ export async function POST(request: Request) {
   console.log(`Prompt: "${prompt}"`);
   console.log(`===================================\n`);
 
+  // Load the planner prompt template
+  const plannerPromptPath = path.join(process.cwd(), "src", "app", "api", "plan", "planner_prompt.txt");
+  const plannerPromptTemplate = fs.readFileSync(plannerPromptPath, "utf-8");
+
   // Retrieve relevant files for context
   const relevantChunks = await retrieveRelevantChunks(prompt);
-  
-  // Log the files that were found
-  console.log(`\n=== PLAN API: Files Found for Planning ===`);
-  const fileNames = relevantChunks.map(chunk => chunk.file);
-  console.log('Related files found:', fileNames.length > 0 ? fileNames : 'No files found');
-  console.log(`==========================================\n`);
 
   // Build enhanced prompt with file context
-  const enhancedPrompt = relevantChunks.length > 0 
-    ? `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] 
+  const contextSection = relevantChunks.length > 0 
+    ? `\n\nRELEVANT CODE CONTEXT:\n${relevantChunks.map(chunk => `**${chunk.file}:**\n${chunk.code ? chunk.code.substring(0, 800) : 'No content'}...`).join('\n\n')}`
+    : "";
 
-Context from relevant files:
-${relevantChunks.map(chunk => `**${chunk.file}:**\n${chunk.code ? chunk.code.substring(0, 500) : 'No content'}...`).join('\n\n')}
+  const config = {
+    tools,
+    systemInstruction: [
+      {
+        text: plannerPromptTemplate,
+      }
+    ],
+  };
 
-The request: ${prompt}`
-    : `Break this request into a step-by-step plan. Make sure to be simple, don't overcomplicate it. Do as little steps as possible but don't over condense steps. Return ONLY a JSON array of objects, where each object has: step (number), instruction (string) and expected_outcome (string). Do NOT include any code block formatting, markdown, or extra text. Example: [{"step": 1, "description": "First step."}, ...] The request: ${prompt}`;
-
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+  const model = 'gemini-2.0-flash';
+  const contents = [
     {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": process.env.GEMINI_API_KEY || ""
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: enhancedPrompt
-              }
-            ]
-          }
-        ]
-      })
-    }
-  );
+      role: 'user',
+      parts: [
+        {
+          text: `USER REQUEST: "${prompt}"${contextSection}
 
-  if (!response.ok) {
-    const text = await response.text();
-    return NextResponse.json([`Gemini API error: ${response.status} ${response.statusText} - ${text}`], { status: 500 });
-  }
+Analyze the request and context, then provide your step-by-step implementation plan using the create_implementation_plan function.`,
+        },
+      ],
+    },
+  ];
 
-  const data = await response.json();
-  let steps: any[] = [];
   try {
-    // Extract the plan text from Gemini's response, even if wrapped in code block formatting
-    let output = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!output) {
-      steps = ["No plan text found in Gemini response."];
-    } else {
-      // Remove code block markers and whitespace
-      output = output.replace(/```json|```/g, "").trim();
-      // Try to find the first JSON array in the string
-      const match = output.match(/\[[\s\S]*?\]/);
-      const jsonText = match ? match[0] : output;
-      try {
-        steps = JSON.parse(jsonText);
-      } catch {
-        steps = [jsonText]; // Fallback: return the raw text as a single step
+    const response = await ai.models.generateContentStream({
+      model,
+      config,
+      contents,
+    });
+
+    let steps: any[] = [];
+    let hasValidPlan = false;
+
+    for await (const chunk of response) {
+      if (chunk.functionCalls && chunk.functionCalls[0]) {
+        const functionCall = chunk.functionCalls[0];
+        console.log("[planner] Function call received:", functionCall.name);
+        
+        if (functionCall.name === 'create_implementation_plan' && functionCall.args?.steps) {
+          steps = Array.isArray(functionCall.args.steps) ? functionCall.args.steps : [];
+          hasValidPlan = true;
+          console.log(`[planner] Successfully extracted ${steps.length} steps from function call`);
+          break;
+        }
+      } else if (chunk.text) {
+        console.log("[planner] Text chunk received (no function call)");
       }
     }
-  } catch (e) {
-    steps = ["Could not parse plan from Gemini response."];
-  }
 
-  // Write steps to scratchpad.json in the project root
-  try {
-    // Add 'completed' field to each step if it's an object
+    // Fallback to text parsing if no function call
+    if (!hasValidPlan) {
+      console.log("[planner] No function call found, using fallback");
+      steps = [
+        { 
+          step: 1, 
+          description: "Analyze the request and implement the requested functionality", 
+          expected_outcome: "Working implementation of the requested feature" 
+        }
+      ];
+    }
+
+    // Add completed status to steps
     const stepsWithStatus = Array.isArray(steps)
       ? steps.map(step =>
           typeof step === 'object' && step !== null
@@ -90,10 +132,21 @@ The request: ${prompt}`
             : step
         )
       : steps;
-    fs.writeFileSync(path.join(process.cwd(), "scratchpad.json"), JSON.stringify(stepsWithStatus, null, 2));
-  } catch (e) {
-    // Optionally log or handle file write errors
-  }
 
-  return NextResponse.json(steps);
+    // Write steps to scratchpad.json
+    try {
+      fs.writeFileSync(path.join(process.cwd(), "scratchpad.json"), JSON.stringify(stepsWithStatus, null, 2));
+    } catch (e) {
+      console.error("Error writing steps to scratchpad.json:", e);
+    }
+
+    return NextResponse.json(steps);
+
+  } catch (error) {
+    console.error("[planner] Error:", error);
+    return NextResponse.json(
+      [{ step: 1, description: "Failed to generate plan", expected_outcome: "Error occurred" }], 
+      { status: 500 }
+    );
+  }
 }

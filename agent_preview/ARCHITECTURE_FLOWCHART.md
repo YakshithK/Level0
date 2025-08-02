@@ -32,7 +32,7 @@ graph TB
     subgraph "AI Engine"
         RET[Retriever System]
         EXE[Executor Agent]
-        LLM[LLM APIs (OpenAI + Gemini)]
+        LLM[LLM API (Kimi K2 + Gemini)]
     end
     
     %% File System
@@ -369,6 +369,6 @@ stateDiagram-v2
 - **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
 - **Code Editor**: Monaco Editor (VS Code engine)
 - **Game Engine**: Phaser.js 3.x
-- **AI APIs**: OpenAI GPT-4 + Google Gemini
+- **AI APIs**: Kimi K2 + Google Gemini
 - **File Processing**: Node.js fs module, diff-match-patch
 - **State Management**: React hooks and context

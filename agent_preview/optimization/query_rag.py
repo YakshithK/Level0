@@ -1,12 +1,19 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logs
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN for faster startup
+
 import json
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 import argparse
+import warnings
+import sys
+warnings.filterwarnings('ignore')  # Suppress warnings
 
 class PhaserRAG:
     def __init__(self, index_path="phaser_index.faiss", meta_path="phaser_chunks.jsonl", model_name="all-MiniLM-L6-v2"):
-        print(f"🔍 Loading RAG system...")
+        print("Loading RAG system...", file=sys.stderr)  # Send to stderr
         self.model = SentenceTransformer(model_name)
         self.index = faiss.read_index(index_path)
         
@@ -17,7 +24,7 @@ class PhaserRAG:
                 if line.strip():
                     self.chunks.append(json.loads(line)["chunk"])
         
-        print(f"✅ Loaded {len(self.chunks)} code chunks")
+        print(f"Loaded {len(self.chunks)} code chunks", file=sys.stderr)  # Send to stderr
     
     def search(self, query, top_k=5):
         """Search for similar code chunks based on the query"""
@@ -40,12 +47,12 @@ class PhaserRAG:
             if idx < len(self.chunks):
                 similarity = float(dist)  # Already cosine similarity due to normalization
                 
-                # Only include high-quality results
-                if similarity > 0.5:  # Much higher threshold
+                # Include all results above minimal threshold
+                if similarity > 0.15:  # Reasonable threshold for UI queries
                     chunk = self.chunks[idx]
                     
-                    # Additional quality filters
-                    if self._is_relevant_chunk(chunk, query):
+                    # Basic quality check - ensure it's actual code
+                    if len(chunk.strip()) > 20 and ('class' in chunk or 'function' in chunk or 'const' in chunk or '{' in chunk):
                         results.append({
                             "rank": len(results) + 1,
                             "similarity": similarity,
@@ -68,10 +75,11 @@ class PhaserRAG:
         ]):
             return False
         
-        # Must contain actual game code
+        # Must contain actual game code or relevant terms
         game_indicators = [
             "phaser", "sprite", "scene", "player", "enemy", "bullet",
-            "physics", "collision", "velocity", "keyboard", "input"
+            "physics", "collision", "velocity", "keyboard", "input",
+            "color", "background", "text", "rectangle", "create", "preload"
         ]
         
         if not any(indicator in chunk_lower for indicator in game_indicators):
@@ -81,9 +89,9 @@ class PhaserRAG:
         query_words = query_lower.split()
         chunk_words = chunk_lower.split()
         
-        # Check for word overlap
+        # Check for word overlap (more lenient)
         overlap = len(set(query_words) & set(chunk_words))
-        return overlap >= min(2, len(query_words) // 2)  # At least half the query words
+        return overlap >= max(1, len(query_words) // 3)  # At least one relevant word
     
     def format_context(self, results, max_chars=3000):
         """Format search results into context for LLM prompting"""
@@ -108,6 +116,7 @@ def main():
     parser.add_argument("--top_k", type=int, default=5, help="Number of results")
     parser.add_argument("--index", default="phaser_index.faiss", help="FAISS index path")
     parser.add_argument("--meta", default="phaser_chunks.jsonl", help="Metadata path")
+    parser.add_argument("--json", action="store_true", help="Output JSON for API")
     
     args = parser.parse_args()
     
@@ -115,18 +124,37 @@ def main():
     rag = PhaserRAG(args.index, args.meta)
     
     # Search
-    print(f"\n🔎 Searching for: '{args.query}'\n")
     results = rag.search(args.query, args.top_k)
     
-    # Display results
-    for result in results:
-        print(f"📄 Rank {result['rank']} (Similarity: {result['similarity']:.3f})")
-        print(f"```javascript\n{result['code'][:200]}...\n```\n")
-    
-    # Show formatted context
-    print("🤖 Formatted context for LLM:")
-    print("=" * 50)
-    print(rag.format_context(results))
+    if args.json:
+        # Output JSON for Node.js integration
+        # Filter out empty or very short chunks
+        valid_chunks = []
+        valid_similarities = []
+        
+        for i, result in enumerate(results):
+            chunk = result['code'].strip()
+            # More lenient validation - just check it's not empty and has some structure
+            if len(chunk) > 10 and ('{' in chunk or 'function' in chunk or 'class' in chunk or '=' in chunk):
+                valid_chunks.append(chunk)
+                valid_similarities.append(result['similarity'])
+        
+        output = {
+            "chunks": valid_chunks,
+            "similarities": valid_similarities
+        }
+        print(json.dumps(output))
+    else:
+        # Display results for human (send to stderr to not interfere with JSON output)
+        print(f"\nSearching for: '{args.query}'\n", file=sys.stderr)
+        for result in results:
+            print(f"Rank {result['rank']} (Similarity: {result['similarity']:.3f})", file=sys.stderr)
+            print(f"```javascript\n{result['code'][:200]}...\n```\n", file=sys.stderr)
+        
+        # Show formatted context
+        print("Formatted context for LLM:", file=sys.stderr)
+        print("=" * 50, file=sys.stderr)
+        print(rag.format_context(results), file=sys.stderr)
 
 if __name__ == "__main__":
     main()

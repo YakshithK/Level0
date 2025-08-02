@@ -86,7 +86,7 @@ def integrate_rag_with_agent():
     # Initialize RAG retriever
     rag = PhaserRAGRetriever()
     
-    def enhanced_execute_task(task_description, model="openai"):
+    def enhanced_execute_task(task_description):
         """Enhanced version of your execute_task function with RAG"""
         
         # Your existing system prompt

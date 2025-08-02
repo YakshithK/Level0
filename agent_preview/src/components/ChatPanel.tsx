@@ -21,8 +21,6 @@ interface ChatPanelProps {
   onSubmit: () => void;
   onStop: () => void;
   isProcessing: boolean;
-  selectedModel: "openai" | "kimi";
-  onModelChange: (model: "openai" | "kimi") => void;
   ragEnabled: boolean;
   onRagToggle: (enabled: boolean) => void;
 }
@@ -35,8 +33,6 @@ export default function ChatPanel({
   onSubmit,
   onStop,
   isProcessing,
-  selectedModel,
-  onModelChange,
   ragEnabled,
   onRagToggle
 }: ChatPanelProps) {
@@ -57,18 +53,13 @@ export default function ChatPanel({
             </div>
           </div>
           
-          {/* Model Selector and RAG Toggle */}
+          {/* Model Display and RAG Toggle */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <label className="text-xs text-gray-400">Model:</label>
-              <select 
-                value={selectedModel} 
-                onChange={(e) => onModelChange(e.target.value as "openai" | "kimi")}
-                className="bg-gray-800 border border-gray-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-              >
-                <option value="openai">GPT-4O</option>
-                <option value="kimi">Kimi K2</option>
-              </select>
+              <span className="bg-gray-800 border border-gray-700 text-white text-xs rounded px-2 py-1">
+                Kimi K2
+              </span>
             </div>
             
             <label className="flex items-center gap-2 text-xs text-gray-300">
