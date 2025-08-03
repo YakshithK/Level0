@@ -200,30 +200,35 @@ export class PhaserRAGRetriever {
 
   async enhancePromptWithRAG(originalPrompt: string, userRequest: string, ragEnabled: boolean = true): Promise<string> {
     try {
+      // Always add the Phaser.js exclusivity reminder
+      const phaserOnlyReminder = `\n\nCRITICAL: You are creating a PHASER.JS browser game EXCLUSIVELY. Use ONLY Phaser.js framework - never suggest or use other game libraries, engines, or frameworks (no Pygame, Tkinter, Unity, Three.js, PixiJS, etc.). All games must be HTML5/JavaScript using Phaser.js 3.70+.`;
+
       // Check if RAG is enabled
       if (!ragEnabled) {
-        return originalPrompt;
+        return originalPrompt + phaserOnlyReminder;
       }
 
-      console.log('Searching for relevant Phaser code examples...');
+      console.log('Searching for relevant Phaser.js code examples...');
       const examples = await this.getRelevantExamples(userRequest);
 
       // Check if we have meaningful examples
       if (examples && examples.trim().length > 50) {
         const enhancedPrompt = `${originalPrompt}
 
+--- RELEVANT PHASER.JS EXAMPLES ---
 ${examples}
+--- END PHASER.JS EXAMPLES ---
 
-Use these Phaser.js code examples as reference for best practices and patterns. Adapt the patterns shown above to fulfill the user's specific request.`;
-        console.log('Enhanced prompt with FAISS RAG examples');
+Use these Phaser.js code examples as reference for best practices and patterns. Adapt the patterns shown above to fulfill the user's specific request using ONLY Phaser.js.${phaserOnlyReminder}`;
+        console.log('Enhanced prompt with FAISS RAG Phaser.js examples');
         return enhancedPrompt;
       } else {
-        console.log('No relevant examples found, using original prompt');
-        return originalPrompt;
+        console.log('No relevant Phaser.js examples found, using original prompt');
+        return originalPrompt + phaserOnlyReminder;
       }
     } catch (error) {
       console.warn('RAG enhancement failed:', error);
-      return originalPrompt;
+      return originalPrompt + `\n\nCRITICAL: You are creating a PHASER.JS browser game EXCLUSIVELY. Use ONLY Phaser.js framework - never suggest or use other game libraries, engines, or frameworks (no Pygame, Tkinter, Unity, Three.js, PixiJS, etc.). All games must be HTML5/JavaScript using Phaser.js 3.70+.`;
     }
   }
 }

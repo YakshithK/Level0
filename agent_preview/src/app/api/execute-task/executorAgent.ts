@@ -23,12 +23,12 @@ async function callLLMAPI(prompt: string) {
   
   // Load the comprehensive system prompt
   const systemPromptPath = path.join(process.cwd(), "src", "app", "api", "execute-task", "executor_prompt.txt");
-  let systemPrompt = "You are a helpful agent that edits code files as instructed. You are an expert at what you do and follow 100% instructions. Make sure all the code works based on the language given. You excel at tool use, coding, and autonomous problem-solving.";
+  let systemPrompt = "You are a Phaser.js game development specialist. You EXCLUSIVELY create browser games using Phaser.js framework. NEVER use or suggest other game frameworks like Pygame, Tkinter, Unity, etc. All games must be HTML5/JavaScript using Phaser.js 3.70+. You excel at Phaser.js coding and autonomous problem-solving.";
   
   try {
     systemPrompt = fs.readFileSync(systemPromptPath, "utf8");
   } catch (error) {
-    console.warn("[executorAgent] Could not load executor_prompt.txt, using fallback system prompt");
+    console.warn("[executorAgent] Could not load executor_prompt.txt, using fallback Phaser.js system prompt");
   }
   
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

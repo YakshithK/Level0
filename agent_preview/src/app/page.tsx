@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import ChatPanel from "../components/ChatPanel";
 import RightPanel from "../components/RightPanel";
+import Level0ImportBanner from "../components/Level0ImportBanner";
 import type { Message, PlanStep } from "../components/ChatPanel";
 
 export default function Home() {
@@ -404,17 +405,27 @@ export default function Home() {
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Left Panel - Chat */}
       <div className="w-96 flex-shrink-0">
-        <ChatPanel
-          messages={messages}
-          planSteps={planSteps}
-          currentPrompt={currentPrompt}
-          onPromptChange={setCurrentPrompt}
-          onSubmit={handlePromptSubmit}
-          onStop={handleStop}
-          isProcessing={isProcessing}
-          ragEnabled={ragEnabled}
-          onRagToggle={setRagEnabled}
-        />
+        <div className="h-full flex flex-col">
+          {/* Level0 Import Banner */}
+          <div className="p-3 pb-0">
+            <Level0ImportBanner />
+          </div>
+          
+          {/* Chat Panel */}
+          <div className="flex-1">
+            <ChatPanel
+              messages={messages}
+              planSteps={planSteps}
+              currentPrompt={currentPrompt}
+              onPromptChange={setCurrentPrompt}
+              onSubmit={handlePromptSubmit}
+              onStop={handleStop}
+              isProcessing={isProcessing}
+              ragEnabled={ragEnabled}
+              onRagToggle={setRagEnabled}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Right Panel - Code/Files */}
