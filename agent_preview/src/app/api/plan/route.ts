@@ -135,7 +135,7 @@ Analyze the request and context, then provide your step-by-step implementation p
 
     // Write steps to scratchpad.json
     try {
-      fs.writeFileSync(path.join(process.cwd(), "scratchpad.json"), JSON.stringify(stepsWithStatus, null, 2));
+      fs.writeFileSync(path.join(process.cwd(), "data", "scratchpad.json"), JSON.stringify(stepsWithStatus, null, 2));
     } catch (e) {
       console.error("Error writing steps to scratchpad.json:", e);
     }

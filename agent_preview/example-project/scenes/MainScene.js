@@ -1,63 +1,57 @@
 // ===========================================
-// MAIN SCENE - Core Game Logic and Management
+// MAIN SCENE
 // ===========================================
-// This class manages the main gameplay, scene setup, and game state
-// Handles player creation, enemy spawning, collision detection, and UI
-// Controls shooting mechanics, wave progression, score system, and game flow
 class MainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MainScene' });
     }
     
-    // Preload all game assets - sprites, images, and textures
     preload() {
-        // Load sprite images for game entities
-        this.load.image('player', 'assets/sprites/player.png');    // Player character sprite
-        this.load.image('enemy', 'assets/sprites/enemy.png');      // Enemy character sprite  
-        this.load.image('bullet', 'assets/sprites/bullet.png');    // Bullet projectile sprite
+        // Load sprite images
+        this.load.image('player', 'assets/sprites/player.png');
+        this.load.image('enemy', 'assets/sprites/enemy.png');
+        this.load.image('bullet', 'assets/sprites/bullet.png');
     }
     
-    // Create and initialize all game objects and systems
     create() {
-        // Initialize game state variables and scoring system
-        this.score = 0;          // Player score counter
-        this.wave = 1;           // Current wave number
-        this.enemiesKilled = 0;  // Enemies defeated counter
+        // Initialize game state
+        this.score = 0;
+        this.wave = 1;
+        this.enemiesKilled = 0;
         
-        // Create player character at center of screen
+        // Create player
         this.player = new Player(this, 400, 300);
         
-        // Create physics groups for game entities and collision management
+        // Create groups
         this.bullets = this.physics.add.group({
-            classType: Bullet,           // Use Bullet class for projectiles
-            runChildUpdate: true         // Auto-update bullet movements
+            classType: Bullet,
+            runChildUpdate: true
         });
         
-        // Create enemy group for hostile AI entities
         this.enemies = this.physics.add.group({
-            classType: Enemy,            // Use Enemy class for hostile entities
-            runChildUpdate: true         // Auto-update enemy AI behavior
+            classType: Enemy,
+            runChildUpdate: true
         });
         
-        // Setup collision detection systems for combat mechanics
-        this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, null, this);    // Bullets hit enemies
-        this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, null, this);     // Player hit by enemies
+        // Setup collisions
+        this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, null, this);
+        this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, null, this);
         
-        // Start UI scene for score display and game interface
+        // Start UI scene
         this.scene.launch('UIScene');
         
-        // Start enemy spawner system - creates enemies at intervals
+        // Start enemy spawner
         this.enemySpawner = this.time.addEvent({
-            delay: 2000,                 // Spawn every 2 seconds
-            callback: this.spawnEnemies, // Function to create new enemies
-            callbackScope: this,         // Context for spawner
-            loop: true                   // Repeat continuously
+            delay: 2000,
+            callback: this.spawnEnemies,
+            callbackScope: this,
+            loop: true
         });
         
-        // Wave progression system - increases difficulty over time
+        // Wave system
         this.time.addEvent({
-            delay: 30000,                // 30 seconds per wave
-            callback: this.nextWave,     // Advance to next wave
+            delay: 30000, // 30 seconds per wave
+            callback: this.nextWave,
             callbackScope: this,
             loop: true
         });

@@ -26,11 +26,18 @@ export async function POST(request: Request) {
     console.log("[apply-change] Successfully wrote file:", absPath);
     
     // Optionally remove the entry from pending_changes.json
-    const pendingPath = path.join(process.cwd(), "pending_changes.json");
+    const pendingPath = path.join(process.cwd(), "data", "pending_changes.json");
     if (fs.existsSync(pendingPath)) {
-      const pending = JSON.parse(fs.readFileSync(pendingPath, "utf8"));
-      delete pending[file];
-      fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
+      try {
+        const fileContent = fs.readFileSync(pendingPath, "utf8").trim();
+        if (fileContent) {
+          const pending = JSON.parse(fileContent);
+          delete pending[file];
+          fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
+        }
+      } catch (error) {
+        console.error("[apply-change] Error parsing pending_changes.json:", error);
+      }
     }
     
     return NextResponse.json({ success: true, filePath: absPath });

@@ -198,10 +198,19 @@ export async function executeTask(task: string, topK = 5, ragEnabled = true) {
   const dmp = new diff_match_patch();
   
   // 5. Store pending changes for all modified/created files
-  const pendingPath = path.join(process.cwd(), "pending_changes.json");
+  const pendingPath = path.join(process.cwd(), "data", "pending_changes.json");
   let pending: any = {};
   if (fs.existsSync(pendingPath)) {
-    pending = JSON.parse(fs.readFileSync(pendingPath, "utf8"));
+    try {
+      const fileContent = fs.readFileSync(pendingPath, "utf8").trim();
+      if (fileContent) {
+        pending = JSON.parse(fileContent);
+      }
+    } catch (error) {
+      console.error("[ExecutorAgent] Error parsing pending_changes.json:", error);
+      console.log("[ExecutorAgent] Resetting pending_changes.json to empty object");
+      pending = {};
+    }
   }
 
   // Process existing files to modify

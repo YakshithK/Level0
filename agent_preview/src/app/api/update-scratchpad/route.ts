@@ -6,13 +6,20 @@ export async function POST(request: Request) {
   try {
     const { taskId, status, result } = await request.json();
     
-    const scratchpadPath = path.join(process.cwd(), "scratchpad.json");
-    let scratchpad = { tasks: [], completedTasks: [], errors: [] };
+    const scratchpadPath = path.join(process.cwd(), "data", "scratchpad.json");
+    let scratchpad: any = { tasks: [], completedTasks: [], errors: [] };
     
     // Read existing scratchpad
     if (fs.existsSync(scratchpadPath)) {
-      const existing = fs.readFileSync(scratchpadPath, "utf8");
-      scratchpad = JSON.parse(existing);
+      try {
+        const existing = fs.readFileSync(scratchpadPath, "utf8").trim();
+        if (existing) {
+          scratchpad = JSON.parse(existing);
+        }
+      } catch (error) {
+        console.error("[update-scratchpad] Error parsing scratchpad.json:", error);
+        console.log("[update-scratchpad] Using default scratchpad structure");
+      }
     }
     
     // Update task status

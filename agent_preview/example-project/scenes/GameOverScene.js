@@ -1,37 +1,33 @@
 // ===========================================
-// GAME OVER SCENE - End Game Screen and Restart
+// GAME OVER SCENE
 // ===========================================
-// This class manages the game over screen, final statistics, and restart functionality
-// Handles end game display, score summary, player stats, and game restart options
-// Controls game over UI, final results, and transition back to main menu
 class GameOverScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameOverScene' });
     }
     
-    // Create game over screen with final statistics and restart options
     create(data) {
-        // Semi-transparent background overlay for game over screen
+        // Background overlay
         this.add.rectangle(0, 0, this.sys.game.config.width, this.sys.game.config.height, 0x000000, 0.7)
-            .setOrigin(0);  // Dark overlay for dramatic effect
+            .setOrigin(0);
         
-        // Main game over title text - large and prominent
+        // Game Over text
         this.add.text(this.sys.game.config.width/2, 200, 'GAME OVER', {
-            fontSize: '48px',           // Large title text
-            fill: '#ff0000',            // Red color for game over
-            fontStyle: 'bold'           // Bold styling for impact
-        }).setOrigin(0.5);  // Center alignment
+            fontSize: '48px',
+            fill: '#ff0000',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
         
-        // Player final statistics display
+        // Stats
         this.add.text(this.sys.game.config.width/2, 280, `Final Score: ${data.score}`, {
-            fontSize: '24px',           // Medium text for readability
-            fill: '#ffffff'             // White color for visibility
-        }).setOrigin(0.5);  // Center alignment
+            fontSize: '24px',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
         
         this.add.text(this.sys.game.config.width/2, 320, `Wave Reached: ${data.wave}`, {
-            fontSize: '24px',           // Medium text for readability
-            fill: '#ffffff'             // White color for visibility
-        }).setOrigin(0.5);  // Center alignment
+            fontSize: '24px',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
         
         this.add.text(this.sys.game.config.width/2, 360, `Enemies Killed: ${data.enemiesKilled}`, {
             fontSize: '24px',

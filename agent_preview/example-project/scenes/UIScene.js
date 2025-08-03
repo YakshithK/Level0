@@ -1,46 +1,42 @@
 // ===========================================
-// UI SCENE - User Interface and HUD Management
+// UI SCENE
 // ===========================================
-// This class manages the game's user interface, health bar, and score display
-// Handles HUD elements, player statistics, game instructions, and visual feedback
-// Controls health bar rendering, score tracking, wave display, and UI updates
 class UIScene extends Phaser.Scene {
     constructor() {
         super({ key: 'UIScene' });
     }
     
-    // Create and initialize all UI elements and display components
     create() {
-        // Health bar graphics for player health visualization
-        this.healthBar = this.add.graphics();        // Main health bar fill
-        this.healthBarBg = this.add.graphics();      // Health bar background
+        // Health bar
+        this.healthBar = this.add.graphics();
+        this.healthBarBg = this.add.graphics();
         
-        // Score display text - shows player points and achievements
+        // Score text
         this.scoreText = this.add.text(16, 16, 'Score: 0', {
-            fontSize: '24px',         // Large text for visibility
-            fill: '#ffffff'           // White color for contrast
+            fontSize: '24px',
+            fill: '#ffffff'
         });
         
-        // Wave indicator text - shows current difficulty level
+        // Wave text
         this.waveText = this.add.text(16, 50, 'Wave: 1', {
-            fontSize: '20px',         // Medium text size
-            fill: '#ffffff'           // White color for readability
+            fontSize: '20px',
+            fill: '#ffffff'
         });
         
-        // Enemy kill counter - tracks player progress
+        // Enemies killed text
         this.killsText = this.add.text(16, 80, 'Kills: 0', {
-            fontSize: '20px',         // Medium text size
-            fill: '#ffffff'           // White color for visibility
+            fontSize: '20px',
+            fill: '#ffffff'
         });
         
-        // Game control instructions for player guidance
+        // Instructions
         this.add.text(16, this.sys.game.config.height - 100, 'WASD: Move', {
-            fontSize: '16px',         // Smaller instruction text
-            fill: '#cccccc'           // Gray color for subtlety
+            fontSize: '16px',
+            fill: '#cccccc'
         });
         this.add.text(16, this.sys.game.config.height - 80, 'Mouse: Aim', {
-            fontSize: '16px',         // Smaller instruction text
-            fill: '#cccccc'           // Gray color for subtlety
+            fontSize: '16px',
+            fill: '#cccccc'
         });
         this.add.text(16, this.sys.game.config.height - 60, 'Click: Shoot', {
             fontSize: '16px',
