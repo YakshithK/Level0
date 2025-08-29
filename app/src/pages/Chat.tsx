@@ -4,6 +4,7 @@ import '../App.css';
 import { PhaserGame } from '../components/PhaserGames';
 import Editor from "@monaco-editor/react";
 import { supabase } from '../lib/utils';
+import { kimiK2Service } from '../services/kimiK2Service';
 import { User } from '@supabase/supabase-js';
 
 interface ChatMessage {
@@ -123,14 +124,12 @@ export default function Chat() {
     })).concat({ type: 'user', content: aiPrompt });
     setAiPrompt('');
     try {
-      const { data, error } = await supabase.functions.invoke('kimi_k2_proxy', {
-        body: {
-          messages: conversationHistory.map(msg => ({ role: msg.type === 'user' ? 'user' : 'assistant', content: msg.content })),
-          systemPrompt: undefined // or import systemPrompt if needed
-        }
-      });
-      if (error) throw new Error(error.message || 'Kimi K2 proxy error');
-      const result = data;
+      // Call kimiK2Service directly
+      const result = await kimiK2Service.generatePhaserScene(
+        aiPrompt,
+        true,
+        conversationHistory
+      );
       if (result && result.code && result.code.trim()) {
         setPhaserCode(result.code);
         // Save AI message
@@ -355,8 +354,9 @@ export default function Chat() {
               <div className="flex-1 p-2 flex flex-col min-h-0 min-w-0">
                 <span className="block mb-1 font-semibold text-sm">Game Preview</span>
                 <div 
-                  className="flex-1 border border-[#2c2f36] rounded overflow-hidden cursor-pointer"
+                  className="flex-1 border border-[#2c2f36] rounded overflow-hidden cursor-pointer min-h-0"
                   onClick={handleGamePreviewClick}
+                  style={{ minHeight: '400px' }}
                 >
                   <PhaserGame configIndex={0} code={phaserCode}/>
                 </div>

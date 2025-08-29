@@ -14,22 +14,29 @@ export const PhaserGame: React.FC<{
     if (!gameRef.current) return;
 
     const updateSize = () => {
-      const { width, height } = gameRef.current!.getBoundingClientRect();
-      setSize({
-        width: Math.max(400, Math.floor(width)),
-        height: Math.max(300, Math.floor(height)),
-      });
+      const container = gameRef.current!;
+      const rect = container.getBoundingClientRect();
+      const newWidth = Math.max(400, Math.floor(rect.width));
+      const newHeight = Math.max(300, Math.floor(rect.height));
+      
+      // Only update if there's a meaningful change to avoid unnecessary re-renders
+      if (Math.abs(newWidth - size.width) > 5 || Math.abs(newHeight - size.height) > 5) {
+        setSize({ width: newWidth, height: newHeight });
+      }
     };
 
-    updateSize();
+    // Initial size update
+    setTimeout(updateSize, 100);
+    
     window.addEventListener('resize', updateSize);
     const resizeObserver = new window.ResizeObserver(updateSize);
     resizeObserver.observe(gameRef.current);
+    
     return () => {
       window.removeEventListener('resize', updateSize);
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [size.width, size.height]);
 
   const destroyGame = () => {
     if (gameInstance.current) {
@@ -81,7 +88,7 @@ export const PhaserGame: React.FC<{
   }, [code, configIndex, size.width, size.height]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-[300px] bg-[#181c24]">
       <div ref={gameRef} style={{ width: "100%", height: "100%" }} />
       {error && (
         <div className="absolute top-0 left-0 right-0 bg-red-900 text-white p-4 text-sm font-mono whitespace-pre-wrap z-10">
@@ -94,6 +101,11 @@ export const PhaserGame: React.FC<{
               ✕
             </button>
           </div>
+        </div>
+      )}
+      {!code?.trim() && (
+        <div className="absolute inset-0 flex items-center justify-center text-[#888] text-lg">
+          No game code to preview
         </div>
       )}
     </div>

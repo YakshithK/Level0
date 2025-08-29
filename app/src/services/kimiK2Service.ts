@@ -1,7 +1,6 @@
-import { createSDK } from 'moonshot-node';
 import systemPrompt from "../level0_system_prompt.txt?raw";
 
-const MOONSHOT_API_KEY = import.meta.env.VITE_MOONSHOT_API_KEY || '';
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || '';
 
 interface ChatMessage {
   type: 'user' | 'ai';
@@ -16,16 +15,14 @@ function stripCodeBlock(code: string): string {
 }
 
 export class KimiK2Service {
-  private moonshot: ReturnType<typeof createSDK>;
+  private groqApiKey: string;
 
   constructor(apiKey?: string) {
-    this.moonshot = createSDK({
-      accessToken: apiKey || MOONSHOT_API_KEY,
-    });
+    this.groqApiKey = apiKey || GROQ_API_KEY;
   }
 
   async generatePhaserScene(promptText: string, isInitialPrompt: boolean = true, conversationHistory: ChatMessage[] = []): Promise<{ thinking: string, code: string }> {
-    const model = 'moonshot-v1-128k';
+    const model = 'moonshotai/kimi-k2-instruct';
 
     // Build messages array with conversation history
     const messages: any[] = [];
@@ -42,18 +39,31 @@ export class KimiK2Service {
       content: promptText.trim(),
     });
 
-    const response = await this.moonshot.chat.createCompletion.request({
-      model: model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages
-      ],
-      max_tokens: 4000,
-      temperature: 0.6
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${this.groqApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        max_tokens: 4000,
+        temperature: 0.6
+      })
     });
 
-    // Moonshot returns response.choices[0].message.content
-    const fullText = response.choices[0]?.message?.content || '';
+    if (!response.ok) {
+      throw new Error(`Groq API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Groq returns response.choices[0].message.content
+    const fullText = data.choices[0]?.message?.content || '';
     let thinking = '';
     let code = '';
     const thinkingMatch = fullText.match(/<Thinking>([\s\S]*?)<\/Thinking>/i);
@@ -66,7 +76,7 @@ export class KimiK2Service {
     } else {
       code = stripCodeBlock(fullText);
     }
-    console.log("Moonshot KimiK2 thinking", response);
+    console.log("Groq KimiK2 response", data);
     return { thinking, code };
   }
 }

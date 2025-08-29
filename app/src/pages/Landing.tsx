@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import { supabase } from '../lib/utils';
 import { User } from '@supabase/supabase-js';
+import { kimiK2Service } from '../services/kimiK2Service';
 
 // Add CSS animations for modal transitions
 const modalStyles = `
@@ -141,15 +142,9 @@ export default function Landing() {
         setIsGenerating(false);
         return;
       }
-      // 3. Get AI response
-      const { data, error } = await supabase.functions.invoke('kimi_k2_proxy', {
-        body: {
-          messages: [{ role: 'user', content: aiPrompt }],
-          systemPrompt: undefined // or import systemPrompt if needed
-        }
-      });
-      if (error) throw new Error(error.message || 'Kimi K2 proxy error');
-      const result = data;
+      // 3. Get AI response using kimiK2Service
+      const result = await kimiK2Service.generatePhaserScene(aiPrompt, true, []);
+      
       if (result && result.code && result.code.trim()) {
         // 4. Add AI response as a message (raw text, no splitting)
         const { error: aiMsgError } = await supabase
