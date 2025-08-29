@@ -1,451 +1,313 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import ChatPanel from "../components/ChatPanel";
-import RightPanel from "../components/RightPanel";
-import Level0ImportBanner from "../components/Level0ImportBanner";
-import type { Message, PlanStep } from "../components/ChatPanel";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
-  // State management
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentPrompt, setCurrentPrompt] = useState<string>("");
-  const [planSteps, setPlanSteps] = useState<PlanStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [isStopped, setIsStopped] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [ragEnabled, setRagEnabled] = useState<boolean>(true);
-  
-  // File management
-  const [selectedFile, setSelectedFile] = useState<string>("");
-  const [fileContent, setFileContent] = useState<string>("");
-  const [changeCounter, setChangeCounter] = useState<number>(0);
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  
-  // Diff management - now supports multiple pending diffs
-  const [pendingDiffs, setPendingDiffs] = useState<any[]>([]);
+export default function Landing() {
+  const router = useRouter();
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [gameCode, setGameCode] = useState<string>('');
+  const [gameThinking, setGameThinking] = useState<string>('');
 
-  // Load first available file on startup
-  useEffect(() => {
-    async function loadFirstFile() {
-      try {
-        const res = await fetch("/api/files");
-        if (res.ok) {
-          const files = await res.json();
-          if (files.length > 0) {
-            // Find the first TypeScript/JavaScript file, or just use the first file
-            const firstCodeFile = files.find((f: any) => 
-              f.name.endsWith('.ts') || f.name.endsWith('.js') || f.name.endsWith('.tsx') || f.name.endsWith('.jsx')
-            );
-            const fileToSelect = firstCodeFile || files[0];
-            setSelectedFile(fileToSelect.path);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load initial file list:", error);
-      }
-    }
-    
-    if (!selectedFile) {
-      loadFirstFile();
-    }
-  }, [selectedFile]);
-
-  // Load initial file
-  useEffect(() => {
-    async function fetchFile() {
-      if (selectedFile) {
-        const res = await fetch(`/api/files?file=${encodeURIComponent(selectedFile)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setFileContent(data.content ?? "");
-        } else {
-          setFileContent("");
-        }
-      }
-    }
-    fetchFile();
-  }, [selectedFile]);
-
-  // Manual refresh handler
-  const handleRefresh = async () => {
-    if (selectedFile) {
-      const res = await fetch(`/api/files?file=${encodeURIComponent(selectedFile)}&t=${Date.now()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setFileContent(data.content ?? "");
-        setChangeCounter((prev) => prev + 1);
-      }
-    }
+  // Helper function to extract game title from code
+  const extractGameTitle = (code: string): string => {
+    const projectMatch = code.match(/\/\/project="([^"]+)"/);
+    return projectMatch ? projectMatch[1] : 'Generated Game';
   };
 
-  // Chat submission handler
-  const handlePromptSubmit = async () => {
-    if (!currentPrompt.trim() || isProcessing) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: currentPrompt,
-      timestamp: new Date()
+  // Inject CSS animations
+  useEffect(() => {
+    const modalStyles = `
+      @keyframes gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      .animate-gradient-shift {
+        animation: gradient-shift 6s ease infinite;
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      .text-gradient {
+        background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+        background-size: 400% 400%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradient-shift 3s ease infinite;
+      }
+      .glow-effect {
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      }
+      .glow-effect:hover {
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+      }
+    `;
+    
+    const style = document.createElement('style');
+    style.textContent = modalStyles;
+    document.head.appendChild(style);
+    
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
     };
+  }, []);
 
-    setMessages(prev => [...prev, userMessage]);
-    setError("");
-    setIsProcessing(true);
-    setIsStopped(false); // Reset stop flag for new execution
+  const handleGenerateGame = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsGenerating(true);
+    setError(null);
     
     try {
-      // Add system message about planning
-      const planningMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'system',
-        content: 'Analyzing your request and creating execution plan...',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, planningMessage]);
-
-      // Get plan from API
-      const planRes = await fetch("/api/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: currentPrompt })
-      });
-      
-      if (!planRes.ok) {
-        throw new Error(`Plan API returned ${planRes.status}`);
-      }
-      
-      const steps = await planRes.json();
-      console.log("[UI] Plan steps:", steps);
-      
-      // Convert plan to PlanStep format
-      const formattedSteps: PlanStep[] = Array.isArray(steps) 
-        ? steps.map((step, index) => ({
-            step: typeof step === 'object' ? step.instruction || step.description || step.step || JSON.stringify(step) : step,
-            completed: false,
-            isActive: index === 0
-          }))
-        : [{ step: "Failed to generate plan", completed: false, isActive: false }];
-
-      setPlanSteps(formattedSteps);
-      setCurrentStep(0);
-
-      // Add assistant confirmation
-      const assistantMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        type: 'assistant',
-        content: `I've created a ${formattedSteps.length}-step plan to implement your request. I'll now execute each step and show you the changes for review.`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-
-    } catch (e) {
-      console.error("[UI] Plan API error:", e);
-      setError("Failed to generate plan. Please check your API configuration and try again.");
-      const errorMessage: Message = {
-        id: (Date.now() + 3).toString(),
-        type: 'system',
-        content: 'Failed to generate execution plan. Please try again.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsProcessing(false);
-      setCurrentPrompt("");
-    }
-  };
-
-  // Stop execution handler
-  const handleStop = () => {
-    setIsStopped(true);
-    setIsProcessing(false);
-    
-    const stopMessage: Message = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: 'Execution stopped by user.',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, stopMessage]);
-  };
-
-  // Execute plan steps - modified to continue without waiting for user acceptance
-  useEffect(() => {
-    async function runStep() {
-      if (planSteps.length > 0 && currentStep < planSteps.length && !isProcessing && !isStopped) {
-        setIsProcessing(true);
-        setError("");
-        
-        // Update current step as active
-        setPlanSteps(prev => prev.map((step, index) => ({
-          ...step,
-          isActive: index === currentStep
-        })));
-
-        const step = planSteps[currentStep];
-        console.log(`[UI] Executing plan step ${currentStep + 1}:`, step.step);
-        
-        try {
-          const res = await fetch("/api/execute-task", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ task: step.step, ragEnabled })
-          });
-          
-          if (!res.ok) {
-            throw new Error(`Execute task API returned ${res.status}`);
-          }
-          
-          const result = await res.json();
-          console.log(`[UI] Executor result for step ${currentStep + 1}:`, result);
-          
-          // Handle new multi-file format
-          if (result.modifiedFiles && Array.isArray(result.modifiedFiles)) {
-            // Process each modified file
-            result.modifiedFiles.forEach((fileResult: any) => {
-              // Check for generation errors
-              if (!fileResult.updated || fileResult.updated.trim() === "") {
-                fileResult.error = "Generated code is empty or invalid";
-              }
-              
-              // Add to pending diffs queue with mainFile property for compatibility
-              setPendingDiffs(prev => [...prev, { 
-                ...fileResult, 
-                mainFile: fileResult.file, // Add mainFile for backward compatibility
-                stepIndex: currentStep 
-              }]);
-              
-              // Show the updated file in Monaco if the selected file matches
-              if (selectedFile === fileResult.file) {
-                setFileContent(fileResult.updated);
-              }
-            });
-          } else {
-            // Handle legacy single-file format (fallback)
-            // Check for generation errors
-            if (!result.updated || result.updated.trim() === "") {
-              result.error = "Generated code is empty or invalid";
-            }
-            
-            // Add to pending diffs queue
-            setPendingDiffs(prev => [...prev, { ...result, stepIndex: currentStep }]);
-            
-            // Show the updated file in Monaco if the selected file matches
-            if (selectedFile === result.mainFile) {
-              setFileContent(result.updated);
-            }
-          }
-
-          // Mark step as completed and move to next immediately
-          setPlanSteps(prev => prev.map((step, index) => 
-            index === currentStep 
-              ? { ...step, completed: true, isActive: false }
-              : step
-          ));
-
-          // Add step completion message
-          const stepMessage: Message = {
-            id: Date.now().toString(),
-            type: 'assistant',
-            content: `Step ${currentStep + 1} completed and queued for review. Continuing to next step...`,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, stepMessage]);
-
-          // Move to next step automatically
-          setCurrentStep(prev => prev + 1);
-          
-        } catch (error) {
-          console.error(`[UI] Error executing step ${currentStep + 1}:`, error);
-          setError(`Failed to execute step ${currentStep + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          
-          const errorMessage: Message = {
-            id: Date.now().toString(),
-            type: 'system',
-            content: `Error executing step ${currentStep + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    }
-    runStep();
-  }, [planSteps, currentStep, isProcessing, isStopped, selectedFile]);
-
-  // Handle accepting individual changes
-  const handleAccept = async (index?: number) => {
-    const diffIndex = index ?? 0;
-    const diff = pendingDiffs[diffIndex];
-    if (!diff) return;
-    
-    setIsProcessing(true);
-    setError("");
-    
-    try {
-      console.log("[UI] User accepted change for file:", diff.mainFile);
-      
-      const response = await fetch("/api/apply-change", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file: diff.mainFile, content: diff.updated })
+      const response = await fetch('/api/kimi-k2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptText: aiPrompt,
+          isInitialPrompt: true,
+          conversationHistory: []
+        })
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to apply changes: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      // Remove the applied diff from pending diffs
-      setPendingDiffs(prev => prev.filter((_, i) => i !== diffIndex));
+      const result = await response.json();
       
-      const acceptMessage: Message = {
-        id: Date.now().toString(),
-        type: 'system',
-        content: `Changes applied successfully to ${diff.mainFile}`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, acceptMessage]);
-      
-      await handleRefresh();
-      
-      // If this was a new file, trigger file list refresh
-      if (diff.is_new_file) {
-        setRefreshTrigger(prev => prev + 1);
+      if (result.error) {
+        throw new Error(result.error);
       }
       
-    } catch (error) {
-      console.error("[UI] Error applying changes:", error);
-      setError(`Failed to apply changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Handle discarding individual changes
-  const handleDiscard = async (index?: number) => {
-    const diffIndex = index ?? 0;
-    const diff = pendingDiffs[diffIndex];
-    if (!diff) return;
-    
-    // Remove the discarded diff from pending diffs
-    setPendingDiffs(prev => prev.filter((_, i) => i !== diffIndex));
-    setError("");
-    
-    const discardMessage: Message = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: `Changes discarded for ${diff.mainFile}`,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, discardMessage]);
-  };
-
-  // Handle accepting all pending changes
-  const handleAcceptAll = async () => {
-    if (pendingDiffs.length === 0) return;
-    
-    setIsProcessing(true);
-    setError("");
-    
-    try {
-      // Apply all changes sequentially
-      for (const diff of pendingDiffs) {
-        const response = await fetch("/api/apply-change", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file: diff.mainFile, content: diff.updated })
-        });
+      if (result.code && result.code.trim()) {
+        setGameCode(result.code);
+        setGameThinking(result.thinking || '');
         
-        if (!response.ok) {
-          throw new Error(`Failed to apply changes to ${diff.mainFile}: ${response.status}`);
+        // Automatically save to project and redirect to advanced editor
+        console.log('[Landing] Auto-saving to project and redirecting...');
+        
+        try {
+          const saveResponse = await fetch('/api/save-to-project', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              gameCode: result.code,
+              prompt: aiPrompt,
+              gameTitle: extractGameTitle(result.code) || 'Generated Game'
+            })
+          });
+          
+          if (saveResponse.ok) {
+            console.log('[Landing] Project saved successfully, redirecting...');
+            router.push('/route');
+          } else {
+            console.error('[Landing] Failed to save project, but redirecting anyway');
+            router.push('/route');
+          }
+        } catch (saveError) {
+          console.error('[Landing] Error saving project:', saveError);
+          // Still redirect even if save fails
+          router.push('/route');
         }
+      } else {
+        setError('No game code was generated. Please try a different prompt.');
       }
       
-      const acceptAllMessage: Message = {
-        id: Date.now().toString(),
-        type: 'system',
-        content: `All ${pendingDiffs.length} changes applied successfully`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, acceptAllMessage]);
-      
-      // Clear all pending diffs
-      setPendingDiffs([]);
-      
-      await handleRefresh();
-      
-    } catch (error) {
-      console.error("[UI] Error applying all changes:", error);
-      setError(`Failed to apply all changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (err) {
+      console.error('[Landing] Error generating game:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while generating the game');
     } finally {
-      setIsProcessing(false);
+      setIsGenerating(false);
     }
   };
 
-  // Handle rejecting all pending changes
-  const handleRejectAll = async () => {
-    if (pendingDiffs.length === 0) return;
+  const handleAdvancedEdit = () => {
+    // Save the current game to example-project and navigate to advanced editor
+    fetch('/api/save-to-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameCode: gameCode,
+        prompt: aiPrompt,
+        gameTitle: extractGameTitle(gameCode) || 'Generated Game'
+      })
+    }).then(() => {
+      router.push('/route');
+    }).catch(err => {
+      console.error('Error saving to project:', err);
+      // Navigate anyway - the advanced editor can handle empty projects
+      router.push('/route');
+    });
+  };
+
+  const createGameHTML = (sceneCode: string): string => {
+    const gameTitle = extractGameTitle(sceneCode);
     
-    const rejectAllMessage: Message = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: `All ${pendingDiffs.length} changes rejected`,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, rejectAllMessage]);
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${gameTitle}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
     
-    // Clear all pending diffs without applying them
-    setPendingDiffs([]);
+    <!-- Phaser.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    
+    <!-- Game Code -->
+    <script>
+${sceneCode}
+
+// Game Configuration
+class Game {
+    constructor() {
+        this.config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: [DynamicScene]
+        };
+        
+        this.game = new Phaser.Game(this.config);
+    }
+}
+
+// Start the game when page loads
+window.addEventListener('load', () => {
+    new Game();
+});
+    </script>
+</body>
+</html>`;
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* Left Panel - Chat */}
-      <div className="w-96 flex-shrink-0">
-        <div className="h-full flex flex-col">
-          {/* Level0 Import Banner */}
-          <div className="p-3 pb-0">
-            <Level0ImportBanner />
-          </div>
-          
-          {/* Chat Panel */}
-          <div className="flex-1">
-            <ChatPanel
-              messages={messages}
-              planSteps={planSteps}
-              currentPrompt={currentPrompt}
-              onPromptChange={setCurrentPrompt}
-              onSubmit={handlePromptSubmit}
-              onStop={handleStop}
-              isProcessing={isProcessing}
-              ragEnabled={ragEnabled}
-              onRagToggle={setRagEnabled}
-            />
-          </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <header className="relative z-20 flex justify-between items-center p-6 sm:p-8">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg"></div>
+          <span className="text-xl font-bold">Level0</span>
         </div>
-      </div>
+        <button
+          onClick={() => router.push('/route')}
+          className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Advanced Editor
+        </button>
+      </header>
 
-      {/* Right Panel - Code/Files */}
-      <div className="flex-1">
-        <RightPanel
-          selectedFile={selectedFile}
-          fileContent={fileContent}
-          onFileSelect={setSelectedFile}
-          onFileContentChange={setFileContent}
-          changeCounter={changeCounter}
-          onRefresh={handleRefresh}
-          isProcessing={isProcessing}
-          pendingDiffs={pendingDiffs}
-          onAcceptDiff={handleAccept}
-          onDiscardDiff={handleDiscard}
-          onAcceptAllDiffs={handleAcceptAll}
-          onRejectAllDiffs={handleRejectAll}
-          error={error}
-          refreshTrigger={refreshTrigger}
-        />
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-teal-900/20 animate-gradient-shift bg-[length:400%_400%]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_50%)]" />
+        
+        {/* Floating particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-float opacity-30"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 6}s`,
+                animationDuration: `${4 + Math.random() * 4}s`
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 text-center max-w-6xl mx-auto">
+          <>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+              Turn{" "}
+              <span className="text-gradient">words</span>
+              {" "}into{" "}
+              <span className="text-gradient">worlds</span>
+            </h1>
+              
+              <p className="text-xl sm:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
+                <span className="text-cyan-400 font-medium">AI-powered game prototyping in seconds.</span>
+              </p>
+
+              <form
+                className="w-full max-w-xl mx-auto flex flex-col items-center"
+                onSubmit={e => {
+                  e.preventDefault();
+                  handleGenerateGame();
+                }}
+              >
+                <textarea
+                  className="w-full h-32 p-4 rounded-lg border border-gray-600 bg-gray-800 text-white text-lg focus:outline-none focus:border-cyan-400 resize-none shadow-lg"
+                  placeholder="Describe your game (e.g., 'A lava platformer with double jump and spikes')"
+                  value={aiPrompt}
+                  onChange={e => setAiPrompt(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerateGame();
+                    }
+                  }}
+                  disabled={isGenerating}
+                  autoFocus
+                />
+
+                <button
+                  type="submit"
+                  className="mt-6 bg-cyan-400 text-black hover:bg-cyan-300 font-semibold px-8 py-4 text-lg glow-effect transition-all duration-300 hover:scale-105 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating || !aiPrompt.trim()}
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Game'}
+                </button>
+                
+              {error && (
+                <div className="mt-4 text-red-400 text-base">Error: {error}</div>
+              )}
+            </form>
+          </>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, GameController2, Zap } from 'lucide-react';
+import { AlertTriangle, Gamepad2, Zap } from 'lucide-react';
 
 interface ImportedGameInfo {
   originalPrompt: string;
@@ -43,7 +43,7 @@ export default function Level0ImportBanner() {
       <div className="relative z-10 flex items-start gap-3">
         <div className="flex-shrink-0 mt-1">
           <div className="bg-purple-500/20 p-2 rounded-full">
-            <GameController2 className="w-5 h-5 text-purple-400" />
+            <Gamepad2 className="w-5 h-5 text-purple-400" />
           </div>
         </div>
         

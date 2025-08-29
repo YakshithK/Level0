@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
+    <title>Phaser Platformer Game</title>
     <style>
         body {
             margin: 0;
@@ -27,8 +27,18 @@
 <body>
     <div id="game-container"></div>
     
-    <!-- Phaser.js -->
+    <!-- Phaser.js 3.70.0 - includes add.circle support -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    
+    <!-- Sprites -->
+    <script src="sprites/Bullet.js"></script>
+    <script src="sprites/Player.js"></script>
+    <script src="sprites/Enemy.js"></script>
+    
+    <!-- Scenes -->
+    <script src="scenes/MainScene.js"></script>
+    <script src="scenes/GameOverScene.js"></script>
+    <script src="scenes/UIScene.js"></script>
     
     <!-- Main Game -->
     <script src="main.js"></script>

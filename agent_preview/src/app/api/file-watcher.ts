@@ -8,6 +8,8 @@ export class FileWatcherService {
   private vectorDb = getVectorDatabase();
   private projectPath: string;
   private isWatching = false;
+  private recentlyModified: Set<string> = new Set(); // Track our own modifications
+  private debounceTimers: Map<string, NodeJS.Timeout> = new Map(); // Debounce timers
 
   constructor(projectPath: string = "example-project") {
     this.projectPath = path.resolve(projectPath);
@@ -15,19 +17,45 @@ export class FileWatcherService {
 
   private async handleFileChange(filePath: string, eventType: string) {
     try {
-      console.log(`[FileWatcher] File ${eventType}: ${filePath}`);
+      // Normalize and validate the file path
+      const normalizedPath = path.resolve(filePath);
       
-      const relativePath = path.relative(process.cwd(), filePath).replace(/\\/g, '/');
+      // Ignore malformed paths or paths with invalid characters
+      if (normalizedPath.includes('?') || !path.isAbsolute(normalizedPath)) {
+        console.log(`[FileWatcher] Ignoring malformed path: ${filePath}`);
+        return;
+      }
       
-      if (eventType === 'rename' || !fs.existsSync(filePath)) {
+      // Ignore if we recently modified this file ourselves
+      if (this.recentlyModified.has(normalizedPath)) {
+        console.log(`[FileWatcher] Ignoring self-induced change: ${normalizedPath}`);
+        return;
+      }
+      
+      // Only process files within our project directory
+      if (!normalizedPath.startsWith(this.projectPath)) {
+        return;
+      }
+      
+      console.log(`[FileWatcher] File ${eventType}: ${normalizedPath}`);
+      
+      const relativePath = path.relative(process.cwd(), normalizedPath).replace(/\\/g, '/');
+      
+      // Mark this file as recently modified by us to prevent loops
+      this.recentlyModified.add(normalizedPath);
+      setTimeout(() => {
+        this.recentlyModified.delete(normalizedPath);
+      }, 2000); // Clear after 2 seconds
+      
+      if (eventType === 'rename' || !fs.existsSync(normalizedPath)) {
         // File deleted or renamed
         this.vectorDb.removeFile(relativePath);
         return;
       }
 
       // File modified or created
-      if (this.isCodeFile(filePath)) {
-        const symbols = extractSymbolsFromFile(filePath);
+      if (this.isCodeFile(normalizedPath)) {
+        const symbols = extractSymbolsFromFile(normalizedPath);
         await this.vectorDb.updateFile(relativePath, symbols);
       }
     } catch (error) {
@@ -48,12 +76,24 @@ export class FileWatcherService {
     try {
       const watcher = fs.watch(dirPath, { recursive: true }, (eventType, filename) => {
         if (filename) {
-          const fullPath = path.join(dirPath, filename);
+          // Clear any existing debounce timer for this file
+          const existingTimer = this.debounceTimers.get(filename);
+          if (existingTimer) {
+            clearTimeout(existingTimer);
+          }
           
-          // Debounce rapid changes
-          setTimeout(() => {
-            this.handleFileChange(fullPath, eventType);
-          }, 100);
+          // Set new debounce timer
+          const timer = setTimeout(() => {
+            try {
+              const fullPath = path.resolve(dirPath, filename);
+              this.handleFileChange(fullPath, eventType);
+            } catch (error) {
+              console.error(`[FileWatcher] Error processing file change:`, error);
+            }
+            this.debounceTimers.delete(filename);
+          }, 300); // Increased debounce to 300ms
+          
+          this.debounceTimers.set(filename, timer);
         }
       });
 
@@ -83,6 +123,15 @@ export class FileWatcherService {
 
   stop() {
     console.log("[FileWatcher] Stopping file watcher...");
+    
+    // Clear all debounce timers
+    for (const timer of this.debounceTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.debounceTimers.clear();
+    
+    // Clear recently modified tracking
+    this.recentlyModified.clear();
     
     for (const [path, watcher] of this.watchers) {
       try {

@@ -16,7 +16,7 @@ class Game {
                     debug: false
                 }
             },
-            scene: [MainScene, UIScene, GameOverScene]
+            scene: [DYNAMICSCENE HERE]
         };
         
         this.game = new Phaser.Game(this.config);
