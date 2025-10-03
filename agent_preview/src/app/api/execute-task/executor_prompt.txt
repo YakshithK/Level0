@@ -60,7 +60,7 @@ parent: 'game-container'  // MUST use this exact ID in your config
 
 ### FILE STRUCTURE FOR PREVIEW
 ```
-example-project/
+snake-apple/
 ├── main.js              // Entry point (auto-loaded first)
 ├── index.html           // Optional but recommended for control
 ├── scenes/              // Scene classes

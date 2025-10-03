@@ -4,7 +4,7 @@ import path from "path";
 
 export async function GET(request: NextRequest) {
   try {
-    const projectPath = path.join(process.cwd(), "example-project");
+    const projectPath = path.join(process.cwd(), "snake-apple");
     
     // Check if we have an index.html file
     const indexPath = path.join(projectPath, "index.html");
