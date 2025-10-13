@@ -6,11 +6,13 @@ import MultiFileEditor from "@/components/MultiFileEditor";
 import GamePreview from "@/components/GamePreview";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Code, Eye } from "lucide-react";
+import { Code, Eye, Upload } from "lucide-react";
+import ItchPublisher from "@/components/ItchPublisher";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  gameFiles?: GameFiles;
 }
 
 interface GameFiles {
@@ -22,6 +24,7 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showPreview, setShowPreview] = useState(true);
+  const [showItchPublisher, setShowItchPublisher] = useState(false);
 
   const handleSendMessage = async (userMessage: string) => {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
@@ -42,7 +45,11 @@ const Index = () => {
         setGameFiles(data.files);
         setMessages([
           ...newMessages,
-          { role: "assistant", content: data.response || "Game updated successfully!" }
+          { 
+            role: "assistant", 
+            content: data.response || "Game updated successfully!",
+            gameFiles: data.files
+          }
         ]);
         toast.success("Game updated!");
       } else {
@@ -82,6 +89,7 @@ const Index = () => {
               <ChatInterface
                 messages={messages}
                 onSendMessage={handleSendMessage}
+                onRestoreVersion={setGameFiles}
                 isGenerating={isGenerating}
               />
             </div>
@@ -93,24 +101,36 @@ const Index = () => {
           <ResizablePanel defaultSize={65} minSize={35}>
             <div className="h-full p-6 flex flex-col">
               {/* Toggle Buttons */}
-              <div className="mb-4 flex gap-2">
+              <div className="mb-4 flex gap-2 justify-between">
+                <div className="flex gap-2">
+                  <Button
+                    variant={showPreview ? "outline" : "default"}
+                    size="sm"
+                    onClick={() => setShowPreview(false)}
+                    className="flex items-center gap-2"
+                  >
+                    <Code className="h-4 w-4" />
+                    Code Editor
+                  </Button>
+                  <Button
+                    variant={showPreview ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowPreview(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Live Preview
+                  </Button>
+                </div>
                 <Button
-                  variant={showPreview ? "outline" : "default"}
+                  variant="outline"
                   size="sm"
-                  onClick={() => setShowPreview(false)}
+                  onClick={() => setShowItchPublisher(true)}
+                  disabled={Object.keys(gameFiles).length === 0}
                   className="flex items-center gap-2"
                 >
-                  <Code className="h-4 w-4" />
-                  Code Editor
-                </Button>
-                <Button
-                  variant={showPreview ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowPreview(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Live Preview
+                  <Upload className="h-4 w-4" />
+                  Publish to Itch.io
                 </Button>
               </div>
 
@@ -126,6 +146,12 @@ const Index = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </main>
+
+      <ItchPublisher
+        gameFiles={gameFiles}
+        isOpen={showItchPublisher}
+        onClose={() => setShowItchPublisher(false)}
+      />
     </div>
   );
 };

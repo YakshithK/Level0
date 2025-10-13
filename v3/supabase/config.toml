@@ -2,3 +2,6 @@ project_id = "eabniuuwkhzwiwhibloh"
 
 [functions.generate-game]
 verify_jwt = false
+
+[functions.publish-to-itch]
+verify_jwt = false

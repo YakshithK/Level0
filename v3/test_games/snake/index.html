@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello itch.io</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  </head>
+  <body style="margin:0; padding:0; overflow:hidden;">
+    <script>
+      const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        backgroundColor: '#1d1d1d',
+        scene: {
+          preload,
+          create,
+          update
+        }
+      };
+
+      let sprite;
+
+      const game = new Phaser.Game(config);
+
+      function preload() {
+        this.load.image('logo', 'https://labs.phaser.io/assets/sprites/phaser3-logo.png');
+      }
+
+      function create() {
+        sprite = this.add.image(400, 300, 'logo');
+        this.add.text(250, 550, 'Hello, itch.io!', { font: '32px Arial', fill: '#ffffff' });
+        this.input.on('pointerdown', () => {
+          sprite.x = Phaser.Math.Between(100, 700);
+          sprite.y = Phaser.Math.Between(100, 500);
+        });
+      }
+
+      function update() {}
+    </script>
+  </body>
+</html>

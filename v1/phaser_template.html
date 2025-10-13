@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Phaser Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    html, body, #game-container { width: 100%; height: 100%; margin: 0; padding: 0; background: #181c24; }
+    #game-container { display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <script>
+    // --- USER CODE START ---
+    // The following will be replaced with the user's code
+    {{USER_CODE}}
+    // --- USER CODE END ---
+
+    // Boot the game if DynamicScene is defined
+    if (typeof DynamicScene !== 'undefined') {
+      const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        backgroundColor: '#181c24',
+        physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 600 }, debug: false } },
+        scene: DynamicScene,
+        parent: 'game-container'
+      };
+      new Phaser.Game(config);
+    } else {
+      document.getElementById('game-container').innerHTML = '<div style="color:white;font-family:monospace;">No <b>DynamicScene</b> class found in your code.</div>';
+    }
+  </script>
+</body>
+</html> 

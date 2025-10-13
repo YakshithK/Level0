@@ -1,21 +1,28 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface GameFiles {
+  [key: string]: string;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  gameFiles?: GameFiles;
 }
 
 interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
+  onRestoreVersion: (gameFiles: GameFiles) => void;
   isGenerating: boolean;
 }
 
-const ChatInterface = ({ messages, onSendMessage, isGenerating }: ChatInterfaceProps) => {
+const ChatInterface = ({ messages, onSendMessage, onRestoreVersion, isGenerating }: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
 
   const handleSubmit = () => {
@@ -82,22 +89,46 @@ const ChatInterface = ({ messages, onSendMessage, isGenerating }: ChatInterfaceP
               </div>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+            messages.map((message, index) => {
+              // Count how many assistant messages with gameFiles exist before this one
+              const assistantMessagesWithFiles = messages
+                .slice(0, index + 1)
+                .filter(m => m.role === "assistant" && m.gameFiles);
+              const showRestore = message.role === "assistant" && 
+                                  message.gameFiles && 
+                                  assistantMessagesWithFiles.length > 1;
+              
+              return (
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
+                  key={index}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <div
+                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {showRestore && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          onRestoreVersion(message.gameFiles!);
+                          toast.success("Game restored to this version!");
+                        }}
+                        className="mt-2 h-7 text-xs"
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Restore this version
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           {isGenerating && (
             <div className="flex justify-start">
