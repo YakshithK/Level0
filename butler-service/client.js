@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 // Your HTTP service endpoint (change this to your simple HTTP server if you switch)
-const SERVICE_URL = "http://localhost:3000"; // or your gRPC proxy
+const SERVICE_URL = "https://level0-production.up.railway.app"; // or your gRPC proxy
 
 async function testPublish() {
   try {
