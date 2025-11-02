@@ -14,7 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          game_files: Json | null
+          game_id: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          game_files?: Json | null
+          game_id: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          game_files?: Json | null
+          game_id?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_versions: {
+        Row: {
+          created_at: string | null
+          deployment_url: string | null
+          files: Json
+          game_id: string
+          id: string
+          notes: string | null
+          version_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          deployment_url?: string | null
+          files: Json
+          game_id: string
+          id?: string
+          notes?: string | null
+          version_number: number
+        }
+        Update: {
+          created_at?: string | null
+          deployment_url?: string | null
+          files?: Json
+          game_id?: string
+          id?: string
+          notes?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_versions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          created_at: string | null
+          current_files: Json | null
+          description: string | null
+          id: string
+          initial_idea: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_files?: Json | null
+          description?: string | null
+          id?: string
+          initial_idea?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_files?: Json | null
+          description?: string | null
+          id?: string
+          initial_idea?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

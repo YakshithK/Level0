@@ -8,7 +8,9 @@ interface GamePreviewProps {
   gameFiles: GameFiles;
 }
 
-const GamePreview = ({ gameFiles }: GamePreviewProps) => {
+const GamePreview = ({ gameFiles, onRuntimeError }: GamePreviewProps & { 
+  onRuntimeError?: (errors: Array<{ message: string; source?: string; line?: number }>) => void 
+}) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -18,6 +20,36 @@ const GamePreview = ({ gameFiles }: GamePreviewProps) => {
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
       
       if (!doc) return;
+
+      // Runtime error detection
+      const runtimeErrors: Array<{ message: string; source?: string; line?: number }> = [];
+      
+      const errorHandler = (event: ErrorEvent) => {
+        runtimeErrors.push({
+          message: event.message,
+          source: event.filename,
+          line: event.lineno
+        });
+        console.error('Game runtime error:', event.message);
+      };
+
+      const unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
+        runtimeErrors.push({
+          message: `Unhandled promise rejection: ${event.reason}`
+        });
+        console.error('Game promise rejection:', event.reason);
+      };
+
+      // Attach error listeners to iframe
+      iframe.contentWindow?.addEventListener('error', errorHandler);
+      iframe.contentWindow?.addEventListener('unhandledrejection', unhandledRejectionHandler);
+
+      // Report errors after a delay to catch initialization errors
+      setTimeout(() => {
+        if (runtimeErrors.length > 0 && onRuntimeError) {
+          onRuntimeError(runtimeErrors);
+        }
+      }, 2000);
 
       // Helper: resize base64 data URL to exact target size (pixelated for crisp sprites)
       const resizeDataUrl = (dataUrl: string, width: number, height: number): Promise<string> => {
@@ -135,24 +167,30 @@ const GamePreview = ({ gameFiles }: GamePreviewProps) => {
   }, [gameFiles]);
 
   return (
-    <div className="h-full w-full bg-[hsl(var(--preview-bg))] rounded-xl border border-border overflow-hidden">
+    <div className="h-full w-full glass-strong rounded-2xl border border-border/50 overflow-hidden animate-scale-in relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
       {gameFiles["index.html"] ? (
         <iframe
           ref={iframeRef}
-          className="w-full h-full"
+          className="w-full h-full relative z-10 rounded-2xl"
           title="Game Preview"
           sandbox="allow-scripts allow-same-origin"
         />
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center space-y-4 p-8">
-            <div className="text-6xl">🎮</div>
-            <h3 className="text-xl font-semibold text-muted-foreground">
-              Your game will appear here
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Enter a prompt and click Generate to create an instant playable game
-            </p>
+        <div className="flex items-center justify-center h-full relative z-10">
+          <div className="text-center space-y-6 p-8 animate-fade-in">
+            <div className="relative inline-block">
+              <div className="text-7xl animate-float">🎮</div>
+              <div className="absolute inset-0 blur-2xl bg-primary/20 animate-glow-pulse" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold gradient-text">
+                Your game will appear here
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Enter a prompt and click Generate to create an instant playable game
+              </p>
+            </div>
           </div>
         </div>
       )}

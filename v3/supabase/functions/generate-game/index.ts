@@ -245,14 +245,43 @@ CRITICAL: All code MUST be properly formatted with newlines and indentation!`;
       }
     }
 
-    // Generate a friendly response
+    // Generate a friendly response and game title
     const assistantResponse = conversationHistory.length === 0 
       ? "I've created your Phaser game! Try it out and let me know if you want any changes."
       : "I've updated your Phaser game with the changes you requested!";
+    
+    // Generate game title from the prompt for new games
+    let gameTitle = null;
+    if (conversationHistory.length === 0) {
+      const titleResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'user',
+              content: `Based on this game description: "${prompt}"\n\nGenerate a short, catchy game title (maximum 4 words). Respond with ONLY the title, nothing else.`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 20,
+        }),
+      });
+      
+      if (titleResponse.ok) {
+        const titleData = await titleResponse.json();
+        gameTitle = titleData.choices[0].message.content.trim().replace(/['"]/g, '');
+      }
+    }
 
     return new Response(JSON.stringify({ 
       files,
-      response: assistantResponse
+      response: assistantResponse,
+      gameTitle
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGamePersistence } from "@/hooks/useGamePersistence";
 import ChatInterface from "@/components/ChatInterface";
 import MultiFileEditor from "@/components/MultiFileEditor";
 import GamePreview from "@/components/GamePreview";
+import AnimatedBackground from "@/components/AnimatedBackground";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Code, Eye, Upload } from "lucide-react";
+import { Code, Eye, Upload, Home, Save, LogOut } from "lucide-react";
 import ItchPublisher from "@/components/ItchPublisher";
 
 interface Message {
@@ -25,6 +28,126 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showPreview, setShowPreview] = useState(true);
   const [showItchPublisher, setShowItchPublisher] = useState(false);
+  const [gameTitle, setGameTitle] = useState("New Game");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
+
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  
+  const gameIdFromUrl = searchParams.get('gameId');
+  const { currentGameId, saveGame, loadGame, saveChatMessage, loadChatMessages } = useGamePersistence(gameIdFromUrl);
+
+  // Load game data if gameId is provided
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
+    const loadGameData = async () => {
+      if (gameIdFromUrl) {
+        const game = await loadGame(gameIdFromUrl);
+        if (game) {
+          setGameTitle(game.title);
+          setGameFiles(game.current_files as GameFiles || {});
+          
+          const chatHistory = await loadChatMessages(gameIdFromUrl);
+          setMessages(chatHistory);
+        }
+      } else if (location.state?.initialIdea && messages.length === 0) {
+        // New game from landing page - only run if no messages yet
+        const idea = location.state.initialIdea;
+        handleSendMessage(idea);
+        // Clear the location state to prevent re-running
+        window.history.replaceState({}, document.title);
+      }
+    };
+
+    loadGameData();
+  }, [user, gameIdFromUrl, navigate]);
+
+  // Auto-save game when files change
+  useEffect(() => {
+    if (user && Object.keys(gameFiles).length > 0 && currentGameId) {
+      const autoSave = async () => {
+        await saveGame(gameTitle, gameFiles);
+      };
+      
+      const timeoutId = setTimeout(autoSave, 2000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [gameFiles, gameTitle, user, currentGameId]);
+
+  const validateAndFixGame = async (files: GameFiles, conversationHistory: Message[] = []): Promise<GameFiles> => {
+    const { supabase } = await import("@/integrations/supabase/client");
+    
+    // Step 1: Static validation
+    setIsValidating(true);
+    const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-game', {
+      body: { files }
+    });
+    setIsValidating(false);
+
+    if (validationError || !validationResult) {
+      console.error('Validation error:', validationError);
+      return files; // Return original files if validation fails
+    }
+
+    console.log('Validation result:', validationResult);
+
+    // Step 2: If there are errors, attempt auto-fix
+    if (!validationResult.valid && validationResult.errors.length > 0) {
+      const criticalErrors = validationResult.errors.filter((e: any) => e.severity === 'critical');
+      
+      if (validationResult.autoFixable && criticalErrors.length > 0) {
+        // Auto-fix simple errors
+        toast.info(`Detected ${criticalErrors.length} error(s), attempting auto-fix...`);
+        
+        setIsFixing(true);
+        const { data: fixResult, error: fixError } = await supabase.functions.invoke('fix-game-errors', {
+          body: {
+            files,
+            errors: criticalErrors,
+            conversationHistory
+          }
+        });
+        setIsFixing(false);
+
+        if (!fixError && fixResult?.files) {
+          toast.success(`Auto-fixed ${fixResult.fixedFiles?.length || 0} file(s)!`);
+          return fixResult.files;
+        } else {
+          console.error('Fix error:', fixError);
+          toast.error('Auto-fix failed. Please review the errors.');
+        }
+      } else if (criticalErrors.length > 0) {
+        // Complex errors - notify user
+        const errorSummary = criticalErrors.map((e: any) => `${e.file}: ${e.message}`).join('\n');
+        toast.error(`Found ${criticalErrors.length} error(s) that need manual review:\n${errorSummary}`);
+      }
+    }
+
+    // Display warnings
+    if (validationResult.warnings && validationResult.warnings.length > 0) {
+      console.warn('Validation warnings:', validationResult.warnings);
+    }
+
+    return files;
+  };
+
+  const handleRuntimeError = async (errors: Array<{ message: string; source?: string; line?: number }>) => {
+    console.error('Runtime errors detected:', errors);
+    
+    const errorSummary = errors.map(e => e.message).join('; ');
+    toast.error(`Game runtime error detected: ${errorSummary.substring(0, 100)}...`);
+    
+    // Optionally trigger auto-fix for runtime errors
+    // This can be expanded based on needs
+  };
 
   const handleSendMessage = async (userMessage: string) => {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
@@ -32,6 +155,7 @@ const Index = () => {
     setIsGenerating(true);
 
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase.functions.invoke('generate-game', {
         body: { 
           prompt: userMessage,
@@ -42,15 +166,37 @@ const Index = () => {
       if (error) throw error;
 
       if (data?.files) {
-        setGameFiles(data.files);
-        setMessages([
-          ...newMessages,
-          { 
-            role: "assistant", 
-            content: data.response || "Game updated successfully!",
-            gameFiles: data.files
-          }
-        ]);
+        // Validate and fix the generated game
+        const validatedFiles = await validateAndFixGame(data.files, messages);
+        
+        const assistantMessage = { 
+          role: "assistant" as const, 
+          content: data.response || "Game updated successfully!",
+          gameFiles: validatedFiles
+        };
+        
+        setGameFiles(validatedFiles);
+        setMessages([...newMessages, assistantMessage]);
+        
+        // Update game title from AI response if provided
+        if (data.gameTitle && gameTitle === "New Game") {
+          setGameTitle(data.gameTitle);
+        }
+
+        // Save to database
+        let gId = currentGameId;
+        if (!gId && user) {
+          // Create new game if this is the first message
+          const initialIdea = messages.length === 0 ? userMessage : undefined;
+          gId = await saveGame(gameTitle, validatedFiles, initialIdea, userMessage.substring(0, 200));
+        }
+
+        if (gId && user) {
+          // Save chat messages
+          await saveChatMessage(gId, 'user', userMessage);
+          await saveChatMessage(gId, 'assistant', assistantMessage.content, validatedFiles);
+        }
+
         toast.success("Game updated!");
       } else {
         throw new Error("No game files received");
@@ -63,29 +209,81 @@ const Index = () => {
     }
   };
 
+  const handleManualSave = async () => {
+    if (!user) {
+      toast.error("Please sign in to save");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const gId = await saveGame(gameTitle, gameFiles, undefined, "Manual save");
+      if (gId) {
+        toast.success("Game saved successfully!");
+      }
+    } catch (error) {
+      toast.error("Failed to save game");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col relative overflow-hidden">
+      <AnimatedBackground />
+      
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
+      <header className="relative z-10 glass-strong border-b border-primary/20 shrink-0">
+        <div className="px-6 py-5">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold gradient-text">
-              GameForge AI
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent ml-2">
+              {gameTitle}
             </h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="hidden sm:inline">Powered by</span>
-              <span className="font-semibold text-primary">Groq + Llama 3.3</span>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="glass border-primary/20 hover:border-accent/60"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleManualSave}
+                disabled={!user || Object.keys(gameFiles).length === 0 || isSaving}
+                className="glass border-primary/20 hover:border-accent/60"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="glass border-primary/20 hover:border-accent/60"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="h-[calc(100vh-73px)]">
+      {/* Main Content - fills remaining space */}
+      <main className="relative z-10 flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
           {/* Chat Panel */}
           <ResizablePanel defaultSize={35} minSize={25}>
-            <div className="h-full p-6">
+            <div className="h-full p-4 md:p-6">
               <ChatInterface
                 messages={messages}
                 onSendMessage={handleSendMessage}
@@ -95,52 +293,95 @@ const Index = () => {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle />
+          <ResizableHandle withHandle className="bg-gradient-to-b from-primary/50 to-accent/50 w-[2px]" />
 
           {/* Code/Preview Panel */}
           <ResizablePanel defaultSize={65} minSize={35}>
-            <div className="h-full p-6 flex flex-col">
-              {/* Toggle Buttons */}
-              <div className="mb-4 flex gap-2 justify-between">
-                <div className="flex gap-2">
+            <div className="h-full flex flex-col">
+              {/* Top Control Bar */}
+              <div className="shrink-0 p-4 md:p-6 pb-3">
+                <div className="flex gap-3 justify-between items-center">
+                  <div className="flex gap-2 p-1 rounded-xl glass">
+                    <Button
+                      variant={showPreview ? "ghost" : "default"}
+                      size="sm"
+                      onClick={() => setShowPreview(false)}
+                      className={`flex items-center gap-2 rounded-lg smooth-transition ${
+                        !showPreview ? 'bg-gradient-to-r from-primary to-accent glow-primary' : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <Code className="h-4 w-4" />
+                      <span className="hidden sm:inline">Code</span>
+                    </Button>
+                    <Button
+                      variant={showPreview ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setShowPreview(true)}
+                      className={`flex items-center gap-2 rounded-lg smooth-transition ${
+                        showPreview ? 'bg-gradient-to-r from-primary to-accent glow-primary' : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="hidden sm:inline">Preview</span>
+                    </Button>
+                  </div>
                   <Button
-                    variant={showPreview ? "outline" : "default"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => setShowPreview(false)}
-                    className="flex items-center gap-2"
+                    onClick={() => setShowItchPublisher(true)}
+                    disabled={Object.keys(gameFiles).length === 0}
+                    className="flex items-center gap-2 glass border-accent/30 hover:border-accent/60 hover:bg-accent/10 glow-hover"
                   >
-                    <Code className="h-4 w-4" />
-                    Code Editor
-                  </Button>
-                  <Button
-                    variant={showPreview ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowPreview(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Live Preview
+                    <Upload className="h-4 w-4" />
+                    <span className="hidden sm:inline">Publish</span>
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowItchPublisher(true)}
-                  disabled={Object.keys(gameFiles).length === 0}
-                  className="flex items-center gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Publish to Itch.io
-                </Button>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 min-h-0">
-                {showPreview ? (
-                  <GamePreview gameFiles={gameFiles} />
-                ) : (
-                  <MultiFileEditor files={gameFiles} onChange={setGameFiles} />
-                )}
+              {/* Content - fills remaining space */}
+              <div className="flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6">
+                <div className="h-full animate-fade-in">
+                  {showPreview ? (
+                    <GamePreview gameFiles={gameFiles} onRuntimeError={handleRuntimeError} />
+                  ) : (
+                    <MultiFileEditor files={gameFiles} onChange={setGameFiles} />
+                  )}
+                </div>
+              </div>
+
+              {/* Status Footer Bar */}
+              <div className="shrink-0 glass-strong border-t border-border/50 px-4 md:px-6 py-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${Object.keys(gameFiles).length > 0 ? 'bg-accent animate-glow-pulse' : 'bg-muted'}`} />
+                      <span className="text-muted-foreground">
+                        {Object.keys(gameFiles).length > 0 
+                          ? `${Object.keys(gameFiles).length} files` 
+                          : 'No files loaded'}
+                      </span>
+                    </div>
+                    {Object.keys(gameFiles).length > 0 && (
+                      <div className="hidden md:flex items-center gap-2 text-muted-foreground">
+                        <span>•</span>
+                        <span>{showPreview ? 'Preview Mode' : 'Edit Mode'}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {(isGenerating || isValidating || isFixing) && (
+                      <div className="flex items-center gap-2 text-accent">
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent animate-glow-pulse" />
+                        <span className="hidden sm:inline">
+                          {isFixing ? 'Fixing...' : isValidating ? 'Validating...' : 'Generating...'}
+                        </span>
+                      </div>
+                    )}
+                     <div className="text-muted-foreground hidden md:inline">
+                      Level0 v1.0
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </ResizablePanel>

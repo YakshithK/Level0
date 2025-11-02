@@ -89,21 +89,21 @@ const FileExplorer = ({ files, activeFile, onFileSelect }: FileExplorerProps) =>
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start px-2 py-1 h-auto font-mono text-xs hover:bg-muted/50"
+            className="w-full justify-start px-2 py-1.5 h-auto font-mono text-xs hover:bg-muted/50 rounded-lg smooth-transition"
             style={{ paddingLeft: `${depth * 12 + 8}px` }}
             onClick={() => toggleFolder(node.path)}
           >
             {isExpanded ? (
-              <ChevronDown className="h-3 w-3 mr-1 shrink-0" />
+              <ChevronDown className="h-3 w-3 mr-1 shrink-0 text-accent" />
             ) : (
-              <ChevronRight className="h-3 w-3 mr-1 shrink-0" />
+              <ChevronRight className="h-3 w-3 mr-1 shrink-0 text-muted-foreground" />
             )}
             {isExpanded ? (
-              <FolderOpen className="h-4 w-4 mr-2 shrink-0 text-blue-400" />
+              <FolderOpen className="h-4 w-4 mr-2 shrink-0 text-accent" />
             ) : (
-              <Folder className="h-4 w-4 mr-2 shrink-0 text-blue-400" />
+              <Folder className="h-4 w-4 mr-2 shrink-0 text-primary" />
             )}
-            <span className="truncate">{node.name}</span>
+            <span className="truncate font-medium">{node.name}</span>
           </Button>
           {isExpanded && node.children && (
             <div>
@@ -119,8 +119,10 @@ const FileExplorer = ({ files, activeFile, onFileSelect }: FileExplorerProps) =>
         key={node.path}
         variant="ghost"
         size="sm"
-        className={`w-full justify-start px-2 py-1 h-auto font-mono text-xs hover:bg-muted/50 ${
-          isActive ? 'bg-muted text-primary' : ''
+        className={`w-full justify-start px-2 py-1.5 h-auto font-mono text-xs rounded-lg smooth-transition ${
+          isActive 
+            ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-foreground font-semibold border border-accent/30' 
+            : 'hover:bg-muted/50'
         }`}
         style={{ paddingLeft: `${depth * 12 + 24}px` }}
         onClick={() => onFileSelect(node.path)}
@@ -134,12 +136,12 @@ const FileExplorer = ({ files, activeFile, onFileSelect }: FileExplorerProps) =>
   const fileTree = buildFileTree();
 
   return (
-    <div className="h-full border-r border-border bg-card/30">
-      <div className="px-3 py-2 border-b border-border">
-        <h3 className="text-xs font-semibold uppercase text-muted-foreground">Explorer</h3>
+    <div className="h-full">
+      <div className="px-4 py-3 border-b border-border/50 bg-gradient-to-r from-primary/5 to-accent/5">
+        <h3 className="text-xs font-bold uppercase gradient-text">Explorer</h3>
       </div>
-      <ScrollArea className="h-[calc(100%-40px)]">
-        <div className="p-1">
+      <ScrollArea className="h-[calc(100%-48px)]">
+        <div className="p-2">
           {renderNode(fileTree)}
         </div>
       </ScrollArea>

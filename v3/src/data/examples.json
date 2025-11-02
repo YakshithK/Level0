@@ -1,0 +1,46 @@
+{
+  "examples": [
+    {
+      "name": "Simple Platformer",
+      "description": "A basic platformer game with jumping, moving platforms, and collectibles. Player can move left/right and jump to reach the goal.",
+      "tags": ["platformer", "jumping", "physics", "collectibles"],
+      "embedding": [],
+      "files": {}
+    },
+    {
+      "name": "Snake Game",
+      "description": "Classic snake game where you collect food to grow longer. Avoid hitting walls or your own tail.",
+      "tags": ["snake", "arcade", "grid", "classic"],
+      "embedding": [],
+      "files": {}
+    },
+    {
+      "name": "Space Shooter",
+      "description": "Top-down space shooter where you pilot a ship, shoot enemies, and dodge incoming fire. Survive as long as possible.",
+      "tags": ["shooter", "space", "bullets", "enemies"],
+      "embedding": [],
+      "files": {}
+    },
+    {
+      "name": "Endless Runner",
+      "description": "Infinite runner game where you jump over obstacles and collect coins. The game speeds up as you progress.",
+      "tags": ["runner", "endless", "obstacles", "jumping"],
+      "embedding": [],
+      "files": {}
+    },
+    {
+      "name": "Top-Down Adventure",
+      "description": "Explore a top-down world, collect items, and avoid enemies. Use arrow keys to move in all directions.",
+      "tags": ["topdown", "adventure", "exploration", "enemies"],
+      "embedding": [],
+      "files": {}
+    },
+    {
+      "name": "Match-3 Puzzle",
+      "description": "Classic match-3 puzzle game. Click adjacent gems to swap them and create matches of 3 or more.",
+      "tags": ["puzzle", "match3", "grid", "casual"],
+      "embedding": [],
+      "files": {}
+    }
+  ]
+}

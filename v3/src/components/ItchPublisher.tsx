@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface GameFiles {
   [key: string]: string;
@@ -51,6 +50,7 @@ const ItchPublisher = ({ gameFiles, isOpen, onClose }: ItchPublisherProps) => {
     setIsPublishing(true);
 
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       // 1. Create zip from game files
       toast.info("Creating game package...");
       const zipBlob = await createZipFromFiles(gameFiles);

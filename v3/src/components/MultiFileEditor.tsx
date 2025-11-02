@@ -41,9 +41,9 @@ const MultiFileEditor = ({ files, onChange }: MultiFileEditorProps) => {
   };
 
   return (
-    <div className="h-full flex bg-[#1e1e1e] rounded-xl border border-border overflow-hidden">
+    <div className="h-full flex glass-strong rounded-2xl border border-border/50 overflow-hidden animate-scale-in">
       {/* File Explorer Sidebar */}
-      <div className="w-56 shrink-0">
+      <div className="w-64 shrink-0 border-r border-border/50 bg-gradient-to-b from-muted/30 to-transparent">
         <FileExplorer 
           files={files} 
           activeFile={activeFile} 
@@ -52,12 +52,14 @@ const MultiFileEditor = ({ files, onChange }: MultiFileEditorProps) => {
       </div>
 
       {/* Editor Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[hsl(var(--editor-bg))]">
         {/* Tab Bar */}
-        <div className="flex items-center h-10 border-b border-[#2d2d2d] bg-[#252526] px-2">
-          <div className="flex items-center gap-1 px-2">
-            {getFileIcon(activeFile)}
-            <span className="text-sm font-mono text-gray-300">{activeFile}</span>
+        <div className="flex items-center h-12 border-b border-border/30 bg-gradient-to-r from-primary/5 to-accent/5 px-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass-strong">
+            <div className="text-accent">
+              {getFileIcon(activeFile)}
+            </div>
+            <span className="text-sm font-mono text-foreground font-medium">{activeFile}</span>
           </div>
         </div>
 
