@@ -8,9 +8,3 @@ verify_jwt = false
 
 [functions.generate-embeddings]
 verify_jwt = false
-
-[functions.validate-game]
-verify_jwt = false
-
-[functions.fix-game-errors]
-verify_jwt = false

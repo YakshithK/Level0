@@ -1,55 +1,71 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { GameCodeValidator, type CodeError } from "@/lib/codeValidation";
 
-interface GameFiles {
+export interface GameFiles {
   [key: string]: string;
 }
 
 interface GamePreviewProps {
   gameFiles: GameFiles;
+  onValidationErrors?: (errors: CodeError[]) => void;
+  onRuntimeError?: (error: Error) => void;
 }
 
-const GamePreview = ({ gameFiles, onRuntimeError }: GamePreviewProps & { 
-  onRuntimeError?: (errors: Array<{ message: string; source?: string; line?: number }>) => void 
-}) => {
+const GamePreview = ({ gameFiles, onValidationErrors, onRuntimeError }: GamePreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errors, setErrors] = useState<CodeError[]>([]);
 
-  useEffect(() => {
-    const run = async () => {
-      if (!(iframeRef.current && gameFiles["index.html"])) return;
-      const iframe = iframeRef.current!;
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  // Validate code before execution
+  const validateAndRun = async () => {
+    if (!iframeRef.current) return;
+    
+    // Skip validation if no files are loaded
+    const fileCount = Object.keys(gameFiles).length;
+    if (fileCount === 0) {
+      setIsLoading(false);
+      setErrors([]);
+      return;
+    }
+    
+    setIsLoading(true);
+    setErrors([]);
+    
+    try {
+      // 1. Perform static analysis
+      const validationErrors = await GameCodeValidator.validateCode(gameFiles);
       
-      if (!doc) return;
-
-      // Runtime error detection
-      const runtimeErrors: Array<{ message: string; source?: string; line?: number }> = [];
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        onValidationErrors?.(validationErrors);
+        return;
+      }
       
-      const errorHandler = (event: ErrorEvent) => {
-        runtimeErrors.push({
-          message: event.message,
-          source: event.filename,
-          line: event.lineno
-        });
-        console.error('Game runtime error:', event.message);
+      // 2. If validation passes, run the game
+      await runGame();
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const runtimeError: CodeError = {
+        type: 'runtime',
+        message: errorObj.message,
+        suggestion: 'An unexpected error occurred during execution.'
       };
+      setErrors([runtimeError]);
+      onRuntimeError?.(errorObj);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
-        runtimeErrors.push({
-          message: `Unhandled promise rejection: ${event.reason}`
-        });
-        console.error('Game promise rejection:', event.reason);
-      };
-
-      // Attach error listeners to iframe
-      iframe.contentWindow?.addEventListener('error', errorHandler);
-      iframe.contentWindow?.addEventListener('unhandledrejection', unhandledRejectionHandler);
-
-      // Report errors after a delay to catch initialization errors
-      setTimeout(() => {
-        if (runtimeErrors.length > 0 && onRuntimeError) {
-          onRuntimeError(runtimeErrors);
-        }
-      }, 2000);
+  const runGame = async () => {
+    if (!iframeRef.current || !gameFiles["index.html"]) return;
+    
+    const iframe = iframeRef.current;
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    
+    if (!doc) return;
+    
+    try {
 
       // Helper: resize base64 data URL to exact target size (pixelated for crisp sprites)
       const resizeDataUrl = (dataUrl: string, width: number, height: number): Promise<string> => {
@@ -74,8 +90,40 @@ const GamePreview = ({ gameFiles, onRuntimeError }: GamePreviewProps & {
         });
       };
 
-      // Combine all files into a single HTML document
+      // Combine all files into a single HTML document with error handling
       let combinedHTML = gameFiles["index.html"];
+      
+      // Add error handling to the HTML
+      combinedHTML = combinedHTML.replace(
+        '<head>',
+        `<head>
+          <script>
+            window.onerror = function(message, source, lineno, colno, error) {
+              window.parent.postMessage({
+                type: 'RUNTIME_ERROR',
+                error: {
+                  message: message,
+                  source: source,
+                  line: lineno,
+                  column: colno,
+                  stack: error?.stack
+                }
+              }, '*');
+              return true; // Prevent default handler
+            };
+            
+            // Catch unhandled promise rejections
+            window.addEventListener('unhandledrejection', (event) => {
+              window.parent.postMessage({
+                type: 'PROMISE_REJECTION',
+                error: {
+                  message: event.reason?.message || 'Unhandled Promise Rejection',
+                  stack: event.reason?.stack
+                }
+              }, '*');
+            });
+          </script>`
+      );
       
       // Inject all CSS files
       const cssFiles = Object.entries(gameFiles).filter(([name]) => name.endsWith('.css'));
@@ -161,39 +209,95 @@ const GamePreview = ({ gameFiles, onRuntimeError }: GamePreviewProps & {
       doc.open();
       doc.write(combinedHTML);
       doc.close();
-    };
+      
+      // Add message listener for runtime errors
+      const handleMessage = (event: MessageEvent) => {
+        if (event.source !== iframe.contentWindow) return;
+        
+        if (event.data?.type === 'RUNTIME_ERROR' || event.data?.type === 'PROMISE_REJECTION') {
+          const errorData = event.data.error;
+          const runtimeError: CodeError = {
+            type: 'runtime',
+            message: errorData.message,
+            file: errorData.source,
+            line: errorData.line,
+            column: errorData.column,
+            suggestion: 'Check the browser console for more details.'
+          };
+          
+          setErrors(prev => [...prev, runtimeError]);
+          onRuntimeError?.(new Error(errorData.message));
+        }
+      };
 
-    run();
+      window.addEventListener('message', handleMessage);
+      
+      // Clean up message listener
+      return () => {
+        window.removeEventListener('message', handleMessage);
+      };
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      const runtimeError: CodeError = {
+        type: 'runtime',
+        message: errorObj.message,
+        suggestion: 'An error occurred while setting up the game.'
+      };
+      setErrors([runtimeError]);
+      onRuntimeError?.(errorObj);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Run validation and game when files change
+  useEffect(() => {
+    validateAndRun();
   }, [gameFiles]);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up any resources if needed
+    };
+  }, []);
 
   return (
-    <div className="h-full w-full glass-strong rounded-2xl border border-border/50 overflow-hidden animate-scale-in relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-      {gameFiles["index.html"] ? (
-        <iframe
-          ref={iframeRef}
-          className="w-full h-full relative z-10 rounded-2xl"
-          title="Game Preview"
-          sandbox="allow-scripts allow-same-origin"
-        />
-      ) : (
-        <div className="flex items-center justify-center h-full relative z-10">
-          <div className="text-center space-y-6 p-8 animate-fade-in">
-            <div className="relative inline-block">
-              <div className="text-7xl animate-float">🎮</div>
-              <div className="absolute inset-0 blur-2xl bg-primary/20 animate-glow-pulse" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold gradient-text">
-                Your game will appear here
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Enter a prompt and click Generate to create an instant playable game
-              </p>
-            </div>
+    <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+      
+      {errors.length > 0 && (
+        <div className="absolute inset-0 z-20 bg-red-900/90 p-4 overflow-auto">
+          <h3 className="text-white font-bold mb-2">Found {errors.length} error{errors.length > 1 ? 's' : ''}:</h3>
+          <div className="space-y-2">
+            {errors.map((error, index) => (
+              <div key={index} className="bg-red-800/70 p-3 rounded text-sm text-white">
+                <div className="font-mono font-bold">{error.message}</div>
+                {error.file && (
+                  <div className="text-xs opacity-80 mt-1">
+                    {error.file}{error.line !== undefined ? `:${error.line}` : ''}
+                    {error.column !== undefined ? `:${error.column}` : ''}
+                  </div>
+                )}
+                {error.suggestion && (
+                  <div className="text-yellow-200 text-xs mt-1"> {error.suggestion}</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
+      
+      <iframe
+        ref={iframeRef}
+        className="w-full h-full border-0"
+        title="Game Preview"
+        sandbox="allow-scripts allow-same-origin"
+      />
     </div>
   );
 };

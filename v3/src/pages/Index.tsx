@@ -30,8 +30,9 @@ const Index = () => {
   const [showItchPublisher, setShowItchPublisher] = useState(false);
   const [gameTitle, setGameTitle] = useState("New Game");
   const [isSaving, setIsSaving] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
-  const [isFixing, setIsFixing] = useState(false);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
+  const [autoFixAttempts, setAutoFixAttempts] = useState(0);
+  const maxAutoFixAttempts = 3;
 
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -82,77 +83,14 @@ const Index = () => {
     }
   }, [gameFiles, gameTitle, user, currentGameId]);
 
-  const validateAndFixGame = async (files: GameFiles, conversationHistory: Message[] = []): Promise<GameFiles> => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    
-    // Step 1: Static validation
-    setIsValidating(true);
-    const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-game', {
-      body: { files }
-    });
-    setIsValidating(false);
-
-    if (validationError || !validationResult) {
-      console.error('Validation error:', validationError);
-      return files; // Return original files if validation fails
-    }
-
-    console.log('Validation result:', validationResult);
-
-    // Step 2: If there are errors, attempt auto-fix
-    if (!validationResult.valid && validationResult.errors.length > 0) {
-      const criticalErrors = validationResult.errors.filter((e: any) => e.severity === 'critical');
-      
-      if (validationResult.autoFixable && criticalErrors.length > 0) {
-        // Auto-fix simple errors
-        toast.info(`Detected ${criticalErrors.length} error(s), attempting auto-fix...`);
-        
-        setIsFixing(true);
-        const { data: fixResult, error: fixError } = await supabase.functions.invoke('fix-game-errors', {
-          body: {
-            files,
-            errors: criticalErrors,
-            conversationHistory
-          }
-        });
-        setIsFixing(false);
-
-        if (!fixError && fixResult?.files) {
-          toast.success(`Auto-fixed ${fixResult.fixedFiles?.length || 0} file(s)!`);
-          return fixResult.files;
-        } else {
-          console.error('Fix error:', fixError);
-          toast.error('Auto-fix failed. Please review the errors.');
-        }
-      } else if (criticalErrors.length > 0) {
-        // Complex errors - notify user
-        const errorSummary = criticalErrors.map((e: any) => `${e.file}: ${e.message}`).join('\n');
-        toast.error(`Found ${criticalErrors.length} error(s) that need manual review:\n${errorSummary}`);
-      }
-    }
-
-    // Display warnings
-    if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.warn('Validation warnings:', validationResult.warnings);
-    }
-
-    return files;
-  };
-
-  const handleRuntimeError = async (errors: Array<{ message: string; source?: string; line?: number }>) => {
-    console.error('Runtime errors detected:', errors);
-    
-    const errorSummary = errors.map(e => e.message).join('; ');
-    toast.error(`Game runtime error detected: ${errorSummary.substring(0, 100)}...`);
-    
-    // Optionally trigger auto-fix for runtime errors
-    // This can be expanded based on needs
-  };
-
-  const handleSendMessage = async (userMessage: string) => {
+  const handleSendMessage = async (userMessage: string, isAutoFix: boolean = false) => {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsGenerating(true);
+    
+    if (isAutoFix) {
+      setIsAutoFixing(true);
+    }
 
     try {
       const { supabase } = await import("@/integrations/supabase/client");
@@ -166,16 +104,13 @@ const Index = () => {
       if (error) throw error;
 
       if (data?.files) {
-        // Validate and fix the generated game
-        const validatedFiles = await validateAndFixGame(data.files, messages);
-        
         const assistantMessage = { 
           role: "assistant" as const, 
           content: data.response || "Game updated successfully!",
-          gameFiles: validatedFiles
+          gameFiles: data.files
         };
         
-        setGameFiles(validatedFiles);
+        setGameFiles(data.files);
         setMessages([...newMessages, assistantMessage]);
         
         // Update game title from AI response if provided
@@ -188,16 +123,22 @@ const Index = () => {
         if (!gId && user) {
           // Create new game if this is the first message
           const initialIdea = messages.length === 0 ? userMessage : undefined;
-          gId = await saveGame(gameTitle, validatedFiles, initialIdea, userMessage.substring(0, 200));
+          gId = await saveGame(gameTitle, data.files, initialIdea, userMessage.substring(0, 200));
         }
 
         if (gId && user) {
           // Save chat messages
           await saveChatMessage(gId, 'user', userMessage);
-          await saveChatMessage(gId, 'assistant', assistantMessage.content, validatedFiles);
+          await saveChatMessage(gId, 'assistant', assistantMessage.content, data.files);
         }
 
-        toast.success("Game updated!");
+        // Reset auto-fix attempts on successful generation
+        if (isAutoFix) {
+          setAutoFixAttempts(0);
+          toast.success("Error fixed successfully!");
+        } else {
+          toast.success("Game updated!");
+        }
       } else {
         throw new Error("No game files received");
       }
@@ -206,7 +147,62 @@ const Index = () => {
       toast.error("Failed to generate game. Please try again.");
     } finally {
       setIsGenerating(false);
+      if (isAutoFix) {
+        setIsAutoFixing(false);
+      }
     }
+  };
+
+  const handleRuntimeError = async (error: Error) => {
+    // Only auto-fix if we haven't exceeded max attempts
+    if (autoFixAttempts >= maxAutoFixAttempts) {
+      toast.error(`Auto-fix failed after ${maxAutoFixAttempts} attempts. Please describe the issue manually.`);
+      setAutoFixAttempts(0);
+      return;
+    }
+
+    setAutoFixAttempts(prev => prev + 1);
+    
+    // Create error context message
+    const errorMessage = `RUNTIME ERROR DETECTED:
+Error: ${error.message}
+Stack: ${error.stack || 'No stack trace'}
+
+Please fix this error in the game code. Analyze the error and update the relevant files to resolve it.`;
+    
+    toast.info(`Auto-fixing error (attempt ${autoFixAttempts + 1}/${maxAutoFixAttempts})...`);
+    
+    // Send error back to AI for fixing
+    await handleSendMessage(errorMessage, true);
+  };
+
+  const handleValidationErrors = async (errors: any[]) => {
+    // Only auto-fix if we haven't exceeded max attempts
+    if (autoFixAttempts >= maxAutoFixAttempts) {
+      toast.error(`Auto-fix failed after ${maxAutoFixAttempts} attempts. Please describe the issue manually.`);
+      setAutoFixAttempts(0);
+      return;
+    }
+
+    setAutoFixAttempts(prev => prev + 1);
+    
+    // Create validation error context
+    const errorDetails = errors.map(e => 
+      `- ${e.type.toUpperCase()}: ${e.message}${e.file ? ` in ${e.file}` : ''}${e.line ? ` at line ${e.line}` : ''}`
+    ).join('\n');
+    
+    const errorMessage = `VALIDATION ERRORS DETECTED:\n${errorDetails}\n\nPlease fix these errors in the game code.`;
+    
+    toast.info(`Auto-fixing validation errors (attempt ${autoFixAttempts + 1}/${maxAutoFixAttempts})...`);
+    
+    // Send errors back to AI for fixing
+    await handleSendMessage(errorMessage, true);
+  };
+
+  // Reset auto-fix attempts when user manually sends a message
+  const handleUserMessage = (message: string) => {
+    setAutoFixAttempts(0);
+    handleSendMessage(message, false);
   };
 
   const handleManualSave = async () => {
@@ -286,7 +282,7 @@ const Index = () => {
             <div className="h-full p-4 md:p-6">
               <ChatInterface
                 messages={messages}
-                onSendMessage={handleSendMessage}
+                onSendMessage={handleUserMessage}
                 onRestoreVersion={setGameFiles}
                 isGenerating={isGenerating}
               />
@@ -342,7 +338,11 @@ const Index = () => {
               <div className="flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6">
                 <div className="h-full animate-fade-in">
                   {showPreview ? (
-                    <GamePreview gameFiles={gameFiles} onRuntimeError={handleRuntimeError} />
+                    <GamePreview 
+                      gameFiles={gameFiles} 
+                      onRuntimeError={handleRuntimeError}
+                      onValidationErrors={handleValidationErrors}
+                    />
                   ) : (
                     <MultiFileEditor files={gameFiles} onChange={setGameFiles} />
                   )}
@@ -369,12 +369,16 @@ const Index = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    {(isGenerating || isValidating || isFixing) && (
+                    {isAutoFixing && (
+                      <div className="flex items-center gap-2 text-yellow-400">
+                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-glow-pulse" />
+                        <span className="hidden sm:inline">Auto-fixing ({autoFixAttempts}/{maxAutoFixAttempts})...</span>
+                      </div>
+                    )}
+                    {isGenerating && !isAutoFixing && (
                       <div className="flex items-center gap-2 text-accent">
                         <div className="w-1.5 h-1.5 rounded-full bg-accent animate-glow-pulse" />
-                        <span className="hidden sm:inline">
-                          {isFixing ? 'Fixing...' : isValidating ? 'Validating...' : 'Generating...'}
-                        </span>
+                        <span className="hidden sm:inline">Generating...</span>
                       </div>
                     )}
                      <div className="text-muted-foreground hidden md:inline">

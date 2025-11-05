@@ -1,89 +1,100 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import JSZip from "https://esm.sh/jszip@3.10.1";
-
+// supabase/functions/publish-to-itch/index.ts
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { apiKey, username, gameId, gameFiles } = await req.json();
-    
-    console.log("Publishing to itch.io:", { username, gameId });
-
-    // Check if the game exists
-    const gameUrl = `https://itch.io/api/1/${apiKey}/game/${gameId}`;
-    const gameCheckResponse = await fetch(gameUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+const BUTLER_SERVICE_URL = "https://level0-production.up.railway.app";
+serve(async (req)=>{
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: corsHeaders
     });
-
-    if (!gameCheckResponse.ok) {
-      throw new Error(`Game not found. Make sure the game ID is correct.`);
+  }
+  try {
+    const { api_key, username, game_slug, channel, zip_url } = await req.json();
+    if (!api_key || !username || !game_slug || !zip_url) {
+      return new Response(JSON.stringify({
+        error: "Missing required fields"
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
     }
-
-    // Create a ZIP file from game files
-    await createZipFromFiles(gameFiles);
-    
-    // For now, we return instructions since Butler CLI is required for actual uploads
-    // Butler is itch.io's command-line tool for uploading builds
-    // Reference: https://itch.io/docs/butler/
-    
-    const instructions = `
-Game validated successfully!
-
-To upload your game files to itch.io, you'll need to use Butler (itch.io's upload tool).
-
-1. Download Butler: https://itch.io/docs/butler/installing.html
-2. Login: butler login
-3. Upload your game:
-   butler push your-game-folder ${username}/${gameId}:html
-
-Your game page: https://${username}.itch.io/${gameId}
-
-Note: Direct API uploads are not supported by itch.io. Butler is the official upload method.
-    `.trim();
-
-    console.log("Game check successful, returning instructions");
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Game validated",
-        instructions,
-        gameUrl: `https://${username}.itch.io/${gameId}`,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.log('Calling butler service with:', {
+      username,
+      game_slug,
+      channel
+    });
+    // Call butler service via HTTP
+    const response = await fetch(`${BUTLER_SERVICE_URL}/publish`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        api_key,
+        username,
+        game_slug,
+        channel: channel || "html5",
+        zip_url
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Butler service error:', errorText);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Butler service error: ${errorText}`
+      }), {
+        status: response.status,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    // Read the NDJSON streaming response
+    const text = await response.text();
+    const lines = text.trim().split('\n').filter((line)=>line.trim());
+    const messages = [];
+    let finalSuccess = false;
+    for (const line of lines){
+      try {
+        const parsed = JSON.parse(line);
+        messages.push(parsed);
+        if (parsed.success === true) {
+          finalSuccess = true;
+        }
+      } catch (e) {
+        console.error('Failed to parse line:', line);
       }
-    );
+    }
+    console.log('Parsed messages:', messages);
+    return new Response(JSON.stringify({
+      success: finalSuccess,
+      messages: messages,
+      error: finalSuccess ? undefined : "Publish failed"
+    }), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
+      }
+    });
   } catch (error) {
-    console.error("Error in publish-to-itch:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error('Function error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : "Internal server error"
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
       }
-    );
+    });
   }
 });
-
-// Helper function to create ZIP from files
-async function createZipFromFiles(files: Record<string, string>): Promise<Uint8Array> {
-  const zip = new JSZip();
-  
-  for (const [filename, content] of Object.entries(files)) {
-    zip.file(filename, content);
-  }
-  
-  return await zip.generateAsync({ type: "uint8array" });
-}

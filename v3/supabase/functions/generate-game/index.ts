@@ -1,29 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-serve(async (req) => {
+serve(async (req)=>{
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
-
   try {
     const { prompt, conversationHistory = [] } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
+    if (!GOOGLE_API_KEY) {
+      throw new Error('GOOGLE_API_KEY is not configured');
     }
-
     console.log('Generating Phaser game for prompt:', prompt);
-
     const systemPrompt = `You are an expert Phaser 3 game developer. Generate complete, playable games using Phaser 3 framework.
 
-CRITICAL: You MUST respond with a JSON object containing multiple organized files. NO OTHER FORMAT IS ACCEPTABLE.
+CRITICAL: You MUST use the generate_game_files function to return your game files. Call this function with a 'files' object containing all game files.
 
 REQUIRED FILE STRUCTURE - You MUST create multiple files:
 
@@ -123,174 +119,196 @@ CONVERSATION MODE:
 - Return ALL files even if only one changed
 - Update assets.json if new entities are added
 
-CRITICAL: Respond ONLY with valid JSON. No markdown, no explanations.
-CRITICAL: All code MUST be properly formatted with newlines and indentation!`;
+ERROR FIXING MODE:
+- If you receive a "RUNTIME ERROR DETECTED" or "VALIDATION ERRORS DETECTED" message:
+  * Carefully analyze the error message, stack trace, file, and line number
+  * Identify the root cause of the error
+  * Fix the specific issue in the relevant file(s)
+  * Test your logic mentally to ensure the fix is correct
+  * Return ALL game files with the fix applied
+  * Common errors to watch for:
+    - Undefined variables or functions
+    - Missing Phaser scene methods (preload, create, update)
+    - Incorrect physics configuration
+    - Asset loading issues
+    - Syntax errors in JavaScript
+    - Missing semicolons or brackets
 
-    // Build messages array with conversation history
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...conversationHistory.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      { role: 'user', content: prompt }
+CRITICAL: Use the generate_game_files function to return all files.
+CRITICAL: All code MUST be properly formatted with newlines and indentation!`;
+    // Build messages as Gemini "contents"
+    const contents = [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: systemPrompt
+          }
+        ]
+      },
+      ...conversationHistory.map((msg)=>({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [
+            {
+              text: msg.content
+            }
+          ]
+        })),
+      {
+        role: 'user',
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ];
+    // Define the function/tool schema for structured output
+    const tools = [
+      {
+        functionDeclarations: [
+          {
+            name: "generate_game_files",
+            description: "Generate complete Phaser 3 game files with proper structure",
+            parameters: {
+              type: "object",
+              properties: {
+                files: {
+                  type: "object",
+                  description: "Object containing all game files with filename as key and code content as value",
+                  properties: {
+                    "index.html": {
+                      type: "string",
+                      description: "Main HTML file with Phaser CDN"
+                    },
+                    "styles.css": {
+                      type: "string",
+                      description: "CSS styles for game container"
+                    },
+                    "game.js": {
+                      type: "string",
+                      description: "Phaser game configuration and initialization"
+                    }
+                  },
+                  required: ["index.html", "styles.css", "game.js"]
+                }
+              },
+              required: ["files"]
+            }
+          }
+        ]
+      }
     ];
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // === Gemini function calling request ===
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
+        'x-goog-api-key': GOOGLE_API_KEY
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: messages,
-        temperature: 0.9,
-        max_tokens: 8000,
-      }),
+        contents,
+        tools,
+        toolConfig: {
+          functionCallingConfig: {
+            mode: "ANY",
+            allowedFunctionNames: ["generate_game_files"]
+          }
+        },
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: 32768
+        }
+      })
     });
-
     if (!response.ok) {
       const error = await response.text();
-      console.error('Lovable AI error:', error);
-      throw new Error(`AI Gateway error: ${response.status}`);
+      console.error('Gemini API error:', error);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
-
     const data = await response.json();
-    let gameResponse = data.choices[0].message.content;
-
-    console.log('Phaser game generated successfully');
-
-    // Parse the JSON response to extract files
-    gameResponse = gameResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
-    let files;
-    try {
-      files = JSON.parse(gameResponse);
-    } catch (parseError) {
-      console.error('Failed to parse game response as JSON:', parseError);
-      console.error('Raw response:', gameResponse);
-      throw new Error('AI did not return valid JSON format');
+    // Extract function call from Gemini response
+    const functionCall = data.candidates?.[0]?.content?.parts?.find(
+      (part: any) => part.functionCall?.name === "generate_game_files"
+    );
+    
+    if (!functionCall) {
+      console.error('No function call found in response:', JSON.stringify(data, null, 2));
+      throw new Error('AI did not return structured function call');
     }
-
-    // Validate that we have required files
+    
+    const files = functionCall.functionCall.args.files;
+    
+    console.log('Phaser game generated successfully via function call');
+    
+    // Validate required files
     if (!files['index.html'] || !files['styles.css']) {
       throw new Error('Missing required files (index.html, styles.css)');
     }
-    
-    // Ensure at least one JS file exists
-    const jsFiles = Object.keys(files).filter(key => key.endsWith('.js'));
+    const jsFiles = Object.keys(files).filter((key)=>key.endsWith('.js'));
     if (jsFiles.length === 0) {
       throw new Error('No JavaScript files found');
     }
-    
     console.log('Created files:', Object.keys(files));
-
-    // Process assets if assets.json exists
+    // Skip image generation section (Gemini Flash doesn’t support images)
     if (files['assets.json']) {
-      console.log('Processing asset metadata...');
-      try {
-        // Handle both string and object formats
-        const assetsMetadata = typeof files['assets.json'] === 'string' 
-          ? JSON.parse(files['assets.json']) 
-          : files['assets.json'];
-        
-        // Generate sprites that are marked for generation
-        if (assetsMetadata.sprites) {
-          for (const [key, assetInfo] of Object.entries(assetsMetadata.sprites)) {
-            const asset = assetInfo as any;
-            if (asset.generate) {
-              console.log(`Generating sprite: ${key} at size ${asset.size[0]}x${asset.size[1]}`);
-              
-              // Determine appropriate base size for generation
-              const [targetWidth, targetHeight] = asset.size;
-              const scaleFactor = Math.max(1, Math.min(4, Math.floor(512 / Math.max(targetWidth, targetHeight))));
-              const genWidth = targetWidth * scaleFactor;
-              const genHeight = targetHeight * scaleFactor;
-              
-              // Call Lovable AI image generation with explicit size constraints
-              const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash-image-preview',
-                  messages: [
-                    {
-                      role: 'user',
-                      content: `Generate a pixel art game sprite: ${asset.description}. CRITICAL: Image must be EXACTLY ${genWidth}x${genHeight} pixels (will be scaled to ${targetWidth}x${targetHeight}). Transparent background PNG. Centered sprite. Top-down or side view for a 2D game. No text or UI elements.`
-                    }
-                  ],
-                  modalities: ['image', 'text']
-                }),
-              });
-
-              if (imageResponse.ok) {
-                const imageData = await imageResponse.json();
-                const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-                
-                if (imageUrl) {
-                  files[`assets/sprites/${key}.png`] = imageUrl;
-                  console.log(`Generated sprite: ${key} at ${genWidth}x${genHeight}, target: ${targetWidth}x${targetHeight}`);
-                }
-              }
-            }
-          }
-        }
-      } catch (assetError) {
-        console.error('Error processing assets:', assetError);
-        // Continue without assets - game will use placeholders
-      }
+      console.log('Skipping sprite generation (Gemini Flash model only supports text).');
     }
-
-    // Generate a friendly response and game title
-    const assistantResponse = conversationHistory.length === 0 
-      ? "I've created your Phaser game! Try it out and let me know if you want any changes."
-      : "I've updated your Phaser game with the changes you requested!";
-    
-    // Generate game title from the prompt for new games
+    // Friendly message
+    const assistantResponse = conversationHistory.length === 0 ? "I've created your Phaser game! Try it out and let me know if you want any changes." : "I've updated your Phaser game with the changes you requested!";
+    // Generate short game title using Gemini
     let gameTitle = null;
     if (conversationHistory.length === 0) {
-      const titleResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const titleResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
+          contents: [
             {
               role: 'user',
-              content: `Based on this game description: "${prompt}"\n\nGenerate a short, catchy game title (maximum 4 words). Respond with ONLY the title, nothing else.`
+              parts: [
+                {
+                  text: `Based on this game description: "${prompt}"\n\nGenerate a short, catchy game title (maximum 4 words). Respond with ONLY the title.`
+                }
+              ]
             }
           ],
-          temperature: 0.7,
-          max_tokens: 20,
-        }),
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 20
+          }
+        })
       });
-      
       if (titleResponse.ok) {
         const titleData = await titleResponse.json();
-        gameTitle = titleData.choices[0].message.content.trim().replace(/['"]/g, '');
+        gameTitle = titleData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/['"]/g, '');
       }
     }
-
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       files,
       response: assistantResponse,
       gameTitle
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     });
   } catch (error) {
     console.error('Error in generate-game function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({
+      error: errorMessage
+    }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     });
   }
 });
